@@ -38,6 +38,31 @@ window.addEventListener('storage', (e) => {
     }
 });
 
+// Live Server-Sent Events (SSE) Database Push Stream
+let sseConnection = null;
+function initSSE() {
+    if (typeof EventSource !== 'undefined') {
+        try {
+            const sseUrl = (window.location.protocol === "http:" || window.location.protocol === "https:")
+                ? "/api/events"
+                : "http://localhost:5000/api/events";
+            sseConnection = new EventSource(sseUrl);
+            sseConnection.onmessage = (event) => {
+                try {
+                    const parsed = JSON.parse(event.data);
+                    console.log("⚡ [SSE LIVE DATABASE PUSH]:", parsed);
+                    // Refresh data cache from SQLite database
+                    syncDatabaseFromServer();
+                    syncListeners.forEach(cb => {
+                        try { cb(parsed); } catch (e) {}
+                    });
+                } catch (e) {}
+            };
+        } catch (e) {}
+    }
+}
+initSSE();
+
 // Get current logged-in user from localStorage
 function getCurrentUser() {
     try {
@@ -410,6 +435,7 @@ function loadNavbar(role) {
             <li><a href="video-call.html" class="nav-link ${currentPage === 'video-call.html' ? 'active' : ''}">Video Call</a></li>
             <li><a href="health-tips.html" class="nav-link ${currentPage === 'health-tips.html' ? 'active' : ''}">Health Tips</a></li>
             <li><a href="emergency.html" class="nav-link" style="background:#dc3545; color:white; font-weight:bold; border-radius:4px;">🚑 SOS</a></li>
+            <li><a href="database-viewer.html" class="nav-link ${currentPage === 'database-viewer.html' ? 'active' : ''}" style="color:#C5A55A;">🗄️ Database</a></li>
             <li><a href="student-profile.html" class="nav-link" title="My Profile">👤 ${userName}</a></li>
             <li><a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:#ffc107;">Logout</a></li>
         `;
@@ -422,6 +448,7 @@ function loadNavbar(role) {
             <li><a href="prescriptions.html" class="nav-link ${currentPage === 'prescriptions.html' ? 'active' : ''}">Prescriptions</a></li>
             <li><a href="video-call.html" class="nav-link ${currentPage === 'video-call.html' ? 'active' : ''}">Video Room</a></li>
             <li><a href="medicine-inventory.html" class="nav-link ${currentPage === 'medicine-inventory.html' ? 'active' : ''}">Dispensary Stock</a></li>
+            <li><a href="database-viewer.html" class="nav-link ${currentPage === 'database-viewer.html' ? 'active' : ''}" style="color:#C5A55A; font-weight:bold;">🗄️ Database</a></li>
             <li><span class="nav-link" style="color:#C5A55A;">👨‍⚕️ ${userName}</span></li>
             <li><a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:#ffc107;">Logout</a></li>
         `;
@@ -462,6 +489,7 @@ function loadFooter() {
                     <li><a href="student-dashboard.html" style="color:#eee;">Student Portal</a></li>
                     <li><a href="doctor-dashboard.html" style="color:#eee;">Doctor Portal (Admin)</a></li>
                     <li><a href="emergency.html" style="color:#ff8888;">Instant Ambulance / SOS</a></li>
+                    <li><a href="database-viewer.html" style="color:#C5A55A; font-weight:bold;">🗄️ Database Inspector (SQLite 3)</a></li>
                     <li><a href="javascript:void(0)" onclick="resetAllDemoData()" style="color:#bbb; font-size:0.8rem;">🔄 Reset Database Data</a></li>
                 </ul>
             </div>

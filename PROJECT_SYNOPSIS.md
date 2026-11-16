@@ -65,9 +65,11 @@ The system follows a modular client-server web architecture implemented as a cli
                                v
 +-------------------------------------------------------------+
 |                      PERSISTENCE LAYER                      |
-|                  (`localStorage` & `data.js`)               |
-|  - Student Profiles, Doctor Records, Appointments           |
-|  - Digital Prescriptions, Hospital Referrals, Drug Stock    |
+|       (SQLite 3 Relational Engine & JSON Dual-Store)        |
+|  - Relational Database: `data/dtu_health.db` (node:sqlite)  |
+|  - Real-Time Bus: Server-Sent Events (SSE) `/api/events`    |
+|  - Relational Tables: students, doctors, slots,             |
+|    appointments, prescriptions, medicines, emergencies      |
 +-------------------------------------------------------------+
 ```
 
@@ -109,13 +111,19 @@ The system follows a modular client-server web architecture implemented as a cli
 - Accessible strictly to Doctors and Administrators.
 - Real-time stock status monitoring with one-click quantity adjustment (`+10` / `-10`) for campus pharmacy supplies.
 
+### Module 9: Relational Database Engine & Inspector (`database-viewer.html`, `server.js`)
+- Full-stack relational database engine using **SQLite 3 (`data/dtu_health.db`)** via native `node:sqlite`.
+- Implements real-time **Server-Sent Events (SSE)** push streaming on `/api/events` and HTML5 BroadcastChannel bus.
+- Interactive database visualizer providing schema inspection, table metrics, and live record auditing for faculty examination.
+
 ---
 
 ## 8. HARDWARE & SOFTWARE REQUIREMENTS
 
 ### Software Requirements
 - **Frontend Technologies:** HTML5, CSS3, Vanilla JavaScript (ES6+)
-- **Storage / State Management:** Browser LocalStorage API
+- **Backend / Database Engine:** Node.js native SQLite 3 (`node:sqlite`) & JSON Dual Engine
+- **Real-Time Communication:** Server-Sent Events (SSE) `/api/events` & HTML5 BroadcastChannel
 - **Multimedia Protocols:** HTML5 WebRTC / `navigator.mediaDevices.getUserMedia`
 - **Supported Web Browsers:** Google Chrome, Microsoft Edge, Mozilla Firefox, Safari
 - **Operating System:** Platform independent (Windows 10/11, macOS, Linux, Android, iOS)

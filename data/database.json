@@ -81,7 +81,25 @@
       "available": true
     }
   ],
-  "appointments": [],
+  "appointments": [
+    {
+      "id": "APT-8497",
+      "slotId": "2",
+      "studentEmail": "rahul_2k22co123@dtu.ac.in",
+      "studentName": "Rahul",
+      "rollNo": "2K22/CO/123",
+      "branch": "CSE",
+      "doctorName": "Dr. Priya Verma",
+      "department": "Dental",
+      "date": "2026-11-19",
+      "time": "11:00 AM - 02:00 PM",
+      "mode": "Physical OPD Visit (Health Center)",
+      "reason": "high fever",
+      "urgency": "Normal / Routine",
+      "status": "confirmed",
+      "createdAt": "11/16/2026"
+    }
+  ],
   "slots": [
     {
       "id": 1,
@@ -104,7 +122,7 @@
       "startTime": "11:00 AM",
       "endTime": "02:00 PM",
       "maxLimit": 10,
-      "bookedCount": 0,
+      "bookedCount": 1,
       "note": "Dental examination & cavity screening"
     },
     {
@@ -134,18 +152,102 @@
     }
   ],
   "medicines": [
-    { "id": 1, "name": "Paracetamol 650mg", "category": "Analgesic / Fever", "stock": 120, "unit": "Tablets", "expiry": "2027-04" },
-    { "id": 2, "name": "Cetirizine 10mg", "category": "Antihistamine / Allergy", "stock": 85, "unit": "Tablets", "expiry": "2026-12" },
-    { "id": 3, "name": "Amoxicillin 500mg", "category": "Antibiotic", "stock": 45, "unit": "Capsules", "expiry": "2026-09" },
-    { "id": 4, "name": "Pantoprazole 40mg", "category": "Antacid / Acidity", "stock": 90, "unit": "Tablets", "expiry": "2027-02" },
-    { "id": 5, "name": "Ibuprofen 400mg", "category": "Pain Relief", "stock": 60, "unit": "Tablets", "expiry": "2026-11" },
-    { "id": 6, "name": "ORS Sachet", "category": "Electrolyte / Dehydration", "stock": 150, "unit": "Packs", "expiry": "2027-08" },
-    { "id": 7, "name": "Betadine Ointment", "category": "Antiseptic", "stock": 35, "unit": "Tubes", "expiry": "2026-10" },
-    { "id": 8, "name": "Azithromycin 500mg", "category": "Antibiotic", "stock": 40, "unit": "Tablets", "expiry": "2026-08" },
-    { "id": 9, "name": "Bandage Roll (Cotton)", "category": "First Aid", "stock": 75, "unit": "Rolls", "expiry": "2028-01" },
-    { "id": 10, "name": "Dextromethorphan Syrup", "category": "Cough Syrup", "stock": 28, "unit": "Bottles", "expiry": "2026-07" },
-    { "id": 11, "name": "Volini Pain Spray", "category": "Pain Relief", "stock": 22, "unit": "Cans", "expiry": "2027-01" },
-    { "id": 12, "name": "Vitamin C Chewable", "category": "Supplements", "stock": 110, "unit": "Tablets", "expiry": "2027-05" }
+    {
+      "id": 1,
+      "name": "Paracetamol 650mg",
+      "category": "Analgesic / Fever",
+      "stock": 120,
+      "unit": "Tablets",
+      "expiry": "2027-04"
+    },
+    {
+      "id": 2,
+      "name": "Cetirizine 10mg",
+      "category": "Antihistamine / Allergy",
+      "stock": 85,
+      "unit": "Tablets",
+      "expiry": "2026-12"
+    },
+    {
+      "id": 3,
+      "name": "Amoxicillin 500mg",
+      "category": "Antibiotic",
+      "stock": 45,
+      "unit": "Capsules",
+      "expiry": "2026-09"
+    },
+    {
+      "id": 4,
+      "name": "Pantoprazole 40mg",
+      "category": "Antacid / Acidity",
+      "stock": 90,
+      "unit": "Tablets",
+      "expiry": "2027-02"
+    },
+    {
+      "id": 5,
+      "name": "Ibuprofen 400mg",
+      "category": "Pain Relief",
+      "stock": 60,
+      "unit": "Tablets",
+      "expiry": "2026-11"
+    },
+    {
+      "id": 6,
+      "name": "ORS Sachet",
+      "category": "Electrolyte / Dehydration",
+      "stock": 150,
+      "unit": "Packs",
+      "expiry": "2027-08"
+    },
+    {
+      "id": 7,
+      "name": "Betadine Ointment",
+      "category": "Antiseptic",
+      "stock": 35,
+      "unit": "Tubes",
+      "expiry": "2026-10"
+    },
+    {
+      "id": 8,
+      "name": "Azithromycin 500mg",
+      "category": "Antibiotic",
+      "stock": 40,
+      "unit": "Tablets",
+      "expiry": "2026-08"
+    },
+    {
+      "id": 9,
+      "name": "Bandage Roll (Cotton)",
+      "category": "First Aid",
+      "stock": 75,
+      "unit": "Rolls",
+      "expiry": "2028-01"
+    },
+    {
+      "id": 10,
+      "name": "Dextromethorphan Syrup",
+      "category": "Cough Syrup",
+      "stock": 28,
+      "unit": "Bottles",
+      "expiry": "2026-07"
+    },
+    {
+      "id": 11,
+      "name": "Volini Pain Spray",
+      "category": "Pain Relief",
+      "stock": 22,
+      "unit": "Cans",
+      "expiry": "2027-01"
+    },
+    {
+      "id": 12,
+      "name": "Vitamin C Chewable",
+      "category": "Supplements",
+      "stock": 110,
+      "unit": "Tablets",
+      "expiry": "2027-05"
+    }
   ],
   "emergencies": []
 }
