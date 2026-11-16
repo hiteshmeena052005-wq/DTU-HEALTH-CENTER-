@@ -96,35 +96,37 @@ dtu-health-center/
 - Doctors can adjust stock levels (+/- 10) directly.
 - Campus wellness articles categorized into Mental Health, Exam Stress, Ergonomics, and Lifestyle.
 
-### 4.7. Full-Stack Database Engine & Real-Time Sync
-- **Relational Database Engine:** Persistent **SQLite 3** relational database (`data/dtu_health.db`) using native `node:sqlite`.
-- **Relational Tables & Schema:**
-  - `students`: Roll number, branch, blood group, medical history
-  - `doctors`: Doctor qualifications, OPD departments, contact details
-  - `slots`: Doctor availability sessions with capacity gating (`max_limit`, `booked_count`)
+### 4.7. Dedicated Hospital DBMS Architecture
+- **Relational Database Engine:** Persistent **Hospital DBMS** powered by **SQLite 3 (`database/hospital.db`)** via Node.js native `node:sqlite`.
+- **Relational SQL DDL Schema (`database/schema.sql`):** 3NF Normalized schema with Primary Keys, Foreign Keys, Constraints, and Indexes across 11 tables:
+  - `departments`: Campus medical departments and locations
+  - `doctors`: Doctor credentials, specializations, contact details
+  - `students`: Roll number, branch, blood group, university email
+  - `doctor_slots`: Doctor availability sessions with capacity check (`CHECK booked_count <= max_capacity`)
   - `appointments`: Patient queue with urgency levels and status
-  - `prescriptions`: Digital Rx orders with dosage and medicines
-  - `medicines`: Dispensary stock with expiry tracking
-  - `notices`: Broadcast health advisories
-- **Dual-Storage Engine:** SQLite 3 binary file + readable `data/database.json` dual-persistence.
-- **Real-Time Push Architecture:** HTTP **Server-Sent Events (SSE)** stream (`/api/events`) combined with the HTML5 **BroadcastChannel** bus. When an appointment is booked or cancelled, changes push in real time (<10ms) to all active doctor and student screens without manual refresh.
-- **Live Database Inspector:** Dedicated `database-viewer.html` module displaying live table rows, SQL record counts, and schema inspection for academic viva demonstration.
+  - `prescriptions`: Digital clinical prescriptions with diagnosis
+  - `prescription_medicines`: Normalized medication line items (1-to-many relationship)
+  - `referrals`: Specialist transfer slips between departments
+  - `pharmacy_medicines`: Dispensary medicine stock with expiry tracking
+  - `campus_notices`: Public health advisories
+  - `emergency_sos_logs`: 24/7 campus ambulance dispatch logs
+- **Real-Time Push Architecture:** HTTP **Server-Sent Events (SSE)** stream (`/api/events`) combined with the HTML5 **BroadcastChannel** bus. When an appointment is booked or cancelled, or a prescription is issued, changes push in real time (<10ms) to all active doctor and student screens without manual refresh.
 
 ---
 
 ## 5. Viva & Presentation Guide (Expected Questions & Answers)
 
 **Q1: What database architecture does the system use?**  
-*Answer:* We implemented a full **Relational Database Engine using SQLite 3** (`data/dtu_health.db`) powered by Node.js native `node:sqlite`, coupled with a dual JSON document store. It features structured relational tables (`students`, `doctors`, `appointments`, `slots`, `prescriptions`, `medicines`) with primary keys and atomic SQL transactions.
+*Answer:* We implemented a complete **Relational Hospital Database Management System (DBMS)** using SQLite 3 (`database/hospital.db`) with a textbook 3NF normalized schema in `database/schema.sql`. It features structured relational tables (`students`, `doctors`, `doctor_slots`, `appointments`, `prescriptions`, `prescription_medicines`, `referrals`, `pharmacy_medicines`) with primary keys, foreign key constraints, and atomic SQL transactions.
 
 **Q2: How do real-time updates happen across devices and tabs without page reload?**  
 *Answer:* We use a hybrid real-time architecture: **Server-Sent Events (SSE)** via `/api/events` pushes live database mutations from the backend, while a client-side **BroadcastChannel bus** syncs open browser tabs with zero network latency. When a student books or cancels, the doctor's screen reflects the change instantly.
 
-**Q3: How is data preserved and can the database be inspected during viva?**  
-*Answer:* All data is permanently written to disk in `data/dtu_health.db`. The system includes a built-in **Database Inspector (`database-viewer.html`)** where examiners can inspect all SQL tables, view live record counts, and watch rows update in real time.
+**Q3: How is data preserved in the hospital database?**  
+*Answer:* All hospital clinical data, prescriptions, slots, and appointments are permanently stored on disk in the relational database file `database/hospital.db`. The SQL schema and seeds are formally defined in `database/schema.sql` and `database/seed.sql`.
 
 **Q4: How is the slot restriction (max 10 students) enforced?**  
-*Answer:* Each doctor slot object stores `maxLimit: 10` and `bookedCount`. Upon submission, `book-appointment.html` validates whether `bookedCount < maxLimit`. If full, it displays a "Slot Closed" state and prevents further submissions. Furthermore, backend SQL queries clamp capacity using `MIN(max_limit, booked_count + 1)` and auto-reconcile with active appointments upon cancellation.
+*Answer:* Each doctor slot object stores `maxLimit: 10` and `bookedCount`. Upon submission, `book-appointment.html` validates whether `bookedCount < maxLimit`. If full, it displays a "Slot Closed" state and prevents further submissions. Furthermore, backend SQL queries clamp capacity using `MIN(max_capacity, booked_count + 1)` and auto-reconcile with active appointments upon cancellation.
 
 **Q5: How does the video call feature function?**  
 *Answer:* It uses HTML5 `navigator.mediaDevices.getUserMedia` to stream live webcam video on the local tile while simulating the remote doctor feed with realistic controls, live duration counters, and a synchronized in-call messaging panel.

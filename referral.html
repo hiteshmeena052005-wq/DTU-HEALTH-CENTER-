@@ -208,9 +208,8 @@
                 status: "Pending Specialist Visit"
             };
 
-            const referrals = JSON.parse(localStorage.getItem('dtu_referrals') || '[]');
-            referrals.unshift(newReferral);
-            localStorage.setItem('dtu_referrals', JSON.stringify(referrals));
+            // Save to Hospital DBMS (database/hospital.db)
+            saveReferral(newReferral);
 
             showNotification(`Patient ${studentName} referred to ${toDoctor}!`, 'success');
             

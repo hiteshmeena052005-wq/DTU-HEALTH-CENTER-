@@ -154,6 +154,24 @@ async function syncDatabaseFromServer() {
                     localStorage.setItem("dtu_prescriptions", JSON.stringify(liveRx));
                 }
             }
+
+            // Fetch live referrals
+            const refRes = await fetch(`${API_BASE}/referrals`);
+            if (refRes.ok) {
+                const liveRefs = await refRes.json();
+                if (Array.isArray(liveRefs) && liveRefs.length > 0) {
+                    localStorage.setItem("dtu_referrals", JSON.stringify(liveRefs));
+                }
+            }
+
+            // Fetch live medicines inventory
+            const medRes = await fetch(`${API_BASE}/medicines`);
+            if (medRes.ok) {
+                const liveMeds = await medRes.json();
+                if (Array.isArray(liveMeds) && liveMeds.length > 0) {
+                    localStorage.setItem("dtu_medicines", JSON.stringify(liveMeds));
+                }
+            }
         }
     } catch (e) {
         console.log("ℹ️ Server offline. Operating in autonomous local mode.");
@@ -308,9 +326,44 @@ async function savePrescription(prescription) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(prescription)
         });
+        console.log("💾 Prescription saved to Hospital DBMS (database/hospital.db)");
     } catch (e) {}
 
     broadcastDataChange('PRESCRIPTION_ADDED', { prescription });
+}
+
+function getReferrals() {
+    return JSON.parse(localStorage.getItem("dtu_referrals") || "[]");
+}
+
+async function saveReferral(referral) {
+    const list = getReferrals();
+    list.unshift(referral);
+    localStorage.setItem("dtu_referrals", JSON.stringify(list));
+
+    try {
+        await fetch(`${API_BASE}/referrals`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(referral)
+        });
+        console.log("💾 Referral saved to Hospital DBMS (database/hospital.db)");
+    } catch (e) {}
+
+    broadcastDataChange('REFERRAL_ADDED', { referral });
+}
+
+async function triggerEmergencySOS(sosData) {
+    try {
+        await fetch(`${API_BASE}/emergency`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(sosData)
+        });
+        console.log("🚨 Emergency SOS saved to Hospital DBMS (database/hospital.db)");
+    } catch (e) {}
+
+    broadcastDataChange('EMERGENCY_SOS', sosData);
 }
 
 function getNotices() {
@@ -435,7 +488,6 @@ function loadNavbar(role) {
             <li><a href="video-call.html" class="nav-link ${currentPage === 'video-call.html' ? 'active' : ''}">Video Call</a></li>
             <li><a href="health-tips.html" class="nav-link ${currentPage === 'health-tips.html' ? 'active' : ''}">Health Tips</a></li>
             <li><a href="emergency.html" class="nav-link" style="background:#dc3545; color:white; font-weight:bold; border-radius:4px;">🚑 SOS</a></li>
-            <li><a href="database-viewer.html" class="nav-link ${currentPage === 'database-viewer.html' ? 'active' : ''}" style="color:#C5A55A;">🗄️ Database</a></li>
             <li><a href="student-profile.html" class="nav-link" title="My Profile">👤 ${userName}</a></li>
             <li><a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:#ffc107;">Logout</a></li>
         `;
@@ -448,7 +500,6 @@ function loadNavbar(role) {
             <li><a href="prescriptions.html" class="nav-link ${currentPage === 'prescriptions.html' ? 'active' : ''}">Prescriptions</a></li>
             <li><a href="video-call.html" class="nav-link ${currentPage === 'video-call.html' ? 'active' : ''}">Video Room</a></li>
             <li><a href="medicine-inventory.html" class="nav-link ${currentPage === 'medicine-inventory.html' ? 'active' : ''}">Dispensary Stock</a></li>
-            <li><a href="database-viewer.html" class="nav-link ${currentPage === 'database-viewer.html' ? 'active' : ''}" style="color:#C5A55A; font-weight:bold;">🗄️ Database</a></li>
             <li><span class="nav-link" style="color:#C5A55A;">👨‍⚕️ ${userName}</span></li>
             <li><a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:#ffc107;">Logout</a></li>
         `;
@@ -489,7 +540,6 @@ function loadFooter() {
                     <li><a href="student-dashboard.html" style="color:#eee;">Student Portal</a></li>
                     <li><a href="doctor-dashboard.html" style="color:#eee;">Doctor Portal (Admin)</a></li>
                     <li><a href="emergency.html" style="color:#ff8888;">Instant Ambulance / SOS</a></li>
-                    <li><a href="database-viewer.html" style="color:#C5A55A; font-weight:bold;">🗄️ Database Inspector (SQLite 3)</a></li>
                     <li><a href="javascript:void(0)" onclick="resetAllDemoData()" style="color:#bbb; font-size:0.8rem;">🔄 Reset Database Data</a></li>
                 </ul>
             </div>

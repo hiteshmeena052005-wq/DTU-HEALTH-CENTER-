@@ -282,12 +282,21 @@
             document.getElementById('modalFormStep').style.display = 'none';
             document.getElementById('modalDispatchedStep').style.display = 'block';
 
-            // Dispatch to Firebase Real-time Cloud
-            await cloudTriggerSOS({
+            // Record in Hospital DBMS (database/hospital.db)
+            await triggerEmergencySOS({
                 location: loc,
-                emergencyType: emType,
-                student: (getCurrentUser() && getCurrentUser().name) ? getCurrentUser().name : "DTU Student"
+                details: emType,
+                studentName: (getCurrentUser() && getCurrentUser().name) ? getCurrentUser().name : "DTU Student"
             });
+
+            // Dispatch to Cloud
+            if (typeof cloudTriggerSOS === 'function') {
+                await cloudTriggerSOS({
+                    location: loc,
+                    emergencyType: emType,
+                    student: (getCurrentUser() && getCurrentUser().name) ? getCurrentUser().name : "DTU Student"
+                });
+            }
 
             showNotification('Emergency call broadcasted to DTU Ambulance & Security (Real-Time Cloud Synced)!', 'danger');
         }

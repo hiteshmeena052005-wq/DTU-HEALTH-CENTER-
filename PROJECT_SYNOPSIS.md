@@ -111,10 +111,10 @@ The system follows a modular client-server web architecture implemented as a cli
 - Accessible strictly to Doctors and Administrators.
 - Real-time stock status monitoring with one-click quantity adjustment (`+10` / `-10`) for campus pharmacy supplies.
 
-### Module 9: Relational Database Engine & Inspector (`database-viewer.html`, `server.js`)
-- Full-stack relational database engine using **SQLite 3 (`data/dtu_health.db`)** via native `node:sqlite`.
-- Implements real-time **Server-Sent Events (SSE)** push streaming on `/api/events` and HTML5 BroadcastChannel bus.
-- Interactive database visualizer providing schema inspection, table metrics, and live record auditing for faculty examination.
+### Module 9: Hospital Database Management System (DBMS) (`database/`, `server.js`)
+- Full-stack relational database engine using **SQLite 3 (`database/hospital.db`)** via native `node:sqlite`.
+- Standard 3NF normalized relational schema (`database/schema.sql`) with primary keys, foreign keys, and constraints.
+- Real-time **Server-Sent Events (SSE)** push streaming on `/api/events` and HTML5 BroadcastChannel bus for live sync.
 
 ---
 

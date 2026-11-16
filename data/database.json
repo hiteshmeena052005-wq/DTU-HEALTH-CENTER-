@@ -83,6 +83,40 @@
   ],
   "appointments": [
     {
+      "id": "APT-7435",
+      "slotId": "2",
+      "studentEmail": "rahul_2k22co123@dtu.ac.in",
+      "studentName": "Rahul",
+      "rollNo": "2K22/CO/123",
+      "branch": "CSE",
+      "doctorName": "Dr. Priya Verma",
+      "department": "Dental",
+      "date": "2026-11-19",
+      "time": "11:00 AM - 02:00 PM",
+      "mode": "Physical OPD Visit (Health Center)",
+      "reason": "ff",
+      "urgency": "Normal / Routine",
+      "status": "confirmed",
+      "createdAt": "11/16/2026"
+    },
+    {
+      "id": "APT-6708",
+      "slotId": "1",
+      "studentEmail": "rahul_2k22co123@dtu.ac.in",
+      "studentName": "Rahul",
+      "rollNo": "2K22/CO/123",
+      "branch": "CSE",
+      "doctorName": "Dr. Rajesh Sharma",
+      "department": "General Medicine (OPD)",
+      "date": "2026-11-18",
+      "time": "10:00 AM - 01:00 PM",
+      "mode": "Physical OPD Visit (Health Center)",
+      "reason": "high fever",
+      "urgency": "Normal / Routine",
+      "status": "confirmed",
+      "createdAt": "11/16/2026"
+    },
+    {
       "id": "APT-8497",
       "slotId": "2",
       "studentEmail": "rahul_2k22co123@dtu.ac.in",
@@ -110,7 +144,7 @@
       "startTime": "10:00 AM",
       "endTime": "01:00 PM",
       "maxLimit": 10,
-      "bookedCount": 0,
+      "bookedCount": 1,
       "note": "OPD physical checkup slots available for students with fever/cough"
     },
     {
@@ -122,7 +156,7 @@
       "startTime": "11:00 AM",
       "endTime": "02:00 PM",
       "maxLimit": 10,
-      "bookedCount": 1,
+      "bookedCount": 2,
       "note": "Dental examination & cavity screening"
     },
     {
