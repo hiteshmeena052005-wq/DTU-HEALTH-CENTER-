@@ -65,6 +65,12 @@ function syncRealtimeSlots(onUpdateCallback) {
     if (isFirebaseConnected && db) {
         db.collection("slots")
             .onSnapshot((snapshot) => {
+                if (snapshot.empty) {
+                    const initialSlots = getSlots();
+                    initialSlots.forEach(s => {
+                        db.collection("slots").doc(String(s.id)).set(s).catch(() => {});
+                    });
+                }
                 const liveSlots = [];
                 snapshot.forEach(doc => {
                     liveSlots.push({ ...doc.data(), docId: doc.id });
