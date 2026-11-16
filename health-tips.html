@@ -7,14 +7,21 @@
     <link rel="stylesheet" href="css/style.css">
     <style>
         .tip-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            border-top: 4px solid var(--accent);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            background: var(--bg-card);
+            border-radius: var(--radius-card);
+            padding: 22px;
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            backdrop-filter: blur(20px);
+            transition: all 0.2s;
+        }
+        .tip-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-glass-light);
+            background: var(--bg-card-hover);
         }
     </style>
 </head>
@@ -25,21 +32,21 @@
 
     <div class="container section">
 
-        <div style="margin-bottom:25px; text-align:center;">
+        <div style="margin-bottom:28px; text-align:center;">
             <h1 class="section-title">Campus Health & Wellness Board</h1>
-            <p style="color:var(--text-light); max-width:650px; margin:0 auto;">
+            <p style="color:var(--text-muted); max-width:650px; margin:0 auto; font-size:0.92rem;">
                 Verified medical advice, stress management tips, seasonal advisories, and wellness guidelines from DTU Health Center medical officers.
             </p>
         </div>
 
         <!-- Filter & Search Controls -->
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px; background:var(--bg-card); padding:16px; border-radius:var(--radius-inner); border:1px solid var(--border-glass); backdrop-filter:blur(20px);">
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button onclick="filterTips('All')" class="btn btn-small btn-primary filter-btn">All Tips</button>
-                <button onclick="filterTips('Mental Health')" class="btn btn-small btn-secondary filter-btn">Mental Health</button>
-                <button onclick="filterTips('Ergonomics')" class="btn btn-small btn-secondary filter-btn">Ergonomics</button>
-                <button onclick="filterTips('General Wellness')" class="btn btn-small btn-secondary filter-btn">General Wellness</button>
-                <button onclick="filterTips('Lifestyle')" class="btn btn-small btn-secondary filter-btn">Lifestyle</button>
+                <button onclick="filterTips('All')" class="btn btn-small btn-pill-primary filter-btn">All Tips</button>
+                <button onclick="filterTips('Mental Health')" class="btn btn-small btn-pill-glass filter-btn">Mental Health</button>
+                <button onclick="filterTips('Ergonomics')" class="btn btn-small btn-pill-glass filter-btn">Ergonomics</button>
+                <button onclick="filterTips('General Wellness')" class="btn btn-small btn-pill-glass filter-btn">General Wellness</button>
+                <button onclick="filterTips('Lifestyle')" class="btn btn-small btn-pill-glass filter-btn">Lifestyle</button>
             </div>
             <div style="min-width:240px;">
                 <input type="text" id="searchTipsInput" class="form-input" placeholder="🔍 Search health advice..." oninput="searchTips()">
@@ -118,16 +125,16 @@
                 <div class="tip-card">
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                            <span class="badge badge-warning" style="font-size:0.75rem;">${tip.category}</span>
-                            <span style="font-size:0.75rem; color:#888;">${tip.date}</span>
+                            <span class="pill-tag badge-warning">${tip.category}</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">${tip.date}</span>
                         </div>
-                        <h3 style="color:var(--primary); font-size:1.15rem; margin-bottom:8px;">${tip.title}</h3>
-                        <p style="font-size:0.9rem; color:#444; line-height:1.6; margin-bottom:15px;">
+                        <h3 style="color:#ffffff; font-size:1.15rem; font-weight:700; margin-bottom:8px;">${tip.title}</h3>
+                        <p style="font-size:0.88rem; color:var(--text-light); line-height:1.6; margin-bottom:15px;">
                             ${tip.content}
                         </p>
                     </div>
-                    <div style="border-top:1px solid #eee; padding-top:10px; font-size:0.8rem; color:#666;">
-                        ✍️ Contributed by: <strong>${tip.author}</strong>
+                    <div style="border-top:1px solid var(--border-glass); padding-top:10px; font-size:0.8rem; color:var(--text-muted);">
+                        ✍️ Contributed by: <strong style="color:#fff;">${tip.author}</strong>
                     </div>
                 </div>
             `).join('');

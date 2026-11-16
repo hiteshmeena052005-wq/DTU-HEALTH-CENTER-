@@ -226,53 +226,54 @@
             }
 
             container.innerHTML = list.map(rx => `
-                <div class="card" style="margin-bottom:25px; border-top:4px solid var(--primary); box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+                <div class="card" style="margin-bottom:25px; border:1px solid var(--border-glass-light); box-shadow:0 12px 36px rgba(0,0,0,0.45);">
                     
                     <!-- Official Header -->
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #eee; padding-bottom:12px; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--border-glass); padding-bottom:14px; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
                         <div>
-                            <div style="font-size:1.15rem; font-weight:bold; color:var(--primary);">
+                            <div style="font-size:1.15rem; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:8px;">
+                                <span class="brand-badge" style="font-size:0.75rem;">OFFICIAL RX</span>
                                 🏥 DELHI TECHNOLOGICAL UNIVERSITY HEALTH CENTER
                             </div>
-                            <div style="font-size:0.85rem; color:#666;">
-                                Bawana Road, Delhi-110042 | OPD Electronic Medical Slip
+                            <div style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">
+                                Bawana Road, Delhi-110042 · OPD Electronic Medical Record
                             </div>
                         </div>
                         <div style="text-align:right;">
-                            <span class="badge badge-info" style="font-size:0.85rem; margin-bottom:4px; display:inline-block;">
+                            <span class="pill-tag pill-tag-blue" style="font-size:0.8rem; margin-bottom:4px; display:inline-block;">
                                 Slip ID: ${rx.id}
                             </span>
-                            <div style="font-size:0.85rem; color:#555;">Date: <strong>${rx.date}</strong></div>
+                            <div style="font-size:0.82rem; color:var(--text-muted);">Date: <strong style="color:#fff;">${rx.date}</strong></div>
                         </div>
                     </div>
 
                     <!-- Patient & Doctor Metadata -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; background:#fbfbfb; padding:12px; border-radius:6px; margin-bottom:15px; font-size:0.9rem; border:1px solid #eee;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; background:rgba(255,255,255,0.03); padding:14px; border-radius:var(--radius-inner); margin-bottom:16px; font-size:0.9rem; border:1px solid var(--border-glass);">
                         <div>
-                            <div>Patient: <strong style="color:#222;">${rx.studentName}</strong></div>
-                            <div style="color:#666; font-size:0.82rem;">Student ID/Email: ${rx.studentEmail}</div>
+                            <div>Patient: <strong style="color:#ffffff;">${rx.studentName}</strong></div>
+                            <div style="color:var(--text-muted); font-size:0.82rem; margin-top:2px;">Email/Roll: ${rx.studentEmail}</div>
                         </div>
                         <div>
-                            <div>Prescribing Doctor: <strong style="color:var(--primary);">${rx.doctorName}</strong></div>
-                            <div style="color:#666; font-size:0.82rem;">Specialty: ${rx.department}</div>
+                            <div>Prescribing Physician: <strong style="color:var(--amber);">${rx.doctorName}</strong></div>
+                            <div style="color:var(--text-muted); font-size:0.82rem; margin-top:2px;">Department: ${rx.department}</div>
                         </div>
                     </div>
 
                     <!-- Diagnosis -->
-                    <div style="margin-bottom:15px;">
-                        <span style="font-size:0.85rem; color:var(--text-light); text-transform:uppercase; font-weight:bold; letter-spacing:0.5px;">Provisional Clinical Diagnosis</span>
-                        <div style="font-size:1.05rem; font-weight:600; color:#c00; margin-top:2px;">
+                    <div style="margin-bottom:16px;">
+                        <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Provisional Clinical Diagnosis</span>
+                        <div style="font-size:1.1rem; font-weight:700; color:#ff6b6b; margin-top:4px;">
                             ${rx.diagnosis}
                         </div>
                     </div>
 
                     <!-- Prescribed Rx Table -->
-                    <div style="margin-bottom:15px;">
-                        <span style="font-size:0.85rem; color:var(--text-light); text-transform:uppercase; font-weight:bold; letter-spacing:0.5px;">Rx - Medication Orders</span>
-                        <div class="table-container" style="margin-top:6px; overflow-x:auto;">
+                    <div style="margin-bottom:16px;">
+                        <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Rx - Medication Orders</span>
+                        <div style="margin-top:8px; overflow-x:auto;">
                             <table class="table" style="font-size:0.88rem; width:100%;">
                                 <thead>
-                                    <tr style="background:#f5f5f5;">
+                                    <tr>
                                         <th>#</th>
                                         <th>Medicine Name</th>
                                         <th>Dosage & Frequency</th>
@@ -282,10 +283,10 @@
                                 <tbody>
                                     ${(rx.medicines || []).map((m, i) => `
                                         <tr>
-                                            <td>${i+1}</td>
-                                            <td><strong>${m.name}</strong></td>
-                                            <td>${m.dosage}</td>
-                                            <td><span class="badge badge-warning">${m.duration}</span></td>
+                                            <td style="color:var(--text-muted);">${i+1}</td>
+                                            <td><strong style="color:#ffffff;">${m.name}</strong></td>
+                                            <td style="color:var(--text-light);">${m.dosage}</td>
+                                            <td><span class="pill-tag badge-warning">${m.duration}</span></td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -294,24 +295,24 @@
                     </div>
 
                     <!-- Tests & Advice -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; font-size:0.88rem; margin-bottom:15px;">
-                        <div style="background:#fff7f7; padding:10px; border-radius:4px; border-left:3px solid var(--primary);">
-                            <strong>🔬 Diagnostic Tests Recommended:</strong>
-                            <p style="margin-top:3px; color:#555;">${rx.tests || 'None'}</p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:0.88rem; margin-bottom:16px;">
+                        <div style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-inner); border-left:3px solid var(--primary); border:1px solid var(--border-glass);">
+                            <strong style="color:#ffffff;">🔬 Diagnostic Tests Advised:</strong>
+                            <p style="margin-top:4px; color:var(--text-muted);">${rx.tests || 'None'}</p>
                         </div>
-                        <div style="background:#f9f9f9; padding:10px; border-radius:4px; border-left:3px solid var(--accent);">
-                            <strong>📅 Next Follow-Up:</strong>
-                            <p style="margin-top:3px; color:#555;">${rx.followUp || 'SOS (If needed)'}</p>
+                        <div style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-inner); border-left:3px solid var(--amber); border:1px solid var(--border-glass);">
+                            <strong style="color:#ffffff;">📅 Next Follow-Up:</strong>
+                            <p style="margin-top:4px; color:var(--text-muted);">${rx.followUp || 'SOS (If symptoms persist)'}</p>
                         </div>
                     </div>
 
-                    <div style="font-size:0.85rem; color:#666; margin-bottom:15px;">
-                        <strong>Doctor's Notes & Advice:</strong> ${rx.notes || 'Rest and stay hydrated.'}
+                    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+                        <strong style="color:var(--text-light);">Doctor's Advice:</strong> ${rx.notes || 'Rest and stay hydrated.'}
                     </div>
 
                     <!-- Print / Download Footer -->
-                    <div class="no-print" style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #eee; padding-top:10px;">
-                        <button onclick="window.print()" class="btn btn-secondary btn-small">
+                    <div class="no-print" style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border-glass); padding-top:14px;">
+                        <button onclick="window.print()" class="btn btn-pill-glass btn-small">
                             🖨️ Print / Save as PDF
                         </button>
                     </div>

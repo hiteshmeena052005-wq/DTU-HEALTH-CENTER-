@@ -6,73 +6,34 @@
     <title>Login - DTU Health Center</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .login-page-body {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .login-nav {
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .login-nav-brand {
-            color: var(--white);
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-        .login-nav-brand span {
-            color: var(--accent);
-        }
-        .login-nav-link {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-            text-decoration: none;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            transition: background 0.2s;
-        }
-        .login-nav-link:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: var(--white);
-        }
         .demo-badge {
-            background: rgba(197, 165, 90, 0.2);
-            border: 1px solid var(--accent);
-            color: #5c4300;
+            background: rgba(245, 166, 35, 0.1);
+            border: 1px solid rgba(245, 166, 35, 0.3);
+            color: var(--amber);
             padding: 0.6rem 0.8rem;
-            border-radius: 6px;
+            border-radius: var(--radius-inner);
             font-size: 0.82rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
             line-height: 1.4;
         }
     </style>
 </head>
-<body class="login-page-body">
+<body>
 
-    <!-- Simple Navbar -->
-    <nav class="login-nav">
-        <div class="login-nav-brand">
-            🏥 DTU <span>Health Center</span>
-        </div>
-        <div>
-            <a href="index.html" class="login-nav-link">← Home</a>
-        </div>
-    </nav>
+    <!-- Dynamic Modern Floating Pill Navbar Mount -->
+    <div id="navbar-mount"></div>
 
     <!-- Centered Login Box -->
-    <div class="login-container" style="flex: 1; padding: 2rem 1rem;">
+    <div class="login-container" style="flex: 1; padding: 2.5rem 1rem;">
         
         <!-- CARD 1: LOGIN BOX -->
         <div class="login-box" id="authBox">
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <div style="font-size: 2.2rem; margin-bottom: 0.25rem;">🏥</div>
-                <h2 style="color: var(--primary); font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem;">Health Portal Login</h2>
-                <p style="color: var(--text-light); font-size: 0.88rem;">Delhi Technological University</p>
+            <div style="text-align: center; margin-bottom: 1.8rem;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background: rgba(230, 57, 70, 0.15); font-size: 1.6rem; margin-bottom: 0.5rem; border: 1px solid rgba(230, 57, 70, 0.3);">
+                    🏥
+                </div>
+                <h2 style="color: #ffffff; font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em;">Health Portal Login</h2>
+                <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 2px;">Delhi Technological University</p>
             </div>
 
             <!-- Tabs -->
@@ -231,10 +192,27 @@
 
     </div>
 
+    <!-- Dynamic Footer Mount -->
+    <div id="footer-mount"></div>
+
     <!-- Scripts -->
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof initData === 'function') initData();
+            if (typeof loadNavbar === 'function') loadNavbar();
+            if (typeof loadFooter === 'function') loadFooter();
+            populateDoctorOptions();
+
+            // Check if requested to show profile directly via query param
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('setup') === 'profile') {
+                document.getElementById('authBox').style.display = 'none';
+                document.getElementById('profileBox').style.display = 'block';
+            }
+        });
+
         // Switch between Student and Doctor tabs
         function switchTab(role) {
             const studentBtn = document.getElementById('studentTabBtn');

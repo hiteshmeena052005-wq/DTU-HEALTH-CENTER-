@@ -461,14 +461,14 @@ async function updateMedicineStock(id, newStock) {
     }
 }
 
-// Dynamic navbar
+// Dynamic modern floating pill navbar
 function loadNavbar(role) {
     const headerContainer = document.getElementById("navbar-mount");
     if (!headerContainer) return;
 
     const user = getCurrentUser();
     const userName = user ? (user.name || "User") : "Account";
-    const currentPage = window.location.pathname.split("/").pop();
+    const currentPage = window.location.pathname.split("/").pop() || "index.html";
 
     let homeUrl = "index.html";
     if (role === "student" || (user && user.role === "student")) {
@@ -477,89 +477,120 @@ function loadNavbar(role) {
         homeUrl = "doctor-dashboard.html";
     }
 
-    let navHtml = `
-    <nav class="navbar">
-        <div class="nav-brand">
-            <a href="${homeUrl}" style="color:white; display:flex; align-items:center; gap:8px;">
-                🏥 DTU <span>Health Center</span>
-            </a>
-        </div>
-        <ul class="nav-links">
-    `;
+    // Determine initials for avatar circle (e.g. RS for Dr. Rajesh Sharma)
+    let initials = "HC";
+    if (role === "doctor" || (user && user.role === "doctor")) {
+        initials = "RS";
+    } else if (userName) {
+        const parts = userName.replace(/^(Dr\.|Mr\.|Ms\.)\s*/i, '').trim().split(/\s+/);
+        if (parts.length >= 2) {
+            initials = (parts[0][0] + parts[1][0]).toUpperCase();
+        } else if (parts.length === 1) {
+            initials = parts[0].substring(0, 2).toUpperCase();
+        }
+    }
 
-    if (role === "student") {
-        navHtml += `
-            <li><a href="student-dashboard.html" class="nav-link ${currentPage === 'student-dashboard.html' ? 'active' : ''}">Home / Dashboard</a></li>
-            <li><a href="book-appointment.html" class="nav-link ${currentPage === 'book-appointment.html' ? 'active' : ''}">Book Appointment</a></li>
+    let navLinksHtml = "";
+
+    if (role === "doctor" || (user && user.role === "doctor")) {
+        navLinksHtml = `
+            <li><a href="doctor-dashboard.html" class="nav-link ${currentPage === 'doctor-dashboard.html' ? 'active' : ''}">Dashboard</a></li>
+            <li><a href="doctor-dashboard.html#availability-section" class="nav-link">Slots</a></li>
+            <li><a href="doctor-dashboard.html#notice-section" class="nav-link">Notices</a></li>
+            <li><a href="doctor-dashboard.html#clinical-tools-section" class="nav-link">Tools</a></li>
+            <li><a href="doctor-dashboard.html#analytics-section" class="nav-link">Analytics</a></li>
+        `;
+    } else if (role === "student" || (user && user.role === "student")) {
+        navLinksHtml = `
+            <li><a href="student-dashboard.html" class="nav-link ${currentPage === 'student-dashboard.html' ? 'active' : ''}">Dashboard</a></li>
+            <li><a href="book-appointment.html" class="nav-link ${currentPage === 'book-appointment.html' ? 'active' : ''}">Book Slot</a></li>
             <li><a href="prescriptions.html" class="nav-link ${currentPage === 'prescriptions.html' ? 'active' : ''}">Prescriptions</a></li>
             <li><a href="video-call.html" class="nav-link ${currentPage === 'video-call.html' ? 'active' : ''}">Video Call</a></li>
-            <li><a href="health-tips.html" class="nav-link ${currentPage === 'health-tips.html' ? 'active' : ''}">Health Tips</a></li>
-            <li><a href="emergency.html" class="nav-link" style="background:#dc3545; color:white; font-weight:bold; border-radius:4px;">🚑 SOS</a></li>
-            <li><a href="student-profile.html" class="nav-link" title="My Profile">👤 ${userName}</a></li>
-            <li><a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:#ffc107;">Logout</a></li>
-        `;
-    } else if (role === "doctor") {
-        navHtml += `
-            <li><a href="doctor-dashboard.html" class="nav-link ${currentPage === 'doctor-dashboard.html' ? 'active' : ''}">Home / Dashboard</a></li>
-            <li><a href="doctor-dashboard.html#availability-section" class="nav-link">Post Slots</a></li>
-            <li><a href="doctor-dashboard.html#notice-section" class="nav-link">Announcements</a></li>
-            <li><a href="referral.html" class="nav-link ${currentPage === 'referral.html' ? 'active' : ''}">Refer Patient</a></li>
-            <li><a href="prescriptions.html" class="nav-link ${currentPage === 'prescriptions.html' ? 'active' : ''}">Prescriptions</a></li>
-            <li><a href="video-call.html" class="nav-link ${currentPage === 'video-call.html' ? 'active' : ''}">Video Room</a></li>
-            <li><a href="medicine-inventory.html" class="nav-link ${currentPage === 'medicine-inventory.html' ? 'active' : ''}">Dispensary Stock</a></li>
-            <li><span class="nav-link" style="color:#C5A55A;">👨‍⚕️ ${userName}</span></li>
-            <li><a href="javascript:void(0)" onclick="logout()" class="nav-link" style="color:#ffc107;">Logout</a></li>
+            <li><a href="health-tips.html" class="nav-link ${currentPage === 'health-tips.html' ? 'active' : ''}">Tips</a></li>
         `;
     } else {
-        navHtml += `
-            <li><a href="index.html" class="nav-link active">Home</a></li>
-            <li><a href="emergency.html" class="nav-link" style="background:#dc3545; color:white;">Emergency</a></li>
-            <li><a href="login.html" class="nav-link btn btn-secondary btn-small" style="color:#800020;">Login</a></li>
+        navLinksHtml = `
+            <li><a href="index.html" class="nav-link ${currentPage === 'index.html' ? 'active' : ''}">Home</a></li>
+            <li><a href="emergency.html" class="nav-link" style="color:#e63946;">Emergency</a></li>
+            <li><a href="login.html" class="nav-link btn-pill-primary btn-small" style="color:white; margin-left:6px;">Login</a></li>
         `;
     }
 
-    navHtml += `
-        </ul>
-    </nav>
+    let userRightHtml = "";
+    if (user) {
+        userRightHtml = `
+            <div class="user-pill">
+                <span class="user-avatar-circle">${initials}</span>
+                <span>${userName}</span>
+                <button onclick="logout()" class="nav-logout-btn" title="Sign Out">↪</button>
+            </div>
+        `;
+    }
+
+    const navHtml = `
+    <div class="nav-wrapper">
+        <nav class="navbar">
+            <a href="${homeUrl}" class="nav-brand">
+                <span class="brand-badge">DTU</span>
+                <span class="brand-text">Health</span>
+                <span class="brand-accent">Center</span>
+            </a>
+            <ul class="nav-links">
+                ${navLinksHtml}
+            </ul>
+            <div class="nav-right">
+                <button class="theme-toggle-btn" title="Dark Glass Mode Active">🌙</button>
+                ${userRightHtml}
+            </div>
+        </nav>
+    </div>
     `;
 
     headerContainer.innerHTML = navHtml;
 }
 
-// Render standard DTU footer
+// Render modern DTU footer with floating SOS ambulance button
 function loadFooter() {
     const footerContainer = document.getElementById("footer-mount");
     if (!footerContainer) return;
 
     footerContainer.innerHTML = `
+    <!-- Floating Bottom-Left SOS Ambulance Pill Button -->
+    <a href="emergency.html" class="floating-ambulance-btn" title="Immediate 24x7 Ambulance Dispatch">
+        <span>⚠️</span> Ambulance - 102
+    </a>
+
     <footer class="footer">
-        <div class="container" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px; text-align:left;">
-            <div>
-                <h4 style="color:var(--accent); margin-bottom:8px;">DTU Health Center</h4>
-                <p style="font-size:0.9rem; color:#ddd; max-width:320px;">
-                    Providing round-the-clock primary medical aid, doctor consultations, and health welfare support to all students and staff of Delhi Technological University.
+        <div class="container" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; text-align:left;">
+            <div style="max-width:340px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                    <span class="brand-badge">DTU</span>
+                    <strong style="color:#ffffff; font-size:1.05rem;">Health Center</strong>
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+                    Delhi Technological University · Shahbad Daulatpur, Main Bawana Road, Delhi-110042. 
+                    Providing round-the-clock primary clinical aid and emergency response.
                 </p>
-                <p style="margin-top:8px; font-size:0.85rem; color:#bbb;">📍 Shahbad Daulatpur, Main Bawana Road, Delhi-110042</p>
             </div>
             <div>
-                <h4 style="color:var(--accent); margin-bottom:8px;">Quick Links</h4>
-                <ul style="list-style:none; font-size:0.9rem; line-height:1.8;">
-                    <li><a href="student-dashboard.html" style="color:#eee;">Student Portal</a></li>
-                    <li><a href="doctor-dashboard.html" style="color:#eee;">Doctor Portal (Admin)</a></li>
-                    <li><a href="emergency.html" style="color:#ff8888;">Instant Ambulance / SOS</a></li>
-                    <li><a href="javascript:void(0)" onclick="resetAllDemoData()" style="color:#bbb; font-size:0.8rem;">🔄 Reset Database Data</a></li>
+                <h4 style="color:#ffffff; font-size:0.95rem; margin-bottom:12px;">Portals & Services</h4>
+                <ul style="list-style:none; font-size:0.85rem; line-height:2;">
+                    <li><a href="student-dashboard.html">Student OPD Portal</a></li>
+                    <li><a href="doctor-dashboard.html">Doctor Clinical Portal</a></li>
+                    <li><a href="emergency.html" style="color:#e63946; font-weight:600;">🚨 Campus SOS Dispatch</a></li>
+                    <li><a href="javascript:void(0)" onclick="resetAllDemoData()" style="color:var(--text-subtle);">🔄 Reset DBMS State</a></li>
                 </ul>
             </div>
             <div>
-                <h4 style="color:var(--accent); margin-bottom:8px;">Emergency Helpdesk</h4>
-                <p style="font-size:0.9rem; color:#ddd;">📞 Health Center: <strong>011-27871018</strong></p>
-                <p style="font-size:0.9rem; color:#ddd;">🚑 Ambulance: <strong>102 / 112</strong></p>
-                <p style="font-size:0.9rem; color:#ddd;">⏰ Regular OPD: <strong>Mon - Sat: 9:00 AM - 5:00 PM</strong></p>
-                <p style="font-size:0.9rem; color:#ddd;">🚨 Emergency: <strong>24 Hours Open</strong></p>
+                <h4 style="color:#ffffff; font-size:0.95rem; margin-bottom:12px;">Emergency & OPD</h4>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">📞 Health Center: <strong style="color:#fff;">011-27871018</strong></p>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">🚑 Ambulance: <strong style="color:#e63946;">102 / 112</strong></p>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">⏰ OPD Hours: <span style="color:#fff;">Mon–Sat 9:00 AM – 5:00 PM</span></p>
+                <p style="font-size:0.85rem; color:#2ecc71; font-weight:600;">● Emergency Casualty: 24×7 Open</p>
             </div>
         </div>
-        <div style="text-align:center; margin-top:25px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.85rem; color:#bbb;">
-            © 2026 Delhi Technological University (DTU) Health Center. Minor Project Database Engine.
+        <div style="text-align:center; margin-top:30px; padding-top:18px; border-top:1px solid var(--border-glass); font-size:0.8rem; color:var(--text-subtle);">
+            © 2026 Delhi Technological University (DTU) Health Center. Real-Time Cloud + SQLite 3 DBMS.
         </div>
     </footer>
     `;

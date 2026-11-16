@@ -3,88 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment - DTU Health Center</title>
+    <title>Book Doctor Appointment - DTU Health Center</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body onload="initBookingPage()">
 
-    <!-- Dynamic Navbar Mount -->
+    <!-- Dynamic Modern Floating Pill Navbar Mount -->
     <div id="navbar-mount"></div>
 
     <div class="container section">
         
-        <div style="margin-bottom:25px; text-align:center;">
+        <div style="margin-bottom: 28px; text-align: center;">
             <h1 class="section-title">Book Doctor Appointment</h1>
-            <p style="color:var(--text-light); max-width:650px; margin:0 auto;">
-                Doctors post weekly checkup sessions with a maximum limit (e.g., 10 students per session). 
+            <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto; font-size: 0.92rem;">
+                Doctors post weekly checkup sessions with a maximum capacity limit (e.g., 10 students per session). 
                 Select an open slot below and fill the consultation form.
             </p>
         </div>
 
         <!-- STEP 1: Available Doctor Slots -->
-        <div class="card" style="margin-bottom:30px;">
-            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="font-size:1.15rem; color:var(--primary-dark);">
-                    📅 Step 1: Open Doctor Sessions & Available Slots
-                </h3>
-                <span class="badge badge-success">Live Real-Time Capacity Monitor</span>
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="card-header" style="border-bottom: 1px solid var(--border-glass);">
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">
+                        📅 Step 1: Open Doctor Sessions & Available Slots
+                    </h3>
+                </div>
+                <span class="badge-cloud-live">
+                    <span class="pulse-dot"></span> Live Real-Time Capacity Monitor
+                </span>
             </div>
             <div class="card-body">
-                <div id="slotsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px;">
+                <div id="slotsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
                     <!-- Loaded dynamically -->
                 </div>
             </div>
         </div>
 
-        <!-- STEP 2: Interactive Appointment Form (Google-Form style) -->
-        <div class="card" id="bookingFormSection" style="max-width:760px; margin:0 auto; display:none; border-top:5px solid var(--primary);">
-            <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <h3 style="font-size:1.25rem; color:var(--primary);">
-                            📝 Step 2: Student Consultation Request Form
-                        </h3>
-                        <p style="font-size:0.85rem; color:var(--text-light); margin-top:2px;">
-                            Session: <strong id="formSelectedDoctor">Dr. Rajesh Sharma</strong> 
-                            (<span id="formSelectedDept">General Medicine</span>)
-                        </p>
-                    </div>
-                    <button type="button" onclick="cancelSelection()" class="btn btn-secondary btn-small">Change Slot</button>
+        <!-- STEP 2: Interactive Appointment Form -->
+        <div class="card" id="bookingFormSection" style="max-width: 780px; margin: 0 auto; display: none; border: 1px solid var(--border-glass-light); box-shadow: 0 16px 44px rgba(0,0,0,0.6);">
+            <div class="card-header" style="border-bottom: 1px solid var(--border-glass);">
+                <div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">
+                        📝 Step 2: Student Consultation Request Form
+                    </h3>
+                    <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 3px;">
+                        Session: <strong id="formSelectedDoctor" style="color: #ffffff;">Dr. Rajesh Sharma</strong> 
+                        (<span id="formSelectedDept" style="color: var(--amber);">General Medicine</span>)
+                    </p>
                 </div>
+                <button type="button" onclick="cancelSelection()" class="btn btn-pill-glass btn-small">Change Slot</button>
             </div>
             <div class="card-body">
                 <form id="appointmentForm" onsubmit="submitBooking(event)">
                     
                     <!-- Pre-filled Student Details from Profile -->
-                    <div style="background:#f9f9f9; padding:12px; border-radius:6px; margin-bottom:16px; font-size:0.88rem; border:1px solid #eee;">
-                        <h4 style="color:var(--primary); margin-bottom:6px;">🎓 Student Verification</h4>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                            <div>Student Name: <strong id="formStudentName">--</strong></div>
-                            <div>Roll Number: <strong id="formStudentRoll">--</strong></div>
-                            <div>Branch: <strong id="formStudentBranch">--</strong></div>
-                            <div>Blood Group: <strong id="formStudentBlood">--</strong></div>
+                    <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-inner); margin-bottom: 20px; font-size: 0.88rem; border: 1px solid var(--border-glass);">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                            <span class="brand-badge" style="font-size: 0.75rem; padding: 2px 8px;">VERIFIED</span>
+                            <h4 style="color: #ffffff; font-size: 0.95rem; margin: 0;">🎓 Student Identity</h4>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; color: var(--text-light);">
+                            <div>Student Name: <strong id="formStudentName" style="color: #fff;">--</strong></div>
+                            <div>Roll Number: <strong id="formStudentRoll" style="color: #fff;">--</strong></div>
+                            <div>Branch: <strong id="formStudentBranch" style="color: #fff;">--</strong></div>
+                            <div>Blood Group: <strong id="formStudentBlood" style="color: var(--primary);">--</strong></div>
                         </div>
                     </div>
 
-                    <!-- Hidden input to track selected slot ID -->
+                    <!-- Hidden inputs to track selected slot metadata -->
                     <input type="hidden" id="selectedSlotId">
                     <input type="hidden" id="selectedDoctorName">
                     <input type="hidden" id="selectedDeptName">
                     <input type="hidden" id="selectedDate">
                     <input type="hidden" id="selectedTime">
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-                        <div class="form-group">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 16px;">
+                        <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Consultation Date</label>
-                            <input type="text" id="displayDate" class="form-input" readonly style="background:#f4f4f4;">
+                            <input type="text" id="displayDate" class="form-input" readonly style="opacity: 0.85;">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Time Window</label>
-                            <input type="text" id="displayTime" class="form-input" readonly style="background:#f4f4f4;">
+                            <input type="text" id="displayTime" class="form-input" readonly style="opacity: 0.85;">
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-bottom:15px;">
+                    <div class="form-group" style="margin-bottom: 16px;">
                         <label class="form-label">Mode of Consultation *</label>
                         <select id="consultationMode" class="form-select" required>
                             <option value="Physical OPD Visit (Health Center)">🏥 Physical Visit at DTU Health Center</option>
@@ -92,31 +97,31 @@
                         </select>
                     </div>
 
-                    <div class="form-group" style="margin-bottom:15px;">
+                    <div class="form-group" style="margin-bottom: 16px;">
                         <label class="form-label">
                             Emergency / Reason for Consultation * 
-                            <span style="font-weight:normal; color:#666;">(Explain what symptoms you are experiencing)</span>
+                            <span style="font-weight: normal; color: var(--text-muted); font-size: 0.8rem;">(Explain symptoms experienced)</span>
                         </label>
                         <textarea id="reasonInput" class="form-textarea" rows="3" placeholder="e.g. High fever with shivering since yesterday night, sore throat and dizziness..." required></textarea>
                     </div>
 
-                    <div class="form-group" style="margin-bottom:15px;">
+                    <div class="form-group" style="margin-bottom: 22px;">
                         <label class="form-label">How urgent is this medical condition? *</label>
-                        <div style="display:flex; gap:20px; align-items:center; margin-top:5px;">
-                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <div style="display: flex; gap: 20px; align-items: center; margin-top: 8px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-light); font-size: 0.9rem;">
                                 <input type="radio" name="urgencyRadio" value="Normal / Routine" checked> Normal OPD Checkup
                             </label>
-                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--danger); font-weight:bold;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #ff6b6b; font-weight: 700; font-size: 0.9rem;">
                                 <input type="radio" name="urgencyRadio" value="Urgent / High Severity"> Urgent / Need Fast Attention
                             </label>
                         </div>
                     </div>
 
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
-                        <a href="emergency.html" style="color:var(--danger); font-size:0.9rem;">
-                            🚨 If this is a life-threatening emergency, tap here for Immediate Ambulance!
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-glass);">
+                        <a href="emergency.html" style="color: #ff6b6b; font-size: 0.88rem; font-weight: 600;">
+                            🚨 Need immediate ambulance? Tap for SOS!
                         </a>
-                        <button type="submit" class="btn btn-primary" id="submitBtn" style="min-width:240px; font-weight:700; transition: all 0.2s ease;">
+                        <button type="submit" class="btn btn-pill-primary" id="submitBtn" style="min-width: 250px; font-weight: 700; padding: 13px 26px;">
                             Confirm Appointment Booking
                         </button>
                     </div>
@@ -127,7 +132,7 @@
 
     </div>
 
-    <!-- Dynamic Footer Mount -->
+    <!-- Dynamic Footer Mount (Includes Fixed Bottom-Left Ambulance SOS Button) -->
     <div id="footer-mount"></div>
 
     <!-- Firebase Cloud SDK -->
@@ -162,62 +167,63 @@
             });
         }
 
-        // Render available doctor slots with live student count & limits
+        // Render available doctor slots with live capacity progress bar & limit counter
         function renderSlots(customSlots) {
             const grid = document.getElementById('slotsGrid');
             const slots = customSlots || getSlots();
 
             if (!slots || slots.length === 0) {
-                grid.innerHTML = '<p style="color:var(--text-light); grid-column:1/-1;">No open checkup slots scheduled by doctors right now. Please check back soon or visit Health Center directly for walk-in OPD.</p>';
+                grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1; text-align:center; padding:30px;">No open checkup slots scheduled by doctors right now. Please check back soon or visit the Health Center directly for walk-in OPD.</p>';
                 return;
             }
 
             grid.innerHTML = slots.map(slot => {
                 const booked = slot.bookedCount || 0;
                 const max = slot.maxLimit || 10;
-                const remaining = max - booked;
+                const remaining = Math.max(0, max - booked);
                 const isFull = remaining <= 0;
+                const pct = Math.min(100, Math.round((booked / max) * 100));
 
                 return `
-                <div class="card" style="border-top:4px solid ${isFull ? '#dc3545' : 'var(--primary)'}; display:flex; flex-direction:column; justify-content:space-between;">
-                    <div>
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                            <h4 style="color:var(--primary); font-size:1.05rem;">${slot.doctorName}</h4>
-                            <span class="badge ${isFull ? 'badge-danger' : 'badge-success'}">
+                <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; border-color: ${isFull ? 'rgba(230, 57, 70, 0.4)' : 'var(--border-glass)'};">
+                    <div style="padding: 22px 22px 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                            <h4 style="color: #ffffff; font-size: 1.15rem; font-weight: 700;">${slot.doctorName}</h4>
+                            <span class="pill-tag ${isFull ? 'badge-danger' : 'badge-success'}">
                                 ${isFull ? '🔒 FULL' : 'AVAILABLE'}
                             </span>
                         </div>
-                        <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:8px;">
-                            <strong>Dept:</strong> ${slot.department}
+                        <p style="font-size: 0.85rem; color: var(--amber); font-weight: 600; margin-bottom: 12px;">
+                            Dept: ${slot.department}
                         </p>
-                        <div style="background:#f8f5f0; padding:8px; border-radius:4px; font-size:0.85rem; margin-bottom:10px;">
+                        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-glass); padding: 10px 12px; border-radius: var(--radius-inner); font-size: 0.85rem; margin-bottom: 12px; color: var(--text-light);">
                             <div>📅 <strong>Date:</strong> ${slot.date}</div>
-                            <div>⏰ <strong>Time:</strong> ${slot.startTime} - ${slot.endTime}</div>
+                            <div style="margin-top: 2px;">⏰ <strong>Time:</strong> ${slot.startTime} - ${slot.endTime}</div>
                         </div>
-                        <p style="font-size:0.85rem; color:#555; margin-bottom:12px;">
-                            ${slot.note || 'General checkup slots for DTU students'}
+                        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 14px;">
+                            ${slot.note || 'OPD physical checkup slots available for students with fever/cough'}
                         </p>
                     </div>
 
-                    <div>
-                        <div style="margin-bottom:10px;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
-                                <span>Slots filled: <strong>${booked} / ${max}</strong></span>
-                                <span style="color:${isFull ? '#dc3545' : 'var(--success)'}; font-weight:bold;">
+                    <div style="padding: 0 22px 22px;">
+                        <div style="margin-bottom: 14px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
+                                <span style="color: var(--text-muted);">Slots filled: <strong style="color: #fff;">${booked} / ${max}</strong></span>
+                                <span style="color: ${isFull ? '#e63946' : 'var(--success)'}; font-weight: 700;">
                                     ${isFull ? '0 left' : `${remaining} spots remaining`}
                                 </span>
                             </div>
-                            <div style="background:#e0e0e0; height:8px; border-radius:4px; overflow:hidden;">
-                                <div style="background:${isFull ? '#dc3545' : 'var(--primary)'}; height:100%; width:${Math.min(100, (booked/max)*100)}%;"></div>
+                            <div class="slot-progress-wrap" style="height: 8px;">
+                                <div class="slot-progress-bar" style="width: ${pct}%; background: ${isFull ? 'linear-gradient(90deg, #e63946, #c02633)' : 'linear-gradient(90deg, #f5a623, #2ecc71)'};"></div>
                             </div>
                         </div>
 
                         ${isFull ? `
-                            <button class="btn btn-secondary" disabled style="width:100%; opacity:0.6; cursor:not-allowed;">
+                            <button class="btn btn-pill-glass" disabled style="width: 100%; opacity: 0.45; cursor: not-allowed; border-color: rgba(255,255,255,0.06);">
                                 Slot Closed (Max ${max} Reached)
                             </button>
                         ` : `
-                            <button onclick="selectSlot(${slot.id})" class="btn btn-primary" style="width:100%;">
+                            <button onclick="selectSlot(${slot.id})" class="btn btn-pill-primary" style="width: 100%; font-weight: 700;">
                                 Fill Booking Form (${remaining} spots)
                             </button>
                         `}
@@ -265,8 +271,8 @@
 
             // 1. CLICK KARTE HI TURANT GREEN + CONFIRMED!
             submitBtn.disabled = true;
-            submitBtn.style.background = '#28a745';
-            submitBtn.style.borderColor = '#28a745';
+            submitBtn.style.background = '#2ecc71';
+            submitBtn.style.boxShadow = '0 6px 20px rgba(46, 204, 113, 0.6)';
             submitBtn.style.color = '#ffffff';
             submitBtn.innerHTML = `✓ Confirmed!`;
 
@@ -286,7 +292,7 @@
                 alert("Sorry, all 10 spots for this doctor session are already filled!");
                 submitBtn.disabled = false;
                 submitBtn.style.background = '';
-                submitBtn.style.borderColor = '';
+                submitBtn.style.boxShadow = '';
                 submitBtn.innerHTML = `Confirm Appointment Booking`;
                 return;
             }

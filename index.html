@@ -5,34 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DTU Health Center - Delhi Technological University</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .hero-home {
+            padding: 5rem 1.5rem 4rem;
+            text-align: center;
+            position: relative;
+        }
+        .hero-badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(230, 57, 70, 0.12);
+            border: 1px solid rgba(230, 57, 70, 0.3);
+            border-radius: var(--radius-pill);
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .service-card-glass {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            backdrop-filter: blur(20px);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .service-card-glass:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-glass-light);
+            background: var(--bg-card-hover);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+        .service-icon-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <div class="nav-brand">
-            <a href="index.html" id="navBrandLink" style="color:white; display:flex; align-items:center; gap:8px;">
-                🏥 DTU <span>Health Center</span>
-            </a>
-        </div>
-        <ul class="nav-links">
-            <li><a href="#home" class="nav-link active" id="navHomeLink">Home</a></li>
-            <li><a href="#services" class="nav-link">Services</a></li>
-            <li><a href="#doctors" class="nav-link">Doctors</a></li>
-            <li><a href="emergency.html" class="nav-link" style="background:#dc3545; color:#fff; border-radius:4px; font-weight:bold;">🚑 SOS</a></li>
-            <li><a href="#contact" class="nav-link">Contact</a></li>
-            <li><a href="login.html" id="navLoginBtn" class="nav-link btn btn-secondary btn-small" style="color:var(--primary-dark); font-weight:700; margin-left:0.5rem;">Login Portal</a></li>
-        </ul>
-    </nav>
+    <!-- Dynamic Modern Floating Pill Navbar Mount -->
+    <div id="navbar-mount"></div>
 
     <!-- HERO SECTION -->
-    <section class="hero" id="home">
+    <section class="hero-home" id="home">
         <div class="container">
-            <h1 class="hero-title">DTU Health Center</h1>
-            <p class="hero-subtitle">Your Health, Our Priority — Delhi Technological University</p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="login.html" id="heroBookBtn" class="hero-btn">Book Appointment</a>
-                <a href="emergency.html" class="hero-btn" style="background: var(--danger); color: var(--white);">🚑 Instant Ambulance SOS</a>
+            <div class="hero-badge-tag">
+                <span class="brand-badge" style="font-size: 0.72rem; padding: 2px 8px;">CAMPUS AID</span>
+                <span>Delhi Technological University Health Care & OPD System</span>
+            </div>
+            <h1 class="hero-title-massive" style="font-size: 3.2rem; margin-bottom: 16px;">
+                Your Health, Our Priority.<br>
+                <span style="color: var(--amber);">DTU Health Center.</span>
+            </h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 680px; margin: 0 auto 30px;">
+                Providing round-the-clock primary medical aid, specialist doctor OPD slots, video telehealth, and emergency ambulance dispatch for students and faculty.
+            </p>
+            <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+                <a href="login.html" id="heroBookBtn" class="btn btn-pill-primary" style="padding: 13px 30px; font-size: 1rem;">
+                    📅 Book Doctor Appointment
+                </a>
+                <a href="emergency.html" class="btn btn-pill-glass" style="border-color: rgba(230,57,70,0.5); color: #ff6b6b; padding: 13px 26px; font-size: 1rem;">
+                    🚨 Instant Ambulance SOS
+                </a>
             </div>
         </div>
     </section>
@@ -40,175 +85,61 @@
     <!-- SERVICES SECTION -->
     <section class="section" id="services">
         <div class="container">
-            <h2 class="section-title">Our Services</h2>
-            <div class="services-grid">
-                <div class="service-card" onclick="handleServiceClick('consult')">
-                    <span class="service-icon">👨‍⚕️</span>
-                    <h3>Doctor Consultation</h3>
-                    <p>Comprehensive OPD consultations with qualified physicians across various medical specialties.</p>
+            <div style="text-align: center; margin-bottom: 36px;">
+                <h2 class="section-title">Campus Medical Services</h2>
+                <p class="section-subtitle">Comprehensive primary care, digital prescriptions, and emergency response</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px;">
+                <div class="service-card-glass" onclick="handleServiceClick('consult')">
+                    <div class="service-icon-wrap" style="color: #ff2a85;">👨‍⚕️</div>
+                    <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 6px;">Doctor Consultation</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">Comprehensive OPD physical consultations with qualified medical officers.</p>
                 </div>
-                <div class="service-card" onclick="handleServiceClick('appointment')">
-                    <span class="service-icon">📅</span>
-                    <h3>Online Appointment</h3>
-                    <p>Easily book appointment slots with on-duty doctors and avoid long dispensary waiting queues.</p>
+                <div class="service-card-glass" onclick="handleServiceClick('appointment')">
+                    <div class="service-icon-wrap" style="color: #f5a623;">📅</div>
+                    <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 6px;">Slot Reservation</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">Book weekly consultation sessions with live capacity limits (10 students per slot).</p>
                 </div>
-                <div class="service-card" onclick="handleServiceClick('video')">
-                    <span class="service-icon">📹</span>
-                    <h3>Video Consultation</h3>
-                    <p>Virtual consultations for students residing on campus or remote wellness checkups.</p>
+                <div class="service-card-glass" onclick="handleServiceClick('video')">
+                    <div class="service-icon-wrap" style="color: #3a86ff;">📹</div>
+                    <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 6px;">Telehealth Video Room</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">One-to-one secure WebRTC video consultations directly with campus physicians.</p>
                 </div>
-                <div class="service-card" onclick="handleServiceClick('prescription')">
-                    <span class="service-icon">💊</span>
-                    <h3>Digital Prescriptions</h3>
-                    <p>Instant access to prescriptions, doctor diagnoses, and medicine instructions on student dashboard.</p>
+                <div class="service-card-glass" onclick="handleServiceClick('prescription')">
+                    <div class="service-icon-wrap" style="color: #2ecc71;">💊</div>
+                    <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 6px;">Digital Prescriptions</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">Access verified doctor diagnoses, medicine dosage plans, and test orders online.</p>
                 </div>
-                <div class="service-card" onclick="window.location.href='emergency.html'">
-                    <span class="service-icon">🚑</span>
-                    <h3>Instant Ambulance SOS</h3>
-                    <p>24/7 emergency response, ambulance coordination, and direct hostel pickup assistance.</p>
+                <div class="service-card-glass" onclick="window.location.href='emergency.html'">
+                    <div class="service-icon-wrap" style="color: #e63946;">🚑</div>
+                    <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 6px;">Hostel Ambulance SOS</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">One-tap emergency alert that notifies the ambulance dispatch desk in real-time.</p>
                 </div>
-                <div class="service-card" onclick="handleServiceClick('lab')">
-                    <span class="service-icon">🔬</span>
-                    <h3>Lab & Pathology</h3>
-                    <p>Basic pathological tests, rapid diagnostic check-ups, and campus blood work support.</p>
-                </div>
-                <div class="service-card" onclick="window.location.href='health-tips.html'">
-                    <span class="service-icon">🧠</span>
-                    <h3>Mental Health Support</h3>
-                    <p>Confidential student counseling, exam stress management, and mental wellness guidance.</p>
-                </div>
-                <div class="service-card" onclick="window.location.href='medicine-inventory.html'">
-                    <span class="service-icon">📦</span>
-                    <h3>Medicine Inventory</h3>
-                    <p>Real-time university dispensary stock tracker to check medicine availability before visiting.</p>
+                <div class="service-card-glass" onclick="window.location.href='medicine-inventory.html'">
+                    <div class="service-icon-wrap" style="color: #f5a623;">📦</div>
+                    <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 6px;">Dispensary Medicine Stock</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">Check live stock of university pharmacy antibiotics, syrups, and pain relievers.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- DOCTORS SECTION -->
-    <section class="section" id="doctors" style="background: rgba(128,0,32,0.03);">
+    <section class="section" id="doctors">
         <div class="container">
-            <h2 class="section-title">Our Medical Officers & Specialists</h2>
-            <p style="text-align: center; color: var(--text-light); max-width: 600px; margin: -1rem auto 2rem;">
-                Experienced medical practitioners dedicated to student welfare, campus health emergencies, and specialized treatments.
-            </p>
-            <div id="doctorsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div style="text-align: center; margin-bottom: 36px;">
+                <h2 class="section-title">Our Medical Officers & Specialists</h2>
+                <p class="section-subtitle">Dedicated healthcare professionals available for DTU students and staff</p>
+            </div>
+            <div id="doctorsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px;">
                 <!-- Loaded dynamically from data.js -->
             </div>
         </div>
     </section>
 
-    <!-- ABOUT SECTION -->
-    <section class="section" id="about">
-        <div class="container">
-            <h2 class="section-title">About DTU Health Center</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: center;">
-                <div>
-                    <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 1.4rem;">Caring for the DTU Community</h3>
-                    <p style="margin-bottom: 1rem; color: var(--text); line-height: 1.8;">
-                        The DTU Health Center provides comprehensive primary healthcare, preventive medicine, emergency response, and psychological counseling to over 15,000 students, faculty, and administrative staff at Delhi Technological University.
-                    </p>
-                    <p style="margin-bottom: 1rem; color: var(--text); line-height: 1.8;">
-                        Equipped with basic diagnostic facilities, minor OT capabilities, an on-campus pharmacy dispensary, and 24/7 dedicated ambulance support, we ensure quality healthcare is always within reach on campus.
-                    </p>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem;">
-                        <div style="background: var(--white); padding: 1rem 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                            <strong style="color: var(--primary); font-size: 1.5rem;">10+</strong>
-                            <div style="font-size: 0.85rem; color: var(--text-light);">Medical Departments</div>
-                        </div>
-                        <div style="background: var(--white); padding: 1rem 1.5rem; border-radius: 8px; border-left: 4px solid var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                            <strong style="color: var(--accent); font-size: 1.5rem;">24/7</strong>
-                            <div style="font-size: 0.85rem; color: var(--text-light);">Emergency & Ambulance</div>
-                        </div>
-                        <div style="background: var(--white); padding: 1rem 1.5rem; border-radius: 8px; border-left: 4px solid var(--success); box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                            <strong style="color: var(--success); font-size: 1.5rem;">100%</strong>
-                            <div style="font-size: 0.85rem; color: var(--text-light);">Free for DTU Students</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card" style="border-top: 4px solid var(--primary);">
-                    <div class="card-header">
-                        <h3 style="font-size: 1.15rem; color: var(--primary-dark);">Health Center Highlights</h3>
-                    </div>
-                    <div class="card-body">
-                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem;">
-                            <li style="display: flex; gap: 0.5rem; align-items: flex-start;">
-                                <span style="color: var(--success); font-weight: bold;">✓</span>
-                                <span>Free OPD consultations with specialized doctors</span>
-                            </li>
-                            <li style="display: flex; gap: 0.5rem; align-items: flex-start;">
-                                <span style="color: var(--success); font-weight: bold;">✓</span>
-                                <span>Free essential medicines from the campus dispensary</span>
-                            </li>
-                            <li style="display: flex; gap: 0.5rem; align-items: flex-start;">
-                                <span style="color: var(--success); font-weight: bold;">✓</span>
-                                <span>24-Hour emergency ambulance dispatch for hostels</span>
-                            </li>
-                            <li style="display: flex; gap: 0.5rem; align-items: flex-start;">
-                                <span style="color: var(--success); font-weight: bold;">✓</span>
-                                <span>Confidential mental health & stress counseling</span>
-                            </li>
-                            <li style="display: flex; gap: 0.5rem; align-items: flex-start;">
-                                <span style="color: var(--success); font-weight: bold;">✓</span>
-                                <span>Annual vaccination and free dental health camps</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CONTACT SECTION -->
-    <section class="section" id="contact" style="background: rgba(128,0,32,0.03);">
-        <div class="container">
-            <h2 class="section-title">Contact & Location</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-                <div class="card">
-                    <div class="card-header">📞 Emergency Helplines</div>
-                    <div class="card-body">
-                        <p><strong>Health Center Control:</strong> 011-27871018</p>
-                        <p style="margin-top: 0.5rem;"><strong>DTU Ambulance:</strong> 102 / 112</p>
-                        <p style="margin-top: 0.5rem;"><strong>Main Gate Security:</strong> 011-27871024</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">⏰ Working Hours</div>
-                    <div class="card-body">
-                        <p><strong>OPD Consultation:</strong> Monday – Saturday: 9:00 AM – 5:00 PM</p>
-                        <p style="margin-top: 0.5rem;"><strong>Dispensary / Pharmacy:</strong> Monday – Saturday: 9:00 AM – 5:00 PM</p>
-                        <p style="margin-top: 0.5rem;"><strong>Emergency Assistance:</strong> 24 Hours / 7 Days Open</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">📍 Address & Email</div>
-                    <div class="card-body">
-                        <p><strong>Address:</strong> Delhi Technological University, Shahbad Daulatpur, Main Bawana Road, Delhi-110042</p>
-                        <p style="margin-top: 0.5rem;"><strong>Email:</strong> <a href="mailto:healthcenter@dtu.ac.in">healthcenter@dtu.ac.in</a></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="container" style="text-align: center;">
-            <div style="margin-bottom: 0.75rem;">
-                <strong>DTU Health Center</strong> — Delhi Technological University, Shahbad Daulatpur, Bawana Road, Delhi-110042
-            </div>
-            <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 0.75rem;">
-                <a href="#home">Home</a>
-                <a href="#services">Services</a>
-                <a href="#doctors">Doctors</a>
-                <a href="#about">About</a>
-                <a href="emergency.html" style="color: #ff9999; font-weight: bold;">Emergency SOS</a>
-                <a href="login.html" id="footerLoginLink">Portal Login</a>
-            </div>
-            <p style="font-size: 0.82rem; opacity: 0.7;">&copy; 2026 DTU Health Center, Delhi Technological University. Minor Project Prototype.</p>
-        </div>
-    </footer>
+    <!-- Dynamic Footer Mount (Includes Fixed Bottom-Left Ambulance SOS Button) -->
+    <div id="footer-mount"></div>
 
     <!-- Scripts -->
     <script src="js/data.js"></script>
@@ -223,17 +154,17 @@
                 : [];
 
             container.innerHTML = docList.map(doc => `
-                <div class="doctor-card" style="background:#fff; border-radius:8px; padding:15px; border-top:4px solid var(--primary); box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; gap:12px; align-items:center;">
-                    <div class="doctor-photo" style="font-size:2.8rem; background:#f4f4f4; width:65px; height:65px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                <div class="card" style="padding: 20px; display: flex; gap: 16px; align-items: center;">
+                    <div style="font-size: 2.4rem; background: rgba(255,255,255,0.06); width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border-glass);">
                         ${doc.photo || '👨‍⚕️'}
                     </div>
-                    <div class="doctor-info" style="flex: 1;">
-                        <h3 style="font-size:1.05rem; color:var(--primary);">${doc.name}</h3>
-                        <p style="font-size:0.85rem; color:#555;"><strong>Department:</strong> ${doc.department}</p>
-                        <p style="font-size:0.82rem; color:#777;"><strong>Degree:</strong> ${doc.qualification}</p>
-                        <div style="margin-top: 0.4rem;">
-                            <span class="badge ${doc.available !== false ? 'badge-success' : 'badge-danger'}" style="font-size:0.75rem;">
-                                ${doc.available !== false ? '● Available' : '○ Unavailable'}
+                    <div style="flex: 1;">
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: #ffffff; margin-bottom: 2px;">${doc.name}</h3>
+                        <p style="font-size: 0.84rem; color: var(--amber); margin-bottom: 2px;">${doc.department}</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">${doc.qualification}</p>
+                        <div style="margin-top: 6px;">
+                            <span class="pill-tag ${doc.available !== false ? 'badge-success' : 'badge-danger'}" style="font-size: 0.74rem;">
+                                ${doc.available !== false ? '● Available Today' : '○ On Leave'}
                             </span>
                         </div>
                     </div>
@@ -241,37 +172,16 @@
             `).join('');
         }
 
-        // Check if user is already logged in, update header & home buttons accordingly
         function syncLoggedInState() {
             const user = getCurrentUser();
             if (!user) return;
 
             const dashUrl = user.role === 'doctor' ? 'doctor-dashboard.html' : 'student-dashboard.html';
 
-            // Top Brand Logo
-            const brandLink = document.getElementById('navBrandLink');
-            if (brandLink) brandLink.href = dashUrl;
-
-            // Nav Login Button
-            const loginBtn = document.getElementById('navLoginBtn');
-            if (loginBtn) {
-                loginBtn.textContent = `My Dashboard (${user.name ? user.name.split(' ')[0] : 'User'})`;
-                loginBtn.href = dashUrl;
-                loginBtn.style.background = '#C5A55A';
-                loginBtn.style.color = '#5C0015';
-            }
-
-            // Footer Login Link
-            const footerLogin = document.getElementById('footerLoginLink');
-            if (footerLogin) {
-                footerLogin.textContent = 'My Dashboard';
-                footerLogin.href = dashUrl;
-            }
-
-            // Hero Book Appointment Button
             const heroBtn = document.getElementById('heroBookBtn');
             if (heroBtn) {
                 heroBtn.href = user.role === 'doctor' ? 'doctor-dashboard.html' : 'book-appointment.html';
+                heroBtn.textContent = user.role === 'doctor' ? 'Open Doctor Dashboard →' : 'Book Doctor Appointment';
             }
         }
 
@@ -287,7 +197,6 @@
                 return;
             }
 
-            // Student destinations
             if (type === 'appointment') window.location.href = 'book-appointment.html';
             else if (type === 'video') window.location.href = 'video-call.html';
             else if (type === 'prescription') window.location.href = 'prescriptions.html';
@@ -295,9 +204,9 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (typeof initData === 'function') {
-                initData();
-            }
+            if (typeof initData === 'function') initData();
+            if (typeof loadNavbar === 'function') loadNavbar();
+            if (typeof loadFooter === 'function') loadFooter();
             displayDoctors();
             syncLoggedInState();
         });

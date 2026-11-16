@@ -46,11 +46,11 @@
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
                             <div class="form-group">
                                 <label class="form-label">Referring Doctor (You)</label>
-                                <input type="text" id="refFromDoctor" class="form-input" readonly style="background:#f4f4f4;">
+                                <input type="text" id="refFromDoctor" class="form-input" readonly style="opacity:0.85;">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Referring Department</label>
-                                <input type="text" id="refFromDept" class="form-input" readonly style="background:#f4f4f4;">
+                                <input type="text" id="refFromDept" class="form-input" readonly style="opacity:0.85;">
                             </div>
                         </div>
 
@@ -258,31 +258,31 @@
             document.getElementById('refCountBadge').textContent = `${referrals.length} records`;
 
             container.innerHTML = referrals.map(ref => `
-                <div style="border-left:4px solid var(--accent); padding:12px; margin-bottom:12px; background:#fbfbfb; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-glass); border-left:4px solid var(--amber); border-radius:var(--radius-inner); padding:16px; margin-bottom:12px;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                         <div>
-                            <strong style="color:var(--primary); font-size:1rem;">${ref.studentName}</strong> 
-                            <span style="font-size:0.85rem; color:#777;">(${ref.rollNo || 'DTU Student'})</span>
+                            <strong style="color:#ffffff; font-size:1.05rem;">${ref.studentName}</strong> 
+                            <span style="font-size:0.82rem; color:var(--text-muted);">(${ref.rollNo || 'DTU Student'})</span>
                         </div>
-                        <span class="badge ${ref.priority && ref.priority.includes('Immediate') ? 'badge-danger' : 'badge-warning'}">
+                        <span class="pill-tag ${ref.priority && ref.priority.includes('Immediate') ? 'badge-danger' : 'badge-warning'}">
                             ${ref.priority}
                         </span>
                     </div>
 
-                    <div style="margin:8px 0; font-size:0.88rem; background:#fff; padding:8px; border-radius:4px; border:1px solid #eee;">
-                        <div>From: <strong>${ref.fromDoctor}</strong> (${ref.fromDept})</div>
-                        <div style="color:var(--primary); margin-top:3px;">
-                            ➔ Referred To: <strong>${ref.toDoctor}</strong> (${ref.toDept})
+                    <div style="margin:10px 0; font-size:0.88rem; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid var(--border-glass);">
+                        <div style="color:var(--text-muted);">From: <strong style="color:#fff;">${ref.fromDoctor}</strong> (${ref.fromDept})</div>
+                        <div style="color:var(--amber); margin-top:4px;">
+                            ➔ Referred To: <strong style="color:var(--amber);">${ref.toDoctor}</strong> (${ref.toDept})
                         </div>
                     </div>
 
-                    <p style="font-size:0.85rem; color:#444; margin-bottom:6px;">
+                    <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:6px;">
                         <strong>Clinical Finding:</strong> ${ref.reason}
                     </p>
-                    <div style="font-size:0.8rem; color:#666;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">
                         <strong>Advised Tests:</strong> ${ref.tests}
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.78rem; color:#999;">
+                    <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:0.78rem; color:var(--text-subtle);">
                         <span>Ref ID: ${ref.id}</span>
                         <span>Date: ${ref.date}</span>
                     </div>

@@ -83,7 +83,7 @@
                 <div class="table-container" style="overflow-x:auto;">
                     <table class="table" style="font-size:0.9rem; margin:0;">
                         <thead>
-                            <tr style="background:#f5f5f5;">
+                            <tr>
                                 <th>#</th>
                                 <th>Medicine Name</th>
                                 <th>Therapeutic Category</th>
@@ -147,13 +147,13 @@
                 return `
                 <tr>
                     <td>${index + 1}</td>
-                    <td><strong style="color:#222;">${m.name}</strong></td>
-                    <td><span style="color:#666;">${m.category}</span></td>
-                    <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                    <td><strong style="color:#ffffff;">${m.name}</strong></td>
+                    <td><span style="color:var(--text-light);">${m.category}</span></td>
+                    <td><span class="pill-tag ${badgeClass}">${statusText}</span></td>
                     <td>
-                        <strong>${m.stock}</strong> <span style="font-size:0.8rem; color:#777;">${m.unit}</span>
+                        <strong style="color:#ffffff;">${m.stock}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">${m.unit}</span>
                     </td>
-                    <td style="color:#666;">${m.expiry || '2027'}</td>
+                    <td style="color:var(--text-muted);">${m.expiry || '2027'}</td>
                     <td style="text-align:center;">
                         <div style="display:inline-flex; gap:6px; align-items:center;">
                             <button onclick="adjustStock(${m.id}, -10)" class="btn btn-small btn-secondary" style="padding:2px 8px;" title="Deduct 10">-10</button>
@@ -196,12 +196,12 @@
 
                 return `
                 <tr>
-                    <td>${index + 1}</td>
-                    <td><strong>${m.name}</strong></td>
-                    <td>${m.category}</td>
-                    <td><span class="badge ${badgeClass}">${statusText}</span></td>
-                    <td><strong>${m.stock}</strong> ${m.unit}</td>
-                    <td>${m.expiry || '2027'}</td>
+                    <td style="color:var(--text-muted);">${index + 1}</td>
+                    <td><strong style="color:#ffffff;">${m.name}</strong></td>
+                    <td style="color:var(--text-light);">${m.category}</td>
+                    <td><span class="pill-tag ${badgeClass}">${statusText}</span></td>
+                    <td><strong style="color:#ffffff;">${m.stock}</strong> <span style="font-size:0.8rem; color:var(--text-muted);">${m.unit}</span></td>
+                    <td style="color:var(--text-muted);">${m.expiry || '2027'}</td>
                     <td style="text-align:center;">
                         <div style="display:inline-flex; gap:6px; align-items:center;">
                             <button onclick="adjustStock(${m.id}, -10)" class="btn btn-small btn-secondary" style="padding:2px 8px;">-10</button>

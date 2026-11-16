@@ -7,45 +7,42 @@
     <link rel="stylesheet" href="css/style.css">
     <style>
         .sos-hero-card {
-            background: linear-gradient(135deg, #b30000 0%, #660000 100%);
+            background: linear-gradient(135deg, rgba(180, 20, 50, 0.95) 0%, rgba(90, 15, 30, 0.9) 100%);
+            border: 1px solid rgba(230, 57, 70, 0.45);
             color: #fff;
-            padding: 3rem 2rem;
-            border-radius: 12px;
+            padding: 3.5rem 2rem;
+            border-radius: var(--radius-card);
             text-align: center;
-            box-shadow: 0 8px 30px rgba(179,0,0,0.3);
+            box-shadow: 0 16px 45px rgba(230, 57, 70, 0.4);
             margin-bottom: 30px;
+            backdrop-filter: blur(20px);
         }
         .sos-pulse-btn {
-            background: #fff;
-            color: #b30000;
-            font-size: 1.5rem;
+            background: #ffffff;
+            color: #c9182b;
+            font-size: 1.35rem;
             font-weight: 800;
-            padding: 18px 40px;
-            border-radius: 50px;
+            padding: 16px 36px;
+            border-radius: var(--radius-pill);
             border: none;
             cursor: pointer;
-            box-shadow: 0 0 0 0 rgba(255,255,255, 0.7);
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
             animation: pulse-red 2s infinite;
             display: inline-flex;
             align-items: center;
             gap: 12px;
-            transition: 0.2s;
-            margin-top: 20px;
+            transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-top: 24px;
         }
         .sos-pulse-btn:hover {
             transform: scale(1.05);
-            background: #ffe6e6;
+            background: #ffe5e7;
+            box-shadow: 0 8px 30px rgba(255, 255, 255, 0.6);
         }
         @keyframes pulse-red {
-            0% {
-                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 25px rgba(255, 255, 255, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            70% { box-shadow: 0 0 0 25px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
         }
         .contact-grid {
             display: grid;
@@ -53,14 +50,20 @@
             gap: 16px;
         }
         .contact-card {
-            background: #fff;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            border-left: 5px solid var(--danger);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            padding: 18px;
+            border-radius: var(--radius-inner);
+            border: 1px solid var(--border-glass);
+            border-left: 4px solid var(--primary);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            transition: all 0.2s;
+        }
+        .contact-card:hover {
+            border-color: var(--border-glass-light);
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -93,20 +96,23 @@
         </div>
 
         <!-- Emergency Dispatch Modal -->
-        <div id="ambulanceModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
-            <div class="modal-content" style="background:#fff; max-width:520px; width:90%; padding:25px; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+        <div id="ambulanceModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+            <div class="modal-content" style="background:rgba(18,22,32,0.96); border:1px solid var(--border-glass-light); max-width:520px; width:92%; padding:28px; border-radius:var(--radius-card); box-shadow:0 20px 60px rgba(0,0,0,0.8); backdrop-filter:blur(24px); color:#ffffff;">
                 
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px; margin-bottom:15px;">
-                    <h3 style="color:var(--danger); font-size:1.3rem;">🚑 Instant Ambulance Request</h3>
-                    <button onclick="closeAmbulanceModal()" style="border:none; background:none; font-size:1.3rem; cursor:pointer;">✕</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-glass); padding-bottom:14px; margin-bottom:16px;">
+                    <h3 style="color:#ffffff; font-size:1.25rem; font-weight:800; display:flex; align-items:center; gap:8px;">
+                        <span class="brand-badge" style="background:#e63946;">SOS</span>
+                        Instant Ambulance Request
+                    </h3>
+                    <button onclick="closeAmbulanceModal()" style="border:none; background:rgba(255,255,255,0.08); color:var(--text-muted); width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
                 </div>
 
                 <div id="modalFormStep">
-                    <p style="font-size:0.9rem; color:#555; margin-bottom:15px;">
+                    <p style="font-size:0.88rem; color:var(--text-light); margin-bottom:16px;">
                         Confirm your location inside DTU campus so the medical response team can reach you immediately:
                     </p>
 
-                    <div class="form-group" style="margin-bottom:12px;">
+                    <div class="form-group" style="margin-bottom:14px;">
                         <label class="form-label">Your Current Campus Location *</label>
                         <select id="sosLocation" class="form-select" required>
                             <option value="B.R. Ambedkar Hostel (Boys Hostel)">B.R. Ambedkar Hostel</option>
@@ -123,7 +129,7 @@
                         </select>
                     </div>
 
-                    <div class="form-group" style="margin-bottom:15px;">
+                    <div class="form-group" style="margin-bottom:20px;">
                         <label class="form-label">Type of Medical Emergency *</label>
                         <select id="sosEmergencyType" class="form-select" required>
                             <option value="Severe Physical Injury / Fracture">Severe Physical Injury / Fracture</option>
@@ -137,9 +143,9 @@
                     </div>
 
                     <div style="display:flex; justify-content:flex-end; gap:10px;">
-                        <button type="button" onclick="closeAmbulanceModal()" class="btn btn-secondary">Cancel</button>
-                        <button type="button" onclick="dispatchAmbulance()" class="btn btn-danger" style="font-weight:bold;">
-                            🚨 CONFIRM & DISPATCH AMBULANCE
+                        <button type="button" onclick="closeAmbulanceModal()" class="btn btn-pill-glass">Cancel</button>
+                        <button type="button" onclick="dispatchAmbulance()" class="btn btn-pill-danger" style="font-weight:700;">
+                            🚨 DISPATCH AMBULANCE NOW
                         </button>
                     </div>
                 </div>
@@ -147,19 +153,19 @@
                 <!-- Step 2: Dispatched Status -->
                 <div id="modalDispatchedStep" style="display:none; text-align:center; padding:15px 0;">
                     <span style="font-size:3.5rem;">🚨</span>
-                    <h2 style="color:var(--danger); margin:10px 0 5px 0;">AMBULANCE DISPATCHED!</h2>
-                    <p style="font-size:0.95rem; color:#333; margin-bottom:15px;">
+                    <h2 style="color:#ff6b6b; margin:10px 0 5px 0; font-weight:800;">AMBULANCE DISPATCHED!</h2>
+                    <p style="font-size:0.92rem; color:var(--text-light); margin-bottom:16px;">
                         DTU Campus Medical Emergency Vehicle has been alerted.
                     </p>
-                    <div style="background:#fff3cd; border:1px solid #ffeeba; padding:12px; border-radius:6px; font-size:0.9rem; margin-bottom:15px;">
-                        <div>📍 Destination: <strong id="dispDest">--</strong></div>
-                        <div>⏱️ Estimated Response Time: <strong>3 to 5 Minutes</strong></div>
-                        <div>📞 Driver Contact: <strong>+91 9811223399</strong> (DTU Ambulance Driver)</div>
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-glass-light); padding:16px; border-radius:var(--radius-inner); font-size:0.9rem; margin-bottom:18px; text-align:left;">
+                        <div style="margin-bottom:4px;">📍 Destination: <strong id="dispDest" style="color:#ffffff;">--</strong></div>
+                        <div style="margin-bottom:4px; color:#2ecc71;">⏱️ Estimated Response: <strong style="color:#2ecc71;">3 to 5 Minutes</strong></div>
+                        <div>📞 Driver Contact: <strong style="color:var(--amber);">+91 9811223399</strong> (DTU Driver Desk)</div>
                     </div>
-                    <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">
-                        Please ensure the gate/corridor is clear. DTU Security is also dispatched to guide the ambulance team.
+                    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:18px;">
+                        Please ensure the hostel gate/corridor is clear. DTU Security has been notified to guide the paramedics.
                     </p>
-                    <button onclick="closeAmbulanceModal()" class="btn btn-primary" style="width:100%;">Got It</button>
+                    <button onclick="closeAmbulanceModal()" class="btn btn-pill-primary" style="width:100%;">Got It</button>
                 </div>
 
             </div>

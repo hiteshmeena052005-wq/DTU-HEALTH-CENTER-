@@ -8,129 +8,133 @@
 </head>
 <body onload="initDoctorDashboard()">
 
-    <!-- Dynamic Navbar Mount -->
+    <!-- Dynamic Modern Floating Pill Navbar Mount -->
     <div id="navbar-mount"></div>
 
     <div class="container section">
 
-        <!-- Doctor Header & Status -->
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px; padding-bottom:15px; border-bottom:2px solid #eee;">
+        <!-- Top Status Row -->
+        <div class="hero-status-row">
+            <span id="currentDateDeptDisplay">Monday, 16 November · General Medicine (OPD)</span>
+            <span class="badge-cloud-live">
+                <span class="pulse-dot"></span> Cloud sync live
+            </span>
+        </div>
+
+        <!-- Big Hero Header & Quick Actions -->
+        <div class="hero-header-row">
             <div>
-                <h1 style="color:var(--primary); font-size:1.8rem; margin-bottom:4px;">
-                    Doctor & Admin Portal 👨‍⚕️
+                <h1 class="hero-title-massive">
+                    Hello, <span class="highlight" id="docNameDisplay">Dr. Sharma</span>.<br>
+                    Your OPD at a glance.
                 </h1>
-                <p style="color:var(--text-light); font-size:0.95rem;">
-                    Logged in as: <strong id="docNameDisplay" style="color:var(--primary-dark);">Dr. Rajesh Sharma</strong> | 
-                    Department: <span id="docDeptDisplay">General Medicine (OPD)</span> |
-                    <span class="badge badge-success" id="firebaseLiveBadge">● Cloud Real-Time Active</span>
-                </p>
             </div>
-            <div style="display:flex; gap:10px;">
-                <a href="#availability-section" class="btn btn-primary">+ Post Checkup Slots</a>
-                <a href="#notice-section" class="btn btn-secondary" style="color:var(--primary);">+ Broadcast Notice</a>
+            <div class="hero-btn-group">
+                <a href="#availability-section" class="btn btn-pill-primary">+ Post checkup slots</a>
+                <a href="#notice-section" class="btn btn-pill-glass">Broadcast notice</a>
             </div>
         </div>
 
-        <!-- 4 Stats Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number" id="docStatAppointments">0</div>
-                <div class="stat-label">Patients in Queue Today</div>
+        <!-- 4 Stats Cards (First card glowing wine/crimson gradient) -->
+        <div class="stats-grid-modern">
+            <div class="stat-card-modern stat-card-wine">
+                <div class="stat-icon-circle">👤</div>
+                <div class="stat-number-modern" id="docStatAppointments">0</div>
+                <div class="stat-label-modern">Patients in queue today</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="docStatSlots">0</div>
-                <div class="stat-label">Active Slots Posted</div>
+            <div class="stat-card-modern">
+                <div class="stat-icon-circle">📅</div>
+                <div class="stat-number-modern" id="docStatSlots">0</div>
+                <div class="stat-label-modern">Active slots posted</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="docStatPrescriptions">0</div>
-                <div class="stat-label">Prescriptions Issued</div>
+            <div class="stat-card-modern">
+                <div class="stat-icon-circle">📄</div>
+                <div class="stat-number-modern" id="docStatPrescriptions">0</div>
+                <div class="stat-label-modern">Prescriptions issued</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="docStatNotices">0</div>
-                <div class="stat-label">Campus Announcements</div>
+            <div class="stat-card-modern">
+                <div class="stat-icon-circle">📢</div>
+                <div class="stat-number-modern" id="docStatNotices">0</div>
+                <div class="stat-label-modern">Campus announcements</div>
             </div>
         </div>
 
-        <!-- Section: Patient Appointments Queue -->
-        <div class="card" style="margin-top:25px; margin-bottom:30px;">
-            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="font-size:1.15rem; color:var(--primary-dark);">
-                    🩺 Live Patient Queue (Real-Time Cloud Feed)
-                </h3>
-                <span class="badge badge-success">Auto-Syncs Across Devices</span>
+        <!-- Section: Live Patient Appointments Queue -->
+        <div class="card" style="margin-bottom: 28px;">
+            <div class="card-header queue-header-row" style="border-bottom: 1px solid var(--border-glass);">
+                <div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: #ffffff; margin-bottom: 2px;">
+                        Live patient queue
+                    </h3>
+                    <p style="font-size: 0.84rem; color: var(--text-muted); margin: 0;">
+                        Real-time feed from the student app
+                    </p>
+                </div>
+                <span class="badge-cloud-live">
+                    <span class="pulse-dot"></span> Auto-sync on
+                </span>
             </div>
-            <div class="card-body">
-                <div class="table-container" style="overflow-x:auto;">
-                    <table class="table" style="font-size:0.9rem;">
-                        <thead>
-                            <tr style="background:#f4f4f4;">
-                                <th>Student Details</th>
-                                <th>Branch & Roll</th>
-                                <th>Reason / Emergency Feeling</th>
-                                <th>Urgency</th>
-                                <th>Mode</th>
-                                <th>Date & Time</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="patientQueueBody">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
+            <div class="card-body" style="padding: 20px;">
+                <div id="patientQueueList">
+                    <!-- Populated dynamically with patient cards -->
                 </div>
             </div>
         </div>
 
-        <!-- 2-Column Grid: Post Availability & Post Announcements -->
+        <!-- 2-Column Grid: Post Availability Slots & Post Announcements -->
         <div class="dashboard-grid">
 
             <!-- Left: Post Weekly Checkup Availability (Max 10 Students) -->
             <div class="card" id="availability-section">
-                <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
-                    <h3 style="font-size:1.15rem; color:var(--primary);">
-                        📅 Post Weekly Availability Slots (Max 10 Students)
-                    </h3>
-                    <p style="font-size:0.85rem; color:var(--text-light); margin-top:3px;">
-                        Broadcast checkup slots to all DTU students. A booking form with fixed capacity will be created.
-                    </p>
+                <div class="card-header" style="border-bottom: 1px solid var(--border-glass);">
+                    <div>
+                        <h3 style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">
+                            Post weekly availability slots
+                        </h3>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 3px;">
+                            Students can book up to the cap you set (max 10).
+                        </p>
+                    </div>
                 </div>
                 <div class="card-body">
                     <form onsubmit="postDoctorSlot(event)">
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-                            <div class="form-group">
-                                <label class="form-label">Consultation Date *</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Consultation date</label>
                                 <input type="date" id="slotDate" class="form-input" required>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Student Cap Limit *</label>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Student cap</label>
                                 <input type="number" id="slotLimit" class="form-input" value="10" min="1" max="25" required>
                             </div>
                         </div>
 
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-                            <div class="form-group">
-                                <label class="form-label">Start Time *</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Start time</label>
                                 <input type="time" id="slotStartTime" class="form-input" value="10:00" required>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">End Time *</label>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">End time</label>
                                 <input type="time" id="slotEndTime" class="form-input" value="13:00" required>
                             </div>
                         </div>
 
-                        <div class="form-group" style="margin-bottom:15px;">
-                            <label class="form-label">Session Description / Instructions</label>
+                        <div class="form-group" style="margin-bottom: 18px;">
+                            <label class="form-label">Instructions (optional)</label>
                             <input type="text" id="slotNote" class="form-input" placeholder="e.g. Fever, cold and seasonal virus OPD slots for DTU hostellers">
                         </div>
 
-                        <button type="submit" class="btn btn-primary" style="width:100%;">
-                            Publish Slot to Student App (Cloud Sync)
+                        <button type="submit" class="btn btn-pill-primary" style="width: 100%; padding: 13px; font-size: 0.95rem;">
+                            Publish slot to students
                         </button>
                     </form>
 
-                    <!-- Active Doctor Slots List -->
-                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee;">
-                        <h4 style="font-size:0.95rem; color:var(--text-light); margin-bottom:10px;">Your Active Scheduled Slots:</h4>
+                    <!-- Active Doctor Slots Sub-List -->
+                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-glass);">
+                        <h4 style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
+                            Your active slots
+                        </h4>
                         <div id="activeSlotsList">
                             <!-- Populated dynamically -->
                         </div>
@@ -140,34 +144,38 @@
 
             <!-- Right: Post Health Notice / Campus Announcement -->
             <div class="card" id="notice-section">
-                <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
-                    <h3 style="font-size:1.15rem; color:var(--primary);">
-                        📢 Broadcast Campus Health Notice
-                    </h3>
-                    <p style="font-size:0.85rem; color:var(--text-light); margin-top:3px;">
-                        Post medical guidelines, immunization camps, or advisories visible on student dashboards.
-                    </p>
+                <div class="card-header" style="border-bottom: 1px solid var(--border-glass);">
+                    <div>
+                        <h3 style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">
+                            Broadcast health notice
+                        </h3>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 3px;">
+                            Appears on every student dashboard.
+                        </p>
+                    </div>
                 </div>
                 <div class="card-body">
                     <form onsubmit="postDoctorNotice(event)">
-                        <div class="form-group" style="margin-bottom:12px;">
-                            <label class="form-label">Notice Title *</label>
-                            <input type="text" id="noticeTitle" class="form-input" placeholder="e.g. Free Eye Testing Camp on Friday" required>
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label class="form-label">Title</label>
+                            <input type="text" id="noticeTitle" class="form-input" placeholder="e.g. Free eye testing camp on Friday" required>
                         </div>
 
-                        <div class="form-group" style="margin-bottom:12px;">
-                            <label class="form-label">Notice Content / Instructions *</label>
-                            <textarea id="noticeContent" class="form-textarea" rows="3" placeholder="Provide full advisory details for campus students..." required></textarea>
+                        <div class="form-group" style="margin-bottom: 18px;">
+                            <label class="form-label">Details</label>
+                            <textarea id="noticeContent" class="form-textarea" rows="3" placeholder="Dates, timings and what to bring..." required></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-secondary" style="width:100%; color:var(--primary); font-weight:bold;">
-                            Post to Student Web App Board (Cloud Sync)
+                        <button type="submit" class="btn btn-pill-amber" style="width: 100%; padding: 13px; font-size: 0.95rem;">
+                            Post to student app
                         </button>
                     </form>
 
-                    <!-- Recent Notices List -->
-                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee;">
-                        <h4 style="font-size:0.95rem; color:var(--text-light); margin-bottom:10px;">Recent Campus Notices:</h4>
+                    <!-- Recent Notices Sub-List -->
+                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-glass);">
+                        <h4 style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
+                            Recent notices
+                        </h4>
                         <div id="doctorNoticesList">
                             <!-- Populated dynamically -->
                         </div>
@@ -177,48 +185,68 @@
 
         </div>
 
-        <!-- Fast Navigation to Other Doctor Modules -->
-        <div class="card" style="margin-top:25px;">
-            <div class="card-header">
-                <h3 style="font-size:1.15rem; color:var(--primary-dark);">⚙️ Doctor Clinical Tools</h3>
-            </div>
-            <div class="card-body" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:15px;">
-                <a href="referral.html" class="btn btn-secondary" style="padding:15px; text-align:center; color:var(--primary);">
-                    <div style="font-size:1.4rem; margin-bottom:5px;">🔄</div>
-                    <strong>Refer Patient</strong>
-                    <div style="font-size:0.8rem; color:#666;">Transfer student to specialist</div>
+        <!-- 4-Card Clinical Tools Grid -->
+        <div id="clinical-tools-section">
+            <div class="tools-grid-modern">
+                <a href="referral.html" class="tool-card-modern">
+                    <div class="tool-icon-box tool-icon-pink">⇄</div>
+                    <div class="tool-title">Refer patient</div>
+                    <div class="tool-subtitle">Transfer student to a specialist</div>
                 </a>
-                <a href="prescriptions.html" class="btn btn-secondary" style="padding:15px; text-align:center; color:var(--primary);">
-                    <div style="font-size:1.4rem; margin-bottom:5px;">💊</div>
-                    <strong>Digital Rx Writer</strong>
-                    <div style="font-size:0.8rem; color:#666;">Issue prescription & test orders</div>
+                <a href="prescriptions.html" class="tool-card-modern">
+                    <div class="tool-icon-box tool-icon-amber">📄</div>
+                    <div class="tool-title">Digital Rx writer</div>
+                    <div class="tool-subtitle">Prescriptions and test orders</div>
                 </a>
-                <a href="video-call.html" class="btn btn-secondary" style="padding:15px; text-align:center; color:var(--primary);">
-                    <div style="font-size:1.4rem; margin-bottom:5px;">📹</div>
-                    <strong>Telehealth Room</strong>
-                    <div style="font-size:0.8rem; color:#666;">Start video consultation</div>
+                <a href="video-call.html" class="tool-card-modern">
+                    <div class="tool-icon-box tool-icon-blue">📹</div>
+                    <div class="tool-title">Telehealth room</div>
+                    <div class="tool-subtitle">Start a video consultation</div>
                 </a>
-                <a href="medicine-inventory.html" class="btn btn-secondary" style="padding:15px; text-align:center; color:var(--primary);">
-                    <div style="font-size:1.4rem; margin-bottom:5px;">📦</div>
-                    <strong>Dispensary Stock</strong>
-                    <div style="font-size:0.8rem; color:#666;">Update medicine inventory</div>
+                <a href="medicine-inventory.html" class="tool-card-modern">
+                    <div class="tool-icon-box tool-icon-green">📦</div>
+                    <div class="tool-title">Dispensary stock</div>
+                    <div class="tool-subtitle">Update medicine inventory</div>
                 </a>
             </div>
         </div>
 
-        <!-- ANALYTICS SECTION (COMING SOON) -->
-        <div class="card" style="margin-top:25px; text-align:center; padding:30px; border:2px dashed #ddd; background:#fafafa;">
-            <span style="font-size:2.5rem;">📊</span>
-            <h3 style="color:var(--primary); margin:10px 0 5px 0;">DTU Health Center Analytics</h3>
-            <span class="badge badge-warning" style="font-size:0.85rem; padding:4px 10px;">Coming Soon in Phase 2</span>
-            <p style="color:var(--text-light); max-width:550px; margin:10px auto 0 auto; font-size:0.9rem;">
-                Advanced disease trend tracking, monthly OPD patient footfall reports, most prescribed hostel medicines, and campus health statistics will be available here.
-            </p>
+        <!-- Campus Health Analytics Bar Chart Card -->
+        <div id="analytics-section" class="analytics-card-modern">
+            <div class="analytics-header-row">
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
+                        Campus health analytics
+                    </h3>
+                    <p style="font-size: 0.84rem; color: var(--text-muted); margin: 0;">
+                        Disease trends, monthly OPD footfall and most-prescribed hostel medicines.
+                    </p>
+                </div>
+                <span class="pill-tag pill-tag-dark" style="font-size: 0.8rem; padding: 6px 14px;">
+                    Coming in phase 2
+                </span>
+            </div>
+            
+            <!-- Glowing 12-Month Crimson Bar Chart -->
+            <div class="chart-container-modern">
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 28%;"></div><span class="chart-label">Jan</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 42%;"></div><span class="chart-label">Feb</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 62%;"></div><span class="chart-label">Mar</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 35%;"></div><span class="chart-label">Apr</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 55%;"></div><span class="chart-label">May</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 88%;"></div><span class="chart-label">Jun</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 70%;"></div><span class="chart-label">Jul</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 45%;"></div><span class="chart-label">Aug</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 78%;"></div><span class="chart-label">Sep</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 38%;"></div><span class="chart-label">Oct</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 94%;"></div><span class="chart-label">Nov</span></div>
+                <div class="chart-col"><div class="chart-bar-fill" style="height: 82%;"></div><span class="chart-label">Dec</span></div>
+            </div>
         </div>
 
     </div>
 
-    <!-- Dynamic Footer Mount -->
+    <!-- Dynamic Footer Mount (Includes Fixed Bottom-Left Ambulance SOS Button) -->
     <div id="footer-mount"></div>
 
     <!-- Firebase Cloud SDK -->
@@ -237,15 +265,20 @@
             if (!user) return;
 
             currentDoctor = user;
-            document.getElementById('docNameDisplay').textContent = currentDoctor.name || 'Dr. Rajesh Sharma';
-            document.getElementById('docDeptDisplay').textContent = currentDoctor.department || 'General Medicine';
+            document.getElementById('docNameDisplay').textContent = currentDoctor.name || 'Dr. Sharma';
+            
+            // Format today's date dynamically
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+            const deptStr = currentDoctor.department || 'General Medicine (OPD)';
+            document.getElementById('currentDateDeptDisplay').textContent = `${dateStr} · ${deptStr}`;
 
             // Set default date for new slot to tomorrow
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('slotDate').value = tomorrow.toISOString().split('T')[0];
 
-            // Real-Time Listeners: Instant Push Updates from Cloud
+            // Real-Time Listeners: Instant Push Updates from Cloud Firestore
             syncRealtimeAppointments((liveList) => {
                 renderQueue(liveList);
                 renderStats();
@@ -281,65 +314,62 @@
             });
         }
 
-        // Render live queue of appointments
+        // Render live queue of appointments as sleek glassmorphism cards
         function renderQueue(customList) {
-            const tbody = document.getElementById('patientQueueBody');
+            const container = document.getElementById('patientQueueList');
             const appointments = customList || getAppointments();
 
             if (!appointments || appointments.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align:center; padding:25px; color:var(--text-light);">
-                            No patients currently in the appointment queue.
-                        </td>
-                    </tr>
+                container.innerHTML = `
+                    <div style="text-align:center; padding:36px 20px; background:rgba(255,255,255,0.02); border:1px dashed var(--border-glass); border-radius:16px; color:var(--text-muted);">
+                        <div style="font-size:2rem; margin-bottom:8px;">🩺</div>
+                        <strong style="color:#ffffff;">No patients currently in the appointment queue.</strong>
+                        <p style="font-size:0.84rem; margin-top:4px;">When students book appointments from their portal, they will instantly appear here with live notifications.</p>
+                    </div>
                 `;
                 return;
             }
 
-            tbody.innerHTML = appointments.map((apt, index) => `
-                <tr>
-                    <td>
-                        <strong>${apt.studentName}</strong>
-                        <div style="font-size:0.8rem; color:var(--text-light);">${apt.studentEmail}</div>
-                    </td>
-                    <td>
-                        <div>${apt.rollNo || '2K23/CO/001'}</div>
-                        <div style="font-size:0.8rem; color:#666;">${apt.branch || 'DTU'}</div>
-                    </td>
-                    <td style="max-width:260px;">
-                        <span style="font-size:0.88rem; color:#333;">${apt.reason || 'General checkup'}</span>
-                    </td>
-                    <td>
-                        <span class="badge ${apt.urgency && apt.urgency.includes('Urgent') ? 'badge-danger' : 'badge-info'}">
-                            ${apt.urgency || 'Normal'}
-                        </span>
-                    </td>
-                    <td>
-                        <span style="font-size:0.82rem;">${apt.mode && apt.mode.includes('Video') ? '📹 Video' : '🏥 OPD'}</span>
-                    </td>
-                    <td>
-                        <div style="font-size:0.85rem;"><strong>${apt.date}</strong></div>
-                        <div style="font-size:0.8rem; color:#666;">${apt.time}</div>
-                    </td>
-                    <td>
-                        <div style="display:flex; flex-direction:column; gap:4px;">
-                            <a href="video-call.html?patient=${encodeURIComponent(apt.studentName)}&doctor=${encodeURIComponent(currentDoctor.name || 'Doctor')}" 
-                               class="btn btn-small btn-primary" style="text-align:center; padding:4px 6px; font-size:0.75rem;">
-                               📹 Call
-                            </a>
-                            <a href="referral.html?patient=${encodeURIComponent(apt.studentName)}&roll=${encodeURIComponent(apt.rollNo || '')}&dept=${encodeURIComponent(apt.department)}" 
-                               class="btn btn-small btn-secondary" style="text-align:center; padding:4px 6px; font-size:0.75rem; color:var(--primary);">
-                               🔄 Refer
-                            </a>
-                            <button onclick="completeAppointment('${apt.id}')" 
-                                    class="btn btn-small btn-success" style="padding:4px 6px; font-size:0.75rem;">
-                               ✓ Done
-                            </button>
+            container.innerHTML = appointments.map((apt, index) => {
+                const urgencyText = apt.urgency && apt.urgency.includes('Urgent') ? 'Urgent' : 'Normal / routine';
+                const isUrgent = apt.urgency && apt.urgency.includes('Urgent');
+                const isVideo = apt.mode && apt.mode.includes('Video');
+
+                return `
+                <div class="patient-queue-card">
+                    <div class="patient-card-left">
+                        <div class="token-badge">${index + 1}</div>
+                        <div class="patient-info">
+                            <div class="name">${apt.studentName}</div>
+                            <div class="sub">${apt.studentEmail || 'student@dtu.ac.in'}</div>
+                            <div class="sub">${apt.rollNo || '2K22/CO/123'} · ${apt.branch || 'CSE'}</div>
                         </div>
-                    </td>
-                </tr>
-            `).join('');
+                    </div>
+                    <div class="patient-card-mid">
+                        <div class="reason">${apt.reason || 'General checkup'}</div>
+                        <div class="time">📅 ${apt.date || 'Today'}, ${apt.time || '10:00 AM - 01:00 PM'}</div>
+                    </div>
+                    <div class="patient-card-badges">
+                        <span class="pill-tag ${isUrgent ? 'badge-danger' : 'pill-tag-blue'}">${urgencyText}</span>
+                        <span class="pill-tag pill-tag-dark">${isVideo ? '📹 Video' : 'OPD'}</span>
+                    </div>
+                    <div class="patient-card-actions">
+                        <a href="video-call.html?patient=${encodeURIComponent(apt.studentName)}&doctor=${encodeURIComponent(currentDoctor.name || 'Doctor')}" 
+                           class="pill-btn-call">
+                           Call
+                        </a>
+                        <a href="referral.html?patient=${encodeURIComponent(apt.studentName)}&roll=${encodeURIComponent(apt.rollNo || '')}&dept=${encodeURIComponent(apt.department)}" 
+                           class="pill-btn-refer">
+                           Refer
+                        </a>
+                        <button onclick="completeAppointment('${apt.id}')" 
+                                class="pill-btn-done">
+                           Done
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
         }
 
         // Post a new appointment slot for students (limited to 10 by default)
@@ -381,26 +411,40 @@
             renderStats();
         }
 
+        // Render active slots with real-time capacity and progress bar
         function renderDoctorSlots(customSlots) {
             const container = document.getElementById('activeSlotsList');
             const slots = customSlots || getSlots();
 
             if (!slots || slots.length === 0) {
-                container.innerHTML = '<p style="font-size:0.85rem; color:#888;">No slots posted yet.</p>';
+                container.innerHTML = '<p style="font-size:0.84rem; color:var(--text-muted); padding:10px 0;">No active slots posted yet.</p>';
                 return;
             }
 
-            container.innerHTML = slots.map((s) => `
-                <div style="background:#f9f9f9; padding:8px 10px; border-radius:4px; margin-bottom:8px; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <strong>${s.date}</strong> (${s.startTime} - ${s.endTime})
-                        <div style="color:#666;">Capacity: ${s.bookedCount || 0} / ${s.maxLimit} students</div>
+            container.innerHTML = slots.map((s) => {
+                const booked = s.bookedCount || 0;
+                const max = s.maxLimit || 10;
+                const isFull = booked >= max;
+                const pct = Math.min(100, Math.round((booked / max) * 100));
+
+                return `
+                <div class="active-slot-pill">
+                    <div style="flex:1;">
+                        <div style="font-weight:700; color:#ffffff; font-size:0.92rem;">${s.date}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:1px;">${s.startTime} - ${s.endTime}</div>
+                        <div class="slot-progress-wrap" style="max-width:180px;">
+                            <div class="slot-progress-bar" style="width:${pct}%;"></div>
+                        </div>
                     </div>
-                    <span class="badge ${(s.bookedCount || 0) >= s.maxLimit ? 'badge-danger' : 'badge-success'}">
-                        ${(s.bookedCount || 0) >= s.maxLimit ? 'FULL' : 'OPEN'}
-                    </span>
+                    <div style="text-align:right;">
+                        <span class="pill-tag ${isFull ? 'badge-danger' : 'badge-success'}" style="margin-bottom:4px; display:inline-block;">
+                            ${isFull ? 'Full' : 'Open'}
+                        </span>
+                        <div style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">${booked} / ${max} booked</div>
+                    </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         async function postDoctorNotice(event) {
@@ -432,15 +476,15 @@
             const notices = customNotices || getNotices();
 
             if (!notices || notices.length === 0) {
-                container.innerHTML = '<p style="font-size:0.85rem; color:#888;">No notices posted yet.</p>';
+                container.innerHTML = '<p style="font-size:0.84rem; color:var(--text-muted); padding:10px 0;">No notices posted yet.</p>';
                 return;
             }
 
             container.innerHTML = notices.slice(0, 3).map(n => `
-                <div style="background:#f9f9f9; padding:8px 10px; border-radius:4px; margin-bottom:8px; font-size:0.85rem;">
-                    <strong>${n.title}</strong>
-                    <div style="color:#555; margin:3px 0;">${n.content}</div>
-                    <small style="color:#888;">${n.date}</small>
+                <div class="recent-notice-pill">
+                    <h4 class="notice-headline">${n.title}</h4>
+                    <p class="notice-snippet">${n.content}</p>
+                    <span class="notice-timestamp">${n.date}</span>
                 </div>
             `).join('');
         }
@@ -450,7 +494,7 @@
             const apt = appointments.find(a => a.id === aptId);
             if (!apt) return;
 
-            if (confirm(`Mark consultation complete for ${apt.studentName}? This will free up slot capacity.`)) {
+            if (confirm(`Mark consultation complete for ${apt.studentName}? This will free up slot capacity in database.`)) {
                 await cancelAppointmentAndFreeSlot(apt.id, apt.slotId, apt.doctorName);
                 showNotification(`Consultation complete for ${apt.studentName}.`, "success");
                 renderQueue();
