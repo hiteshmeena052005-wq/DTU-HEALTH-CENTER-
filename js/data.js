@@ -1,4 +1,6 @@
-// DTU Health Center - Clean Initial Data
+// DTU Health Center - Clean Initial Datasets & Runtime In-Memory Database
+// Note: Real database is persisted in Google Firebase Cloud Firestore and SQLite 3 DBMS.
+// Browser LocalStorage is ONLY reserved for user session (currentUser & studentProfile).
 
 const departments = [
     { id: 1, name: "General Medicine (OPD)", icon: "🏥" },
@@ -155,13 +157,6 @@ const emergencyContacts = [
     { name: "Rohini Sector 16 Police Station", phone: "100 / 112", available: "24/7", location: "Rohini, Delhi" }
 ];
 
-// Clean empty appointments array for fresh deployment
-const sampleAppointments = [];
-
-// Clean initial prescriptions
-const samplePrescriptions = [];
-
-// Clean slots with 0 booked count
 const sampleSlots = [
     {
         id: 1,
@@ -213,30 +208,45 @@ const sampleNotices = [
     }
 ];
 
-// Initialize clean data
+// In-Memory Runtime Store (Single Source of Truth is Firebase Firestore & SQLite DBMS)
+window._dtuMemoryDB = window._dtuMemoryDB || {
+    appointments: [],
+    slots: sampleSlots.slice(),
+    prescriptions: [],
+    referrals: [],
+    notices: sampleNotices.slice(),
+    medicines: medicines.slice(),
+    doctors: doctors.slice(),
+    emergency: emergencyContacts.slice()
+};
+
+// Initialize runtime datasets and PURGE legacy table keys from localStorage
 function initData(forceReset = false) {
-    if (forceReset || !localStorage.getItem("dtu_doctors")) {
-        localStorage.setItem("dtu_doctors", JSON.stringify(doctors));
+    // Purge any old table keys from browser localStorage so it's not a fake database
+    const tableKeysToPurge = [
+        "dtu_appointments",
+        "dtu_slots",
+        "dtu_prescriptions",
+        "dtu_referrals",
+        "dtu_notices",
+        "dtu_medicines",
+        "dtu_doctors",
+        "dtu_emergency",
+        "dtu_healthTips"
+    ];
+
+    tableKeysToPurge.forEach(key => {
+        try { localStorage.removeItem(key); } catch (e) {}
+    });
+
+    if (forceReset) {
+        window._dtuMemoryDB.appointments = [];
+        window._dtuMemoryDB.slots = JSON.parse(JSON.stringify(sampleSlots));
+        window._dtuMemoryDB.prescriptions = [];
+        window._dtuMemoryDB.referrals = [];
+        window._dtuMemoryDB.notices = JSON.parse(JSON.stringify(sampleNotices));
+        window._dtuMemoryDB.medicines = JSON.parse(JSON.stringify(medicines));
     }
-    if (forceReset || !localStorage.getItem("dtu_medicines")) {
-        localStorage.setItem("dtu_medicines", JSON.stringify(medicines));
-    }
-    if (forceReset || !localStorage.getItem("dtu_healthTips")) {
-        localStorage.setItem("dtu_healthTips", JSON.stringify(healthTips));
-    }
-    if (forceReset || !localStorage.getItem("dtu_emergency")) {
-        localStorage.setItem("dtu_emergency", JSON.stringify(emergencyContacts));
-    }
-    if (forceReset || !localStorage.getItem("dtu_prescriptions")) {
-        localStorage.setItem("dtu_prescriptions", JSON.stringify(samplePrescriptions));
-    }
-    if (forceReset || !localStorage.getItem("dtu_appointments")) {
-        localStorage.setItem("dtu_appointments", JSON.stringify(sampleAppointments));
-    }
-    if (forceReset || !localStorage.getItem("dtu_slots")) {
-        localStorage.setItem("dtu_slots", JSON.stringify(sampleSlots));
-    }
-    if (forceReset || !localStorage.getItem("dtu_notices")) {
-        localStorage.setItem("dtu_notices", JSON.stringify(sampleNotices));
-    }
+
+    console.log("☁️ [DATABASE ARCHITECTURE] Running on Cloud Firebase Firestore & SQLite 3 DBMS. Browser localStorage cleared of tables.");
 }

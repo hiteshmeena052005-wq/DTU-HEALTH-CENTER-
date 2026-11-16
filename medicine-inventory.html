@@ -218,7 +218,7 @@
             const target = items.find(m => m.id == medId);
             if (target) {
                 target.stock = Math.max(0, target.stock + delta);
-                localStorage.setItem('dtu_medicines', JSON.stringify(items));
+                updateMedicineStock(medId, target.stock);
                 showNotification(`Updated ${target.name} stock to ${target.stock}`, 'success');
                 renderInventory();
             }
@@ -243,7 +243,7 @@
             };
 
             items.push(newItem);
-            localStorage.setItem('dtu_medicines', JSON.stringify(items));
+            updateMedicineStock(newItem.id, newItem.stock);
 
             showNotification(`${name} registered in dispensary stock!`, 'success');
             document.getElementById('newMedName').value = '';

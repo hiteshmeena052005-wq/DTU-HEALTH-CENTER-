@@ -234,9 +234,9 @@
         // Render past referrals
         function renderReferrals() {
             const container = document.getElementById('referralListContainer');
-            const referrals = JSON.parse(localStorage.getItem('dtu_referrals') || '[]');
+            const referrals = getReferrals();
 
-            // If empty, supply sample referral
+            // If empty, supply sample referral in memory
             if (referrals.length === 0) {
                 referrals.push({
                     id: "REF-101",
@@ -252,7 +252,6 @@
                     date: "12 Nov 2026",
                     status: "Consultation Completed"
                 });
-                localStorage.setItem('dtu_referrals', JSON.stringify(referrals));
             }
 
             document.getElementById('refCountBadge').textContent = `${referrals.length} records`;

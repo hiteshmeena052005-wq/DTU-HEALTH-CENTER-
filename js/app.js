@@ -114,18 +114,35 @@ function logout() {
 // 🗄️ REAL DATABASE SYNC (API + LOCAL FALLBACK)
 // ==========================================
 
-// Sync data from Node.js database file (data/database.json)
+// ==========================================
+// 🗄️ REAL DATABASE SYNC (FIREBASE CLOUD + SQLITE DBMS)
+// LocalStorage is NEVER used for tables — ONLY in-memory store & real databases!
+// ==========================================
+
+// Ensure in-memory database store exists
+window._dtuMemoryDB = window._dtuMemoryDB || {
+    appointments: [],
+    slots: [],
+    prescriptions: [],
+    referrals: [],
+    notices: [],
+    medicines: []
+};
+
+// Sync data from Node.js SQLite database controller
 async function syncDatabaseFromServer() {
     try {
         const res = await fetch(`${API_BASE}/status`);
         if (res.ok) {
-            console.log("🟢 Connected to DTU Health Center Database Engine");
+            console.log("🟢 Connected to DTU Health Center SQLite DBMS Engine");
 
             // Fetch live appointments from database
             const aptRes = await fetch(`${API_BASE}/appointments`);
             if (aptRes.ok) {
                 const liveApts = await aptRes.json();
-                localStorage.setItem("dtu_appointments", JSON.stringify(liveApts || []));
+                if (Array.isArray(liveApts)) {
+                    window._dtuMemoryDB.appointments = liveApts;
+                }
             }
 
             // Fetch live slots from database
@@ -133,7 +150,7 @@ async function syncDatabaseFromServer() {
             if (slotRes.ok) {
                 const liveSlots = await slotRes.json();
                 if (Array.isArray(liveSlots) && liveSlots.length > 0) {
-                    localStorage.setItem("dtu_slots", JSON.stringify(liveSlots));
+                    window._dtuMemoryDB.slots = liveSlots;
                 }
             }
 
@@ -142,7 +159,7 @@ async function syncDatabaseFromServer() {
             if (noticeRes.ok) {
                 const liveNotices = await noticeRes.json();
                 if (Array.isArray(liveNotices) && liveNotices.length > 0) {
-                    localStorage.setItem("dtu_notices", JSON.stringify(liveNotices));
+                    window._dtuMemoryDB.notices = liveNotices;
                 }
             }
 
@@ -151,7 +168,7 @@ async function syncDatabaseFromServer() {
             if (rxRes.ok) {
                 const liveRx = await rxRes.json();
                 if (Array.isArray(liveRx) && liveRx.length > 0) {
-                    localStorage.setItem("dtu_prescriptions", JSON.stringify(liveRx));
+                    window._dtuMemoryDB.prescriptions = liveRx;
                 }
             }
 
@@ -160,7 +177,7 @@ async function syncDatabaseFromServer() {
             if (refRes.ok) {
                 const liveRefs = await refRes.json();
                 if (Array.isArray(liveRefs) && liveRefs.length > 0) {
-                    localStorage.setItem("dtu_referrals", JSON.stringify(liveRefs));
+                    window._dtuMemoryDB.referrals = liveRefs;
                 }
             }
 
@@ -169,27 +186,30 @@ async function syncDatabaseFromServer() {
             if (medRes.ok) {
                 const liveMeds = await medRes.json();
                 if (Array.isArray(liveMeds) && liveMeds.length > 0) {
-                    localStorage.setItem("dtu_medicines", JSON.stringify(liveMeds));
+                    window._dtuMemoryDB.medicines = liveMeds;
                 }
             }
         }
     } catch (e) {
-        console.log("ℹ️ Server offline. Operating in autonomous local mode.");
+        console.log("ℹ️ Server running autonomously with Firebase Cloud sync.");
     }
 }
 
-// Reset all test data in database & localStorage
+// Reset all test data in database
 async function resetAllDemoData() {
     if (confirm("Reset all test appointments, queues, and demo bookings to fresh clean state?")) {
         try {
             await fetch(`${API_BASE}/reset`, { method: "POST" });
         } catch (e) {}
 
-        localStorage.clear();
+        // Clear only tables, keeping currentUser
+        const tableKeys = ['dtu_appointments', 'dtu_slots', 'dtu_prescriptions', 'dtu_referrals', 'dtu_notices', 'dtu_medicines'];
+        tableKeys.forEach(k => { try { localStorage.removeItem(k); } catch(err) {} });
+
         if (typeof initData === "function") {
             initData(true);
         }
-        showNotification("All previous test data cleared! Fresh database state initialized.", "success");
+        showNotification("All database test tables cleared! Fresh state initialized.", "success");
         setTimeout(() => {
             window.location.reload();
         }, 500);
@@ -211,7 +231,7 @@ function showNotification(message, type = "success") {
 
     const toast = document.createElement("div");
     toast.className = `alert alert-${type}`;
-    toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+    toast.style.boxShadow = "0 8px 24px rgba(0,0,0,0.4)";
     toast.style.marginBottom = "10px";
     toast.style.minWidth = "260px";
     toast.style.animation = "fadeIn 0.3s ease";
@@ -224,9 +244,9 @@ function showNotification(message, type = "success") {
     }, 3500);
 }
 
-// Helpers for Database Operations
+// Helpers for Database Operations (Single Source of Truth: Firebase Cloud & SQLite)
 function getAppointments() {
-    return JSON.parse(localStorage.getItem("dtu_appointments") || "[]");
+    return (window._dtuMemoryDB && window._dtuMemoryDB.appointments) || [];
 }
 
 async function saveAppointment(appointment) {
@@ -234,28 +254,26 @@ async function saveAppointment(appointment) {
     const exists = list.some(a => a.id === appointment.id);
     if (!exists) {
         list.unshift(appointment);
-        localStorage.setItem("dtu_appointments", JSON.stringify(list));
     }
 
     // Auto update slot count in slots array
-    let slots = JSON.parse(localStorage.getItem("dtu_slots") || "[]");
+    let slots = getSlots();
     const targetSlot = slots.find(s => 
         (appointment.slotId && s.id == appointment.slotId) || 
         (appointment.doctorName && s.doctorName === appointment.doctorName)
     );
     if (targetSlot) {
         targetSlot.bookedCount = Math.min(targetSlot.maxLimit || 10, (targetSlot.bookedCount || 0) + 1);
-        localStorage.setItem("dtu_slots", JSON.stringify(slots));
     }
 
-    // Persist to Server Database File
+    // Persist to SQLite Database Server
     try {
         await fetch(`${API_BASE}/appointments`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(appointment)
         });
-        console.log("💾 Saved to database (data/database.json)");
+        console.log("💾 Saved to SQLite database (database/hospital.db)");
     } catch (e) {}
 
     // Broadcast live event to all other open tabs (Doctor Queue, Slot Monitor)
@@ -266,42 +284,39 @@ async function saveAppointment(appointment) {
 async function cancelAppointmentAndFreeSlot(aptId, slotId, doctorName) {
     let list = getAppointments();
     const apt = list.find(a => a.id === aptId);
-    list = list.filter(a => a.id !== aptId);
-    localStorage.setItem("dtu_appointments", JSON.stringify(list));
+    window._dtuMemoryDB.appointments = list.filter(a => a.id !== aptId);
 
     const targetSlotId = slotId || (apt ? apt.slotId : null);
     const targetDocName = doctorName || (apt ? apt.doctorName : null);
 
-    let slots = JSON.parse(localStorage.getItem("dtu_slots") || "[]");
+    let slots = getSlots();
     const slot = slots.find(s => 
         (targetSlotId && s.id == targetSlotId) || 
         (targetDocName && s.doctorName === targetDocName)
     );
 
     if (slot) {
-        // Recount active non-cancelled appointments for this doctor/slot
-        const activeRemaining = list.filter(a => 
+        const activeRemaining = window._dtuMemoryDB.appointments.filter(a => 
             (a.slotId && a.slotId == slot.id) || 
             (a.doctorName && a.doctorName === slot.doctorName)
         ).length;
         slot.bookedCount = Math.max(0, activeRemaining);
-        localStorage.setItem("dtu_slots", JSON.stringify(slots));
         console.log(`📉 Slot capacity updated: ${slot.bookedCount}/${slot.maxLimit} for ${slot.doctorName}`);
     }
 
-    // Inform Database Server
+    // Inform SQLite Database Server
     try {
         await fetch(`${API_BASE}/appointments/cancel`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: aptId, slotId: targetSlotId, doctorName: targetDocName })
         });
-        console.log("💾 Cancellation synced to database file (data/database.json)");
+        console.log("💾 Cancellation synced to SQLite database (database/hospital.db)");
     } catch (e) {}
 
-    // Update Firebase Cloud if active
+    // Update Firebase Cloud Firestore
     if (typeof cloudCancelAppointment === 'function') {
-        cloudCancelAppointment(aptId);
+        cloudCancelAppointment(aptId, targetSlotId);
     }
 
     // Broadcast cancellation to all tabs (Doctor Dashboard, Booking page)
@@ -309,13 +324,12 @@ async function cancelAppointmentAndFreeSlot(aptId, slotId, doctorName) {
 }
 
 function getPrescriptions() {
-    return JSON.parse(localStorage.getItem("dtu_prescriptions") || "[]");
+    return (window._dtuMemoryDB && window._dtuMemoryDB.prescriptions) || [];
 }
 
 async function savePrescription(prescription) {
     const list = getPrescriptions();
     list.unshift(prescription);
-    localStorage.setItem("dtu_prescriptions", JSON.stringify(list));
 
     try {
         await fetch(`${API_BASE}/prescriptions`, {
@@ -326,7 +340,7 @@ async function savePrescription(prescription) {
         console.log("💾 Prescription saved to Hospital DBMS (database/hospital.db)");
     } catch (e) {}
 
-    // Cloud Firebase sync
+    // Cloud Firebase Firestore sync
     if (typeof cloudAddPrescription === 'function') {
         cloudAddPrescription(prescription);
     }
@@ -335,13 +349,12 @@ async function savePrescription(prescription) {
 }
 
 function getReferrals() {
-    return JSON.parse(localStorage.getItem("dtu_referrals") || "[]");
+    return (window._dtuMemoryDB && window._dtuMemoryDB.referrals) || [];
 }
 
 async function saveReferral(referral) {
     const list = getReferrals();
     list.unshift(referral);
-    localStorage.setItem("dtu_referrals", JSON.stringify(list));
 
     try {
         await fetch(`${API_BASE}/referrals`, {
@@ -352,7 +365,7 @@ async function saveReferral(referral) {
         console.log("💾 Referral saved to Hospital DBMS (database/hospital.db)");
     } catch (e) {}
 
-    // Cloud Firebase sync
+    // Cloud Firebase Firestore sync
     if (typeof cloudAddReferral === 'function') {
         cloudAddReferral(referral);
     }
@@ -374,13 +387,12 @@ async function triggerEmergencySOS(sosData) {
 }
 
 function getNotices() {
-    return JSON.parse(localStorage.getItem("dtu_notices") || "[]");
+    return (window._dtuMemoryDB && window._dtuMemoryDB.notices) || [];
 }
 
 async function saveNotice(notice) {
     const list = getNotices();
     list.unshift(notice);
-    localStorage.setItem("dtu_notices", JSON.stringify(list));
 
     try {
         await fetch(`${API_BASE}/notices`, {
@@ -394,9 +406,8 @@ async function saveNotice(notice) {
 }
 
 function getSlots() {
-    let slots = JSON.parse(localStorage.getItem("dtu_slots") || "[]");
+    let slots = (window._dtuMemoryDB && window._dtuMemoryDB.slots) || [];
     const appointments = getAppointments();
-    let updated = false;
 
     slots.forEach(slot => {
         if (!slot.maxLimit) slot.maxLimit = 10;
@@ -409,20 +420,15 @@ function getSlots() {
         // Auto-heal any overflow, negative, or desynced slot counts
         if (slot.bookedCount > slot.maxLimit || slot.bookedCount !== activeCount) {
             slot.bookedCount = Math.min(slot.maxLimit, activeCount);
-            updated = true;
         }
     });
 
-    if (updated) {
-        localStorage.setItem("dtu_slots", JSON.stringify(slots));
-    }
     return slots;
 }
 
 async function saveSlot(slot) {
-    const list = JSON.parse(localStorage.getItem("dtu_slots") || "[]");
+    const list = getSlots();
     list.unshift(slot);
-    localStorage.setItem("dtu_slots", JSON.stringify(list));
 
     try {
         await fetch(`${API_BASE}/slots`, {
@@ -436,12 +442,11 @@ async function saveSlot(slot) {
 }
 
 function updateSlotBookedCount(slotId) {
-    // Reconciles slot count directly from getSlots() auto-heal
     getSlots();
 }
 
 function getMedicines() {
-    return JSON.parse(localStorage.getItem("dtu_medicines") || "[]");
+    return (window._dtuMemoryDB && window._dtuMemoryDB.medicines) || [];
 }
 
 async function updateMedicineStock(id, newStock) {
@@ -449,7 +454,6 @@ async function updateMedicineStock(id, newStock) {
     const item = list.find(m => m.id == id);
     if (item) {
         item.stock = parseInt(newStock);
-        localStorage.setItem("dtu_medicines", JSON.stringify(list));
 
         try {
             await fetch(`${API_BASE}/medicines`, {

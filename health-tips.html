@@ -109,7 +109,7 @@
                 document.getElementById('addTipSection').style.display = 'block';
             }
 
-            allTips = JSON.parse(localStorage.getItem('dtu_healthTips') || '[]');
+            allTips = (typeof healthTips !== 'undefined') ? healthTips.slice() : [];
             renderTipsList(allTips);
         }
 
@@ -188,7 +188,6 @@
             };
 
             allTips.unshift(newTip);
-            localStorage.setItem('dtu_healthTips', JSON.stringify(allTips));
 
             showNotification('Health article published successfully!', 'success');
             document.getElementById('tipTitle').value = '';

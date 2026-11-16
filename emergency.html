@@ -253,7 +253,7 @@
 
         function renderEmergencyContacts() {
             const container = document.getElementById('emergencyContactsList');
-            const contacts = JSON.parse(localStorage.getItem('dtu_emergency') || '[]');
+            const contacts = (typeof emergencyContacts !== 'undefined') ? emergencyContacts : [];
 
             container.innerHTML = contacts.map(c => `
                 <div class="contact-card">
