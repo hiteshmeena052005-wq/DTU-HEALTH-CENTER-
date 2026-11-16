@@ -5,13 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Appointment - DTU Health Center</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .btn-loading {
-            background: #555 !important;
-            cursor: not-allowed !important;
-            transform: none !important;
-        }
-    </style>
 </head>
 <body onload="initBookingPage()">
 
@@ -123,7 +116,7 @@
                         <a href="emergency.html" style="color:var(--danger); font-size:0.9rem;">
                             🚨 If this is a life-threatening emergency, tap here for Immediate Ambulance!
                         </a>
-                        <button type="submit" class="btn btn-primary" id="submitBtn" style="min-width:260px; font-weight:700;">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" style="min-width:240px; font-weight:700; transition: all 0.2s ease;">
                             Confirm Appointment Booking
                         </button>
                     </div>
@@ -132,32 +125,6 @@
             </div>
         </div>
 
-    </div>
-
-    <!-- Booking Confirmation Modal Popup -->
-    <div id="bookingSuccessModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center;">
-        <div class="modal-content" style="background:#fff; max-width:480px; width:90%; padding:30px; border-radius:12px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.3); animation:fadeIn 0.3s ease;">
-            <div style="width:70px; height:70px; background:#e8f5e9; color:#2e7d32; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:2.5rem; margin-bottom:15px;">
-                ✓
-            </div>
-            <h2 style="color:var(--primary); margin-bottom:8px; font-size:1.5rem;">Appointment Confirmed!</h2>
-            <p style="color:#555; font-size:0.95rem; margin-bottom:20px;">
-                Your appointment has been registered and saved in the database!
-            </p>
-
-            <div style="background:#f9f9f9; padding:15px; border-radius:8px; text-align:left; font-size:0.9rem; margin-bottom:20px; border-left:4px solid var(--primary);">
-                <div style="margin-bottom:6px;">👨‍⚕️ Doctor: <strong id="succDocName">--</strong></div>
-                <div style="margin-bottom:6px;">📅 Date: <strong id="succDate">--</strong></div>
-                <div style="margin-bottom:6px;">⏰ Time: <strong id="succTime">--</strong></div>
-                <div>🏥 Mode: <strong id="succMode">--</strong></div>
-            </div>
-
-            <div style="display:flex; gap:10px; justify-content:center;">
-                <button onclick="window.location.href='student-dashboard.html'" class="btn btn-primary" style="width:100%;">
-                    View on Dashboard ➔
-                </button>
-            </div>
-        </div>
     </div>
 
     <!-- Dynamic Footer Mount -->
@@ -290,11 +257,13 @@
             event.preventDefault();
 
             const submitBtn = document.getElementById('submitBtn');
-            
-            // 1. INSTANT BUTTON FEEDBACK (User clearly sees click registered!)
+
+            // 1. CLICK KARTE HI TURANT GREEN + CONFIRMED!
             submitBtn.disabled = true;
-            submitBtn.classList.add('btn-loading');
-            submitBtn.innerHTML = `⏳ Booking in progress... Please wait`;
+            submitBtn.style.background = '#28a745';
+            submitBtn.style.borderColor = '#28a745';
+            submitBtn.style.color = '#ffffff';
+            submitBtn.innerHTML = `✓ Confirmed!`;
 
             const slotId = document.getElementById('selectedSlotId').value;
             const doctorName = document.getElementById('selectedDoctorName').value;
@@ -311,7 +280,8 @@
             if (targetSlot && targetSlot.bookedCount >= targetSlot.maxLimit) {
                 alert("Sorry, all 10 spots for this doctor session are already filled!");
                 submitBtn.disabled = false;
-                submitBtn.classList.remove('btn-loading');
+                submitBtn.style.background = '';
+                submitBtn.style.borderColor = '';
                 submitBtn.innerHTML = `Confirm Appointment Booking`;
                 return;
             }
@@ -334,31 +304,19 @@
                 createdAt: new Date().toLocaleDateString()
             };
 
-            // 2. SAVE TO DATABASE & CLOUD
+            // Save to Database & LocalStorage
             await saveAppointment(newAppointment);
             if (typeof cloudAddAppointment === 'function') {
                 await cloudAddAppointment(newAppointment);
             }
             updateSlotBookedCount(slotId);
 
-            // 3. SHOW SUCCESS MODAL (Clear visual confirmation)
-            submitBtn.style.background = '#28a745';
-            submitBtn.innerHTML = `✓ Confirmed!`;
+            showNotification("Appointment Confirmed!", "success");
 
-            document.getElementById('succDocName').textContent = doctorName;
-            document.getElementById('succDate').textContent = date;
-            document.getElementById('succTime').textContent = time;
-            document.getElementById('succMode').textContent = mode;
-
-            const modal = document.getElementById('bookingSuccessModal');
-            modal.style.display = 'flex';
-
-            showNotification("Appointment confirmed successfully!", "success");
-
-            // Auto-redirect after 3 seconds if modal not closed
+            // Redirect smoothly to dashboard
             setTimeout(() => {
                 window.location.href = "student-dashboard.html";
-            }, 3000);
+            }, 800);
         }
     </script>
 </body>
