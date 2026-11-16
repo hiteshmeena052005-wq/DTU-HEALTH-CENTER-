@@ -531,6 +531,11 @@ function loadNavbar(role) {
         `;
     }
 
+    const currentTheme = getSavedTheme();
+    const isLight = currentTheme === 'light';
+    const themeIcon = isLight ? '☀️' : '🌙';
+    const themeTitle = isLight ? 'Switch to Dark Glass Mode' : 'Switch to Light Mode';
+
     const navHtml = `
     <div class="nav-wrapper">
         <nav class="navbar">
@@ -543,7 +548,7 @@ function loadNavbar(role) {
                 ${navLinksHtml}
             </ul>
             <div class="nav-right">
-                <button class="theme-toggle-btn" title="Dark Glass Mode Active">🌙</button>
+                <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" title="${themeTitle}" aria-label="${themeTitle}">${themeIcon}</button>
                 ${userRightHtml}
             </div>
         </nav>
@@ -551,7 +556,68 @@ function loadNavbar(role) {
     `;
 
     headerContainer.innerHTML = navHtml;
+    applyTheme(currentTheme);
 }
+
+// ==========================================================================
+// THEME MANAGEMENT (Dark Glassmorphism <-> Modern Crisp Light Mode)
+// ==========================================================================
+function getSavedTheme() {
+    try {
+        return localStorage.getItem('dtu_theme') || 'dark';
+    } catch (e) {
+        return 'dark';
+    }
+}
+
+function applyTheme(theme) {
+    const isLight = (theme === 'light');
+    if (isLight) {
+        document.body.classList.add('light-mode');
+        document.documentElement.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+        document.documentElement.classList.remove('light-mode');
+    }
+
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) {
+        btn.innerHTML = isLight ? '☀️' : '🌙';
+        const label = isLight ? 'Switch to Dark Glass Mode' : 'Switch to Light Mode';
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+}
+
+function toggleTheme() {
+    const current = getSavedTheme();
+    const nextTheme = current === 'light' ? 'dark' : 'light';
+    try {
+        localStorage.setItem('dtu_theme', nextTheme);
+    } catch (e) {}
+    applyTheme(nextTheme);
+
+    if (typeof showNotification === 'function') {
+        showNotification(nextTheme === 'light' ? '☀️ Light Mode Activated' : '🌙 Dark Glass Mode Activated', 'info');
+    }
+}
+
+// Auto-apply theme immediately on script load to prevent white flash
+(function () {
+    try {
+        const saved = localStorage.getItem('dtu_theme');
+        if (saved === 'light') {
+            document.documentElement.classList.add('light-mode');
+            if (document.body) {
+                document.body.classList.add('light-mode');
+            } else {
+                document.addEventListener('DOMContentLoaded', function () {
+                    document.body.classList.add('light-mode');
+                });
+            }
+        }
+    } catch (e) {}
+})();
 
 // Render modern DTU footer with floating SOS ambulance button
 function loadFooter() {
@@ -608,6 +674,7 @@ function initPage(role) {
     const user = checkLogin(role);
     loadNavbar(role);
     loadFooter();
+    applyTheme(getSavedTheme());
 
     // Trigger asynchronous sync with database file
     syncDatabaseFromServer();
