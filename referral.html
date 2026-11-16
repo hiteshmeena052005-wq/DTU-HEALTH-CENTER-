@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Referral System - DTU Health Center</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body onload="initReferralPage()">
+
+    <!-- Dynamic Navbar Mount -->
+    <div id="navbar-mount"></div>
+
+    <div class="container section">
+
+        <div style="margin-bottom:25px; text-align:center;">
+            <h1 class="section-title">Inter-Department Patient Referral</h1>
+            <p style="color:var(--text-light); max-width:650px; margin:0 auto;">
+                Transfer students seamlessly between DTU Health Center specialists (e.g. from General OPD to Orthopedic, Dental, or Mental Health Counseling).
+            </p>
+        </div>
+
+        <div class="dashboard-grid">
+
+            <!-- Left: New Patient Referral Form -->
+            <div class="card">
+                <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
+                    <h3 style="font-size:1.15rem; color:var(--primary);">
+                        🔄 Create Clinical Referral Slip
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form onsubmit="submitReferral(event)">
+                        
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                            <div class="form-group">
+                                <label class="form-label">Student Name *</label>
+                                <input type="text" id="refStudentName" class="form-input" placeholder="e.g. Rahul Meena" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Student Roll Number</label>
+                                <input type="text" id="refRollNo" class="form-input" placeholder="e.g. 2K22/CO/101">
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                            <div class="form-group">
+                                <label class="form-label">Referring Doctor (You)</label>
+                                <input type="text" id="refFromDoctor" class="form-input" readonly style="background:#f4f4f4;">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Referring Department</label>
+                                <input type="text" id="refFromDept" class="form-input" readonly style="background:#f4f4f4;">
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                            <div class="form-group">
+                                <label class="form-label">Refer To Specialty Department *</label>
+                                <select id="refToDept" class="form-select" onchange="filterDoctorsByDept()" required>
+                                    <option value="">Select Department</option>
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Target Specialist Doctor *</label>
+                                <select id="refToDoctor" class="form-select" required>
+                                    <option value="">Select Doctor</option>
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:12px;">
+                            <label class="form-label">Referral Urgency Priority *</label>
+                            <select id="refPriority" class="form-select" required>
+                                <option value="Routine OPD Referral">Routine OPD Referral</option>
+                                <option value="Semi-Urgent (Within 24 Hours)">Semi-Urgent (Within 24 Hours)</option>
+                                <option value="Immediate Priority Attention">Immediate Priority Attention</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:12px;">
+                            <label class="form-label">Reason for Referral & Clinical Findings *</label>
+                            <textarea id="refReason" class="form-textarea" rows="3" placeholder="e.g. Persistent knee joint swelling following sports injury in campus ground. Suspected ligament tear. Kindly evaluate for X-ray / MRI..." required></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:16px;">
+                            <label class="form-label">Pre-Referral Investigations / Advised Tests</label>
+                            <input type="text" id="refTests" class="form-input" placeholder="e.g. X-Ray Knee AP/Lateral View, Complete Blood Count">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width:100%;">
+                            Issue & Transfer Referral Slip
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Active Referrals on Record -->
+            <div class="card">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="font-size:1.15rem; color:var(--primary-dark);">
+                        📋 Campus Clinical Referral History
+                    </h3>
+                    <span class="badge badge-info" id="refCountBadge">0 records</span>
+                </div>
+                <div class="card-body" id="referralListContainer">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Dynamic Footer Mount -->
+    <div id="footer-mount"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentDoctor = {};
+
+        function initReferralPage() {
+            const user = initPage('doctor');
+            if (!user) return;
+
+            currentDoctor = user;
+            document.getElementById('refFromDoctor').value = currentDoctor.name || 'Dr. Rajesh Sharma';
+            document.getElementById('refFromDept').value = currentDoctor.department || 'General Medicine (OPD)';
+
+            // Read URL params if redirected from doctor dashboard
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('patient')) {
+                document.getElementById('refStudentName').value = params.get('patient');
+            }
+            if (params.get('roll')) {
+                document.getElementById('refRollNo').value = params.get('roll');
+            }
+
+            populateDepartmentDropdown();
+            renderReferrals();
+        }
+
+        // Fill target departments
+        function populateDepartmentDropdown() {
+            const deptSelect = document.getElementById('refToDept');
+            departments.forEach(d => {
+                // Don't show current doctor's own department as primary choice
+                if (d.name !== currentDoctor.department) {
+                    const opt = document.createElement('option');
+                    opt.value = d.name;
+                    opt.textContent = `${d.icon} ${d.name}`;
+                    deptSelect.appendChild(opt);
+                }
+            });
+            filterDoctorsByDept();
+        }
+
+        // Filter doctors dropdown when department changes
+        function filterDoctorsByDept() {
+            const selectedDept = document.getElementById('refToDept').value;
+            const doctorSelect = document.getElementById('refToDoctor');
+            doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
+
+            const filtered = doctors.filter(doc => !selectedDept || doc.department === selectedDept);
+            filtered.forEach(doc => {
+                const opt = document.createElement('option');
+                opt.value = doc.name;
+                opt.textContent = `${doc.name} (${doc.qualification})`;
+                doctorSelect.appendChild(opt);
+            });
+
+            // If no exact match found, provide general on-duty specialist option
+            if (filtered.length === 0 && selectedDept) {
+                const opt = document.createElement('option');
+                opt.value = `On-Duty Specialist (${selectedDept})`;
+                opt.textContent = `On-Duty Specialist (${selectedDept})`;
+                doctorSelect.appendChild(opt);
+            }
+        }
+
+        // Submit new referral
+        function submitReferral(event) {
+            event.preventDefault();
+
+            const studentName = document.getElementById('refStudentName').value.trim();
+            const rollNo = document.getElementById('refRollNo').value.trim();
+            const toDept = document.getElementById('refToDept').value;
+            const toDoctor = document.getElementById('refToDoctor').value;
+            const priority = document.getElementById('refPriority').value;
+            const reason = document.getElementById('refReason').value.trim();
+            const tests = document.getElementById('refTests').value.trim();
+
+            const newReferral = {
+                id: "REF-" + Date.now().toString().slice(-4),
+                studentName: studentName,
+                rollNo: rollNo,
+                fromDoctor: currentDoctor.name || "Dr. Rajesh Sharma",
+                fromDept: currentDoctor.department || "General Medicine",
+                toDoctor: toDoctor,
+                toDept: toDept,
+                priority: priority,
+                reason: reason,
+                tests: tests || "None",
+                date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+                status: "Pending Specialist Visit"
+            };
+
+            const referrals = JSON.parse(localStorage.getItem('dtu_referrals') || '[]');
+            referrals.unshift(newReferral);
+            localStorage.setItem('dtu_referrals', JSON.stringify(referrals));
+
+            showNotification(`Patient ${studentName} referred to ${toDoctor}!`, 'success');
+            
+            document.getElementById('refReason').value = '';
+            document.getElementById('refTests').value = '';
+            renderReferrals();
+        }
+
+        // Render past referrals
+        function renderReferrals() {
+            const container = document.getElementById('referralListContainer');
+            const referrals = JSON.parse(localStorage.getItem('dtu_referrals') || '[]');
+
+            // If empty, supply sample referral
+            if (referrals.length === 0) {
+                referrals.push({
+                    id: "REF-101",
+                    studentName: "Rahul Meena",
+                    rollNo: "2K22/CO/101",
+                    fromDoctor: "Dr. Rajesh Sharma",
+                    fromDept: "General Medicine (OPD)",
+                    toDoctor: "Dr. Amit Kumar",
+                    toDept: "Orthopedic",
+                    priority: "Routine OPD Referral",
+                    reason: "Complaining of persistent lower back stiffness after prolonged coding sessions.",
+                    tests: "Lumbosacral spine posture evaluation",
+                    date: "12 Nov 2026",
+                    status: "Consultation Completed"
+                });
+                localStorage.setItem('dtu_referrals', JSON.stringify(referrals));
+            }
+
+            document.getElementById('refCountBadge').textContent = `${referrals.length} records`;
+
+            container.innerHTML = referrals.map(ref => `
+                <div style="border-left:4px solid var(--accent); padding:12px; margin-bottom:12px; background:#fbfbfb; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <strong style="color:var(--primary); font-size:1rem;">${ref.studentName}</strong> 
+                            <span style="font-size:0.85rem; color:#777;">(${ref.rollNo || 'DTU Student'})</span>
+                        </div>
+                        <span class="badge ${ref.priority && ref.priority.includes('Immediate') ? 'badge-danger' : 'badge-warning'}">
+                            ${ref.priority}
+                        </span>
+                    </div>
+
+                    <div style="margin:8px 0; font-size:0.88rem; background:#fff; padding:8px; border-radius:4px; border:1px solid #eee;">
+                        <div>From: <strong>${ref.fromDoctor}</strong> (${ref.fromDept})</div>
+                        <div style="color:var(--primary); margin-top:3px;">
+                            ➔ Referred To: <strong>${ref.toDoctor}</strong> (${ref.toDept})
+                        </div>
+                    </div>
+
+                    <p style="font-size:0.85rem; color:#444; margin-bottom:6px;">
+                        <strong>Clinical Finding:</strong> ${ref.reason}
+                    </p>
+                    <div style="font-size:0.8rem; color:#666;">
+                        <strong>Advised Tests:</strong> ${ref.tests}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.78rem; color:#999;">
+                        <span>Ref ID: ${ref.id}</span>
+                        <span>Date: ${ref.date}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

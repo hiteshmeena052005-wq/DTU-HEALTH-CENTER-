@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispensary Medicine Stock (Doctor/Admin) - DTU Health Center</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body onload="initInventoryPage()">
+
+    <!-- Dynamic Navbar Mount -->
+    <div id="navbar-mount"></div>
+
+    <div class="container section">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px;">
+            <div>
+                <h1 class="section-title" style="margin-bottom:5px;">Dispensary Medicine Inventory</h1>
+                <p style="color:var(--text-light); font-size:0.95rem;">
+                    Doctor & Admin Dispensary Management — Monitor inventory levels and register new pharmacy batches.
+                </p>
+            </div>
+            <div id="inventoryStats" style="display:flex; gap:12px; font-size:0.85rem;">
+                <span class="badge badge-success" id="inStockBadge">0 In Stock</span>
+                <span class="badge badge-warning" id="lowStockBadge">0 Low Stock Alert</span>
+            </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="card" style="margin-bottom:20px; padding:15px;">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                <div style="flex:1; min-width:260px;">
+                    <input type="text" id="medSearch" class="form-input" placeholder="🔍 Search medicine by name (e.g. Paracetamol, Cetirizine)..." oninput="filterInventory()">
+                </div>
+                <div style="min-width:200px;">
+                    <select id="medCategoryFilter" class="form-select" onchange="filterInventory()">
+                        <option value="All">All Categories</option>
+                        <option value="Analgesic">Analgesic / Fever</option>
+                        <option value="Antibiotic">Antibiotic</option>
+                        <option value="Antacid">Antacid / Acidity</option>
+                        <option value="Allergy">Allergy / Antihistamine</option>
+                        <option value="First Aid">First Aid / Antiseptic</option>
+                        <option value="Pain Relief">Pain Relief</option>
+                        <option value="Supplements">Supplements & Vitamins</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCTOR: Add New Stock Item -->
+        <div id="doctorAddMedicineSection" class="card" style="margin-bottom:25px; border-top:4px solid var(--primary);">
+            <div class="card-header">
+                <h3 style="font-size:1.1rem; color:var(--primary);">+ Register New Medicine Stock in Dispensary</h3>
+            </div>
+            <div class="card-body">
+                <form onsubmit="addNewMedicine(event)" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; align-items:flex-end;">
+                    <div class="form-group">
+                        <label class="form-label">Medicine Name *</label>
+                        <input type="text" id="newMedName" class="form-input" placeholder="e.g. Cough Lozenges" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <input type="text" id="newMedCat" class="form-input" placeholder="e.g. Cold / Throat" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Initial Stock Count *</label>
+                        <input type="number" id="newMedStock" class="form-input" value="50" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Unit Type</label>
+                        <input type="text" id="newMedUnit" class="form-input" value="Tablets" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary" style="width:100%;">Add to Inventory</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Inventory Table Card -->
+        <div class="card">
+            <div class="card-body" style="padding:0;">
+                <div class="table-container" style="overflow-x:auto;">
+                    <table class="table" style="font-size:0.9rem; margin:0;">
+                        <thead>
+                            <tr style="background:#f5f5f5;">
+                                <th>#</th>
+                                <th>Medicine Name</th>
+                                <th>Therapeutic Category</th>
+                                <th>Stock Status</th>
+                                <th>Available Quantity</th>
+                                <th>Expiry Period</th>
+                                <th style="text-align:center;">Stock Adjustment (+ / -)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Dynamic Footer Mount -->
+    <div id="footer-mount"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        function initInventoryPage() {
+            // Strictly restricted to Doctor / Admin
+            const user = initPage('doctor');
+            if (!user) return;
+
+            renderInventory();
+        }
+
+        function renderInventory() {
+            const tbody = document.getElementById('inventoryTableBody');
+            const items = getMedicines();
+
+            let inStockCount = 0;
+            let lowStockCount = 0;
+
+            items.forEach(m => {
+                if (m.stock > 30) inStockCount++;
+                else if (m.stock > 0) lowStockCount++;
+            });
+
+            document.getElementById('inStockBadge').textContent = `${inStockCount} In Stock`;
+            document.getElementById('lowStockBadge').textContent = `${lowStockCount} Low Stock Alert`;
+
+            tbody.innerHTML = items.map((m, index) => {
+                let badgeClass = 'badge-success';
+                let statusText = 'Available';
+
+                if (m.stock <= 0) {
+                    badgeClass = 'badge-danger';
+                    statusText = 'Out of Stock';
+                } else if (m.stock <= 30) {
+                    badgeClass = 'badge-warning';
+                    statusText = 'Low Stock';
+                }
+
+                return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong style="color:#222;">${m.name}</strong></td>
+                    <td><span style="color:#666;">${m.category}</span></td>
+                    <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                    <td>
+                        <strong>${m.stock}</strong> <span style="font-size:0.8rem; color:#777;">${m.unit}</span>
+                    </td>
+                    <td style="color:#666;">${m.expiry || '2027'}</td>
+                    <td style="text-align:center;">
+                        <div style="display:inline-flex; gap:6px; align-items:center;">
+                            <button onclick="adjustStock(${m.id}, -10)" class="btn btn-small btn-secondary" style="padding:2px 8px;" title="Deduct 10">-10</button>
+                            <button onclick="adjustStock(${m.id}, 10)" class="btn btn-small btn-secondary" style="padding:2px 8px;" title="Add 10">+10</button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        function filterInventory() {
+            const query = document.getElementById('medSearch').value.toLowerCase();
+            const category = document.getElementById('medCategoryFilter').value;
+            const items = getMedicines();
+
+            const filtered = items.filter(m => {
+                const matchesQuery = m.name.toLowerCase().includes(query) || m.category.toLowerCase().includes(query);
+                const matchesCategory = (category === 'All') || m.category.toLowerCase().includes(category.toLowerCase());
+                return matchesQuery && matchesCategory;
+            });
+
+            const tbody = document.getElementById('inventoryTableBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#777;">No matching medicine found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((m, index) => {
+                let badgeClass = 'badge-success';
+                let statusText = 'Available';
+
+                if (m.stock <= 0) {
+                    badgeClass = 'badge-danger';
+                    statusText = 'Out of Stock';
+                } else if (m.stock <= 30) {
+                    badgeClass = 'badge-warning';
+                    statusText = 'Low Stock';
+                }
+
+                return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${m.name}</strong></td>
+                    <td>${m.category}</td>
+                    <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                    <td><strong>${m.stock}</strong> ${m.unit}</td>
+                    <td>${m.expiry || '2027'}</td>
+                    <td style="text-align:center;">
+                        <div style="display:inline-flex; gap:6px; align-items:center;">
+                            <button onclick="adjustStock(${m.id}, -10)" class="btn btn-small btn-secondary" style="padding:2px 8px;">-10</button>
+                            <button onclick="adjustStock(${m.id}, 10)" class="btn btn-small btn-secondary" style="padding:2px 8px;">+10</button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        function adjustStock(medId, delta) {
+            const items = getMedicines();
+            const target = items.find(m => m.id == medId);
+            if (target) {
+                target.stock = Math.max(0, target.stock + delta);
+                localStorage.setItem('dtu_medicines', JSON.stringify(items));
+                showNotification(`Updated ${target.name} stock to ${target.stock}`, 'success');
+                renderInventory();
+            }
+        }
+
+        function addNewMedicine(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('newMedName').value.trim();
+            const cat = document.getElementById('newMedCat').value.trim();
+            const stock = parseInt(document.getElementById('newMedStock').value) || 50;
+            const unit = document.getElementById('newMedUnit').value.trim() || 'Tablets';
+
+            const items = getMedicines();
+            const newItem = {
+                id: Date.now(),
+                name: name,
+                category: cat,
+                stock: stock,
+                unit: unit,
+                expiry: "2027-12"
+            };
+
+            items.push(newItem);
+            localStorage.setItem('dtu_medicines', JSON.stringify(items));
+
+            showNotification(`${name} registered in dispensary stock!`, 'success');
+            document.getElementById('newMedName').value = '';
+            document.getElementById('newMedCat').value = '';
+            renderInventory();
+        }
+    </script>
+</body>
+</html>

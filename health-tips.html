@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Tips & Wellness Board - DTU Health Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .tip-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            border-top: 4px solid var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body onload="initHealthTipsPage()">
+
+    <!-- Dynamic Navbar Mount -->
+    <div id="navbar-mount"></div>
+
+    <div class="container section">
+
+        <div style="margin-bottom:25px; text-align:center;">
+            <h1 class="section-title">Campus Health & Wellness Board</h1>
+            <p style="color:var(--text-light); max-width:650px; margin:0 auto;">
+                Verified medical advice, stress management tips, seasonal advisories, and wellness guidelines from DTU Health Center medical officers.
+            </p>
+        </div>
+
+        <!-- Filter & Search Controls -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px; background:#fff; padding:15px; border-radius:8px; border:1px solid #eee;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button onclick="filterTips('All')" class="btn btn-small btn-primary filter-btn">All Tips</button>
+                <button onclick="filterTips('Mental Health')" class="btn btn-small btn-secondary filter-btn">Mental Health</button>
+                <button onclick="filterTips('Ergonomics')" class="btn btn-small btn-secondary filter-btn">Ergonomics</button>
+                <button onclick="filterTips('General Wellness')" class="btn btn-small btn-secondary filter-btn">General Wellness</button>
+                <button onclick="filterTips('Lifestyle')" class="btn btn-small btn-secondary filter-btn">Lifestyle</button>
+            </div>
+            <div style="min-width:240px;">
+                <input type="text" id="searchTipsInput" class="form-input" placeholder="🔍 Search health advice..." oninput="searchTips()">
+            </div>
+        </div>
+
+        <!-- DOCTOR ONLY: Add Tip Form -->
+        <div id="addTipSection" class="card" style="display:none; margin-bottom:25px; border-top:4px solid var(--primary);">
+            <div class="card-header">
+                <h3 style="font-size:1.1rem; color:var(--primary);">+ Publish New Health Tip / Campus Advisory</h3>
+            </div>
+            <div class="card-body">
+                <form onsubmit="submitNewTip(event)">
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+                        <div class="form-group">
+                            <label class="form-label">Article Title *</label>
+                            <input type="text" id="tipTitle" class="form-input" placeholder="e.g. Protecting Vision During Long Screen Lab Sessions" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category *</label>
+                            <select id="tipCategory" class="form-select" required>
+                                <option value="General Wellness">General Wellness</option>
+                                <option value="Mental Health">Mental Health</option>
+                                <option value="Ergonomics">Ergonomics</option>
+                                <option value="Lifestyle">Lifestyle</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label class="form-label">Article Advice / Content *</label>
+                        <textarea id="tipContent" class="form-textarea" rows="3" placeholder="Write practical health advice for university students..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Publish to Campus Board</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tips Grid -->
+        <div id="tipsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
+            <!-- Populated dynamically -->
+        </div>
+
+    </div>
+
+    <!-- Dynamic Footer Mount -->
+    <div id="footer-mount"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentFilter = 'All';
+        let allTips = [];
+
+        function initHealthTipsPage() {
+            const user = getCurrentUser();
+            const role = user ? user.role : 'student';
+            initPage(role);
+
+            if (role === 'doctor') {
+                document.getElementById('addTipSection').style.display = 'block';
+            }
+
+            allTips = JSON.parse(localStorage.getItem('dtu_healthTips') || '[]');
+            renderTipsList(allTips);
+        }
+
+        function renderTipsList(list) {
+            const grid = document.getElementById('tipsGrid');
+
+            if (list.length === 0) {
+                grid.innerHTML = '<p style="color:var(--text-light); grid-column:1/-1; text-align:center; padding:30px;">No health tips matching this filter.</p>';
+                return;
+            }
+
+            grid.innerHTML = list.map(tip => `
+                <div class="tip-card">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                            <span class="badge badge-warning" style="font-size:0.75rem;">${tip.category}</span>
+                            <span style="font-size:0.75rem; color:#888;">${tip.date}</span>
+                        </div>
+                        <h3 style="color:var(--primary); font-size:1.15rem; margin-bottom:8px;">${tip.title}</h3>
+                        <p style="font-size:0.9rem; color:#444; line-height:1.6; margin-bottom:15px;">
+                            ${tip.content}
+                        </p>
+                    </div>
+                    <div style="border-top:1px solid #eee; padding-top:10px; font-size:0.8rem; color:#666;">
+                        ✍️ Contributed by: <strong>${tip.author}</strong>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterTips(category) {
+            currentFilter = category;
+            
+            // Highlight active button
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(b => {
+                if (b.textContent.trim() === category || (category === 'All' && b.textContent.includes('All'))) {
+                    b.className = 'btn btn-small btn-primary filter-btn';
+                } else {
+                    b.className = 'btn btn-small btn-secondary filter-btn';
+                }
+            });
+
+            if (category === 'All') {
+                renderTipsList(allTips);
+            } else {
+                const filtered = allTips.filter(t => t.category === category);
+                renderTipsList(filtered);
+            }
+        }
+
+        function searchTips() {
+            const query = document.getElementById('searchTipsInput').value.toLowerCase();
+            const filtered = allTips.filter(t => 
+                (currentFilter === 'All' || t.category === currentFilter) &&
+                (t.title.toLowerCase().includes(query) || t.content.toLowerCase().includes(query))
+            );
+            renderTipsList(filtered);
+        }
+
+        function submitNewTip(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('tipTitle').value.trim();
+            const category = document.getElementById('tipCategory').value;
+            const content = document.getElementById('tipContent').value.trim();
+            const user = getCurrentUser();
+
+            const newTip = {
+                id: Date.now(),
+                title: title,
+                content: content,
+                author: (user && user.name) ? user.name : "DTU Health Team",
+                date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+                category: category
+            };
+
+            allTips.unshift(newTip);
+            localStorage.setItem('dtu_healthTips', JSON.stringify(allTips));
+
+            showNotification('Health article published successfully!', 'success');
+            document.getElementById('tipTitle').value = '';
+            document.getElementById('tipContent').value = '';
+            filterTips(currentFilter);
+        }
+    </script>
+</body>
+</html>

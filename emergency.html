@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instant Ambulance & Emergency SOS - DTU Health Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .sos-hero-card {
+            background: linear-gradient(135deg, #b30000 0%, #660000 100%);
+            color: #fff;
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(179,0,0,0.3);
+            margin-bottom: 30px;
+        }
+        .sos-pulse-btn {
+            background: #fff;
+            color: #b30000;
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 18px 40px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 0 0 0 rgba(255,255,255, 0.7);
+            animation: pulse-red 2s infinite;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.2s;
+            margin-top: 20px;
+        }
+        .sos-pulse-btn:hover {
+            transform: scale(1.05);
+            background: #ffe6e6;
+        }
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 25px rgba(255, 255, 255, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .contact-card {
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            border-left: 5px solid var(--danger);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body onload="initEmergencyPage()">
+
+    <!-- Dynamic Navbar Mount -->
+    <div id="navbar-mount"></div>
+
+    <div class="container section">
+
+        <!-- GIANT INSTANT AMBULANCE HERO BUTTON -->
+        <div class="sos-hero-card">
+            <span style="font-size:3rem; display:block; margin-bottom:10px;">🚨</span>
+            <h1 style="font-size:2.2rem; font-weight:800; letter-spacing:0.5px;">
+                DTU CAMPUS EMERGENCY SOS
+            </h1>
+            <p style="font-size:1.1rem; max-width:620px; margin:10px auto 0 auto; opacity:0.95;">
+                Need urgent medical assistance? Trigger instant ambulance dispatch to your hostel or campus location.
+            </p>
+
+            <div>
+                <button onclick="openAmbulanceModal()" class="sos-pulse-btn">
+                    <span>🚑</span> REQUEST INSTANT AMBULANCE
+                </button>
+            </div>
+            
+            <p style="font-size:0.85rem; margin-top:15px; opacity:0.8;">
+                Direct 24x7 Ambulance Line: <strong>011-27871018</strong> | National Emergency: <strong>112 / 102</strong>
+            </p>
+        </div>
+
+        <!-- Emergency Dispatch Modal -->
+        <div id="ambulanceModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+            <div class="modal-content" style="background:#fff; max-width:520px; width:90%; padding:25px; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px; margin-bottom:15px;">
+                    <h3 style="color:var(--danger); font-size:1.3rem;">🚑 Instant Ambulance Request</h3>
+                    <button onclick="closeAmbulanceModal()" style="border:none; background:none; font-size:1.3rem; cursor:pointer;">✕</button>
+                </div>
+
+                <div id="modalFormStep">
+                    <p style="font-size:0.9rem; color:#555; margin-bottom:15px;">
+                        Confirm your location inside DTU campus so the medical response team can reach you immediately:
+                    </p>
+
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label class="form-label">Your Current Campus Location *</label>
+                        <select id="sosLocation" class="form-select" required>
+                            <option value="B.R. Ambedkar Hostel (Boys Hostel)">B.R. Ambedkar Hostel</option>
+                            <option value="Sir C.V. Raman Hostel">Sir C.V. Raman Hostel</option>
+                            <option value="Aryabhatta Hostel">Aryabhatta Hostel</option>
+                            <option value="Kalpana Chawla Hostel (Girls Hostel)">Kalpana Chawla Hostel (Girls)</option>
+                            <option value="Sister Nivedita Girls Hostel">Sister Nivedita Girls Hostel</option>
+                            <option value="Mechanical / Production Block">Mechanical & Production Block</option>
+                            <option value="Computer Science / IT Department Block">Computer Science & IT Block</option>
+                            <option value="Science Block / Physics & Chem Labs">Science Block / Labs</option>
+                            <option value="DTU Sports Complex / Football Ground">Sports Complex / Ground</option>
+                            <option value="Central Library / Admin Block">Central Library / Admin Block</option>
+                            <option value="Main Gate No. 1 / Security Reception">Main Gate No. 1</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="form-label">Type of Medical Emergency *</label>
+                        <select id="sosEmergencyType" class="form-select" required>
+                            <option value="Severe Physical Injury / Fracture">Severe Physical Injury / Fracture</option>
+                            <option value="Unconscious / Fainting / Seizure">Unconscious / Fainting / Seizure</option>
+                            <option value="Severe Breathing Difficulty / Asthma Attack">Severe Breathing Difficulty / Asthma</option>
+                            <option value="Chest Pain / Palpitation / Cardiac Distress">Chest Pain / Cardiac Distress</option>
+                            <option value="High Grade Fever / Delirium">High Grade Fever with Rigor</option>
+                            <option value="Severe Bleeding / Cut Wound">Severe Bleeding Wound</option>
+                            <option value="Other Medical Crisis">Other Immediate Medical Crisis</option>
+                        </select>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:10px;">
+                        <button type="button" onclick="closeAmbulanceModal()" class="btn btn-secondary">Cancel</button>
+                        <button type="button" onclick="dispatchAmbulance()" class="btn btn-danger" style="font-weight:bold;">
+                            🚨 CONFIRM & DISPATCH AMBULANCE
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Dispatched Status -->
+                <div id="modalDispatchedStep" style="display:none; text-align:center; padding:15px 0;">
+                    <span style="font-size:3.5rem;">🚨</span>
+                    <h2 style="color:var(--danger); margin:10px 0 5px 0;">AMBULANCE DISPATCHED!</h2>
+                    <p style="font-size:0.95rem; color:#333; margin-bottom:15px;">
+                        DTU Campus Medical Emergency Vehicle has been alerted.
+                    </p>
+                    <div style="background:#fff3cd; border:1px solid #ffeeba; padding:12px; border-radius:6px; font-size:0.9rem; margin-bottom:15px;">
+                        <div>📍 Destination: <strong id="dispDest">--</strong></div>
+                        <div>⏱️ Estimated Response Time: <strong>3 to 5 Minutes</strong></div>
+                        <div>📞 Driver Contact: <strong>+91 9811223399</strong> (DTU Ambulance Driver)</div>
+                    </div>
+                    <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">
+                        Please ensure the gate/corridor is clear. DTU Security is also dispatched to guide the ambulance team.
+                    </p>
+                    <button onclick="closeAmbulanceModal()" class="btn btn-primary" style="width:100%;">Got It</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 24/7 Essential Emergency Contact Directory -->
+        <div class="card" style="margin-bottom:30px;">
+            <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
+                <h3 style="font-size:1.2rem; color:var(--primary);">
+                    📞 24/7 Critical Emergency Directory
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="contact-grid" id="emergencyContactsList">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SOP & First Aid Guide -->
+        <div class="dashboard-grid">
+            
+            <div class="card">
+                <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
+                    <h3 style="font-size:1.1rem; color:var(--primary);">
+                        📋 What to do while waiting for the Ambulance
+                    </h3>
+                </div>
+                <div class="card-body" style="font-size:0.9rem; line-height:1.7;">
+                    <ol style="padding-left:20px; color:#444;">
+                        <li><strong>Stay calm:</strong> Panic creates confusion. Take a deep breath and keep someone by the patient's side.</li>
+                        <li><strong>Clear the area:</strong> Make sure corridors and building entrances are unobstructed so paramedics can enter with stretchers.</li>
+                        <li><strong>Keep patient comfortable:</strong> Loosen tight neckwear or belts. If unconscious but breathing, place them in the side recovery position.</li>
+                        <li><strong>Do NOT give liquids:</strong> Never force water, food, or medicines into the mouth of an unconscious or drowsy person.</li>
+                        <li><strong>Keep student ID ready:</strong> Keep the student's DTU ID card ready for rapid documentation at the Health Center.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
+                    <h3 style="font-size:1.1rem; color:var(--primary);">
+                        🩹 Quick Campus First Aid Tips
+                    </h3>
+                </div>
+                <div class="card-body" style="font-size:0.9rem; line-height:1.7;">
+                    <div style="margin-bottom:10px;">
+                        <strong style="color:var(--primary);">🩸 Bleeding Cut:</strong>
+                        <p style="color:#555;">Apply firm direct pressure with clean cloth or sterile gauze for 10 minutes without lifting.</p>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <strong style="color:var(--primary);">🦴 Sprains & Sports Injuries:</strong>
+                        <p style="color:#555;">Follow R.I.C.E protocol — Rest, Ice (cold pack), Compression, Elevation above heart level.</p>
+                    </div>
+                    <div>
+                        <strong style="color:var(--primary);">😵 Fainting / Dizziness:</strong>
+                        <p style="color:#555;">Lay the person flat on their back and elevate legs 12 inches to restore blood flow to the brain.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Dynamic Footer Mount -->
+    <div id="footer-mount"></div>
+
+    <!-- Firebase Cloud SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/firebase-service.js"></script>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        function initEmergencyPage() {
+            const user = getCurrentUser();
+            const role = user ? user.role : 'student';
+            initPage(role);
+
+            renderEmergencyContacts();
+        }
+
+        function renderEmergencyContacts() {
+            const container = document.getElementById('emergencyContactsList');
+            const contacts = JSON.parse(localStorage.getItem('dtu_emergency') || '[]');
+
+            container.innerHTML = contacts.map(c => `
+                <div class="contact-card">
+                    <div>
+                        <h4 style="color:var(--primary-dark); font-size:1.05rem; margin-bottom:4px;">${c.name}</h4>
+                        <p style="font-size:0.85rem; color:#666; margin-bottom:8px;">📍 ${c.location || 'DTU Main Campus'}</p>
+                        <div style="font-size:0.8rem; color:#28a745; font-weight:bold; margin-bottom:12px;">● Available: ${c.available}</div>
+                    </div>
+                    <a href="tel:${c.phone.replace(/[^0-9]/g, '')}" class="btn btn-danger" style="text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        📞 Call ${c.phone}
+                    </a>
+                </div>
+            `).join('');
+        }
+
+        function openAmbulanceModal() {
+            const modal = document.getElementById('ambulanceModal');
+            modal.style.display = 'flex';
+            document.getElementById('modalFormStep').style.display = 'block';
+            document.getElementById('modalDispatchedStep').style.display = 'none';
+        }
+
+        function closeAmbulanceModal() {
+            document.getElementById('ambulanceModal').style.display = 'none';
+        }
+
+        async function dispatchAmbulance() {
+            const loc = document.getElementById('sosLocation').value;
+            const emType = document.getElementById('sosEmergencyType').value;
+            document.getElementById('dispDest').textContent = loc;
+            
+            document.getElementById('modalFormStep').style.display = 'none';
+            document.getElementById('modalDispatchedStep').style.display = 'block';
+
+            // Dispatch to Firebase Real-time Cloud
+            await cloudTriggerSOS({
+                location: loc,
+                emergencyType: emType,
+                student: (getCurrentUser() && getCurrentUser().name) ? getCurrentUser().name : "DTU Student"
+            });
+
+            showNotification('Emergency call broadcasted to DTU Ambulance & Security (Real-Time Cloud Synced)!', 'danger');
+        }
+    </script>
+</body>
+</html>

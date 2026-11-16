@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Consultation Room - DTU Health Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .video-room-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            height: calc(100vh - 120px);
+            min-height: 520px;
+        }
+        @media (max-width: 900px) {
+            .video-room-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+        .main-stage {
+            background: #111;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .remote-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: linear-gradient(180deg, #1f242d 0%, #111419 100%);
+        }
+        .pip-feed {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 180px;
+            height: 120px;
+            background: #2b303c;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pip-feed video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .call-controls-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        .call-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            color: #fff;
+            background: #444;
+        }
+        .call-btn:hover {
+            transform: scale(1.1);
+        }
+        .call-btn.btn-hangup {
+            background: #dc3545;
+            width: 54px;
+            height: 54px;
+        }
+        .call-btn.active-off {
+            background: #ffc107;
+            color: #111;
+        }
+        .side-chat-panel {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 0.88rem;
+        }
+        .chat-bubble {
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 85%;
+        }
+        .chat-bubble.remote {
+            background: #f0f0f0;
+            align-self: flex-start;
+        }
+        .chat-bubble.self {
+            background: var(--primary);
+            color: #fff;
+            align-self: flex-end;
+        }
+    </style>
+</head>
+<body onload="initVideoCall()">
+
+    <!-- Dynamic Navbar Mount -->
+    <div id="navbar-mount"></div>
+
+    <div class="container" style="padding-top:15px; padding-bottom:20px;">
+
+        <!-- Top Header Info -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div>
+                <h2 style="color:var(--primary); font-size:1.4rem;">
+                    Telehealth One-to-One Consultation 📹
+                </h2>
+                <p style="font-size:0.85rem; color:var(--text-light);">
+                    Session Room ID: <strong id="roomCodeDisplay">DTU-HEALTH-ROOM-402</strong> | 
+                    Status: <span class="badge badge-success" id="connectionBadge">● Connected (Encrypted)</span>
+                </p>
+            </div>
+            <div>
+                <span id="callDuration" style="font-size:1.1rem; font-family:monospace; font-weight:bold; color:var(--primary);">00:00</span>
+            </div>
+        </div>
+
+        <!-- Video Room Interface -->
+        <div class="video-room-container">
+
+            <!-- Main Stage (Remote Participant Video) -->
+            <div class="main-stage">
+                
+                <div class="remote-feed" id="remoteFeedBox">
+                    <div style="font-size:4.5rem; margin-bottom:10px;" id="remoteAvatar">👨‍⚕️</div>
+                    <h3 style="font-size:1.4rem; color:#fff;" id="remoteNameDisplay">Dr. Rajesh Sharma</h3>
+                    <p style="color:#C5A55A; font-size:0.9rem;" id="remoteRoleDisplay">Chief Medical Officer (OPD)</p>
+                    <div style="margin-top:15px; display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#aaa;">
+                        <span style="display:inline-block; width:10px; height:10px; background:#28a745; border-radius:50%; animation:pulse 1.5s infinite;"></span>
+                        Live Video Audio Stream Active
+                    </div>
+                </div>
+
+                <!-- Picture in Picture (Self Video Preview) -->
+                <div class="pip-feed">
+                    <video id="selfCamera" autoplay playsinline muted></video>
+                    <div id="selfCameraFallback" style="color:#fff; font-size:0.8rem; text-align:center; display:none;">
+                        📷 Camera Off
+                    </div>
+                    <span style="position:absolute; bottom:4px; left:6px; font-size:0.7rem; color:#fff; background:rgba(0,0,0,0.6); padding:1px 4px; border-radius:3px;">
+                        You
+                    </span>
+                </div>
+
+                <!-- Floating Video Controls Bar -->
+                <div class="call-controls-bar">
+                    <button class="call-btn" id="btnMic" onclick="toggleMic()" title="Mute/Unmute Mic">
+                        🎤
+                    </button>
+                    <button class="call-btn" id="btnCam" onclick="toggleCam()" title="Camera On/Off">
+                        📹
+                    </button>
+                    <button class="call-btn" onclick="shareScreenSim()" title="Share Screen">
+                        🖥️
+                    </button>
+                    <button class="call-btn btn-hangup" onclick="endCall()" title="End Consultation">
+                        📞
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Right Side Panel: Live Chat & Clinical Consultation Notes -->
+            <div class="side-chat-panel">
+                
+                <!-- Panel Header with Tabs -->
+                <div style="background:#f4f4f4; padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-around;">
+                    <button onclick="switchTab('chat')" id="tabChatBtn" style="border:none; background:none; font-weight:bold; color:var(--primary); cursor:pointer;">
+                        💬 In-Call Chat
+                    </button>
+                    <button onclick="switchTab('notes')" id="tabNotesBtn" style="border:none; background:none; font-weight:bold; color:#777; cursor:pointer;">
+                        📝 Quick Clinical Notes
+                    </button>
+                </div>
+
+                <!-- Tab 1: Live Chat -->
+                <div id="panelChat" style="display:flex; flex-direction:column; height:100%;">
+                    <div class="chat-messages" id="chatBox">
+                        <div class="chat-bubble remote">
+                            <strong>DTU Health System:</strong><br>
+                            You have joined the secure consultation session. Camera & audio initialized.
+                        </div>
+                        <div class="chat-bubble remote" id="welcomeDocMsg">
+                            <strong>Doctor:</strong><br>
+                            Hello! How can I help you today? Please tell me your symptoms.
+                        </div>
+                    </div>
+                    <div style="padding:10px; border-top:1px solid #eee; display:flex; gap:6px;">
+                        <input type="text" id="chatInput" class="form-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+                        <button onclick="sendChatMessage()" class="btn btn-primary btn-small">Send</button>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Clinical Quick Notes / Prescription Draft -->
+                <div id="panelNotes" style="display:none; padding:15px; overflow-y:auto; flex:1;">
+                    <h4 style="font-size:0.95rem; color:var(--primary); margin-bottom:10px;">Consultation Notes</h4>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label class="form-label" style="font-size:0.8rem;">Provisional Diagnosis</label>
+                        <input type="text" id="liveDiagnosis" class="form-input" placeholder="e.g. Acute Upper Respiratory Infection" style="font-size:0.85rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label class="form-label" style="font-size:0.8rem;">Advised Medicines / Dosage</label>
+                        <textarea id="livePrescription" class="form-textarea" rows="4" placeholder="e.g. Paracetamol 650mg TDS x 3 days..." style="font-size:0.85rem;"></textarea>
+                    </div>
+                    <button onclick="saveConsultationNotes()" class="btn btn-primary btn-small" style="width:100%;">
+                        Save to Student Record
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Dynamic Footer Mount -->
+    <div id="footer-mount"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let isMicOn = true;
+        let isCamOn = true;
+        let localStream = null;
+        let durationSeconds = 0;
+        let timerInterval = null;
+        let currentUser = null;
+
+        function initVideoCall() {
+            currentUser = getCurrentUser();
+            const role = currentUser ? currentUser.role : 'student';
+            initPage(role);
+
+            // Read query params for customized participant names
+            const urlParams = new URLSearchParams(window.location.search);
+            const doctorParam = urlParams.get('doctor');
+            const patientParam = urlParams.get('patient');
+
+            if (role === 'doctor') {
+                document.getElementById('remoteAvatar').textContent = '🎓';
+                document.getElementById('remoteNameDisplay').textContent = patientParam || 'Rahul Meena (Student)';
+                document.getElementById('remoteRoleDisplay').textContent = 'DTU Student - 2K22/CO/101';
+                document.getElementById('welcomeDocMsg').innerHTML = `<strong>Patient:</strong><br>Hello Doctor, I have been feeling fever and severe headache.`;
+                switchTab('notes'); // Open clinical notes directly for doctors
+            } else {
+                if (doctorParam) {
+                    document.getElementById('remoteNameDisplay').textContent = doctorParam;
+                }
+            }
+
+            // Start webcam preview for self video
+            startCameraPreview();
+
+            // Start timer
+            timerInterval = setInterval(() => {
+                durationSeconds++;
+                const mins = String(Math.floor(durationSeconds / 60)).padStart(2, '0');
+                const secs = String(durationSeconds % 60).padStart(2, '0');
+                document.getElementById('callDuration').textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        // Camera capture via HTML5 getUserMedia
+        async function startCameraPreview() {
+            try {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    localStream = stream;
+                    const videoEl = document.getElementById('selfCamera');
+                    videoEl.srcObject = stream;
+                } else {
+                    showFallbackCam();
+                }
+            } catch (err) {
+                // If user denies camera or has no webcam, gracefully show fallback
+                showFallbackCam();
+            }
+        }
+
+        function showFallbackCam() {
+            document.getElementById('selfCamera').style.display = 'none';
+            document.getElementById('selfCameraFallback').style.display = 'block';
+        }
+
+        function toggleMic() {
+            isMicOn = !isMicOn;
+            const btn = document.getElementById('btnMic');
+            if (localStream) {
+                localStream.getAudioTracks().forEach(track => track.enabled = isMicOn);
+            }
+            if (isMicOn) {
+                btn.innerHTML = '🎤';
+                btn.classList.remove('active-off');
+                showNotification('Microphone unmuted', 'success');
+            } else {
+                btn.innerHTML = '🔇';
+                btn.classList.add('active-off');
+                showNotification('Microphone muted', 'warning');
+            }
+        }
+
+        function toggleCam() {
+            isCamOn = !isCamOn;
+            const btn = document.getElementById('btnCam');
+            const videoEl = document.getElementById('selfCamera');
+            const fallbackEl = document.getElementById('selfCameraFallback');
+
+            if (localStream) {
+                localStream.getVideoTracks().forEach(track => track.enabled = isCamOn);
+            }
+
+            if (isCamOn) {
+                videoEl.style.display = 'block';
+                fallbackEl.style.display = 'none';
+                btn.innerHTML = '📹';
+                btn.classList.remove('active-off');
+            } else {
+                videoEl.style.display = 'none';
+                fallbackEl.style.display = 'block';
+                btn.innerHTML = '🚫';
+                btn.classList.add('active-off');
+            }
+        }
+
+        function shareScreenSim() {
+            showNotification('Screen sharing feature active (Simulated Mode)', 'success');
+        }
+
+        function endCall() {
+            if (confirm("End this consultation session?")) {
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+                clearInterval(timerInterval);
+
+                if (currentUser && currentUser.role === 'doctor') {
+                    window.location.href = 'prescriptions.html';
+                } else {
+                    window.location.href = 'student-dashboard.html';
+                }
+            }
+        }
+
+        function switchTab(tab) {
+            const chatPanel = document.getElementById('panelChat');
+            const notesPanel = document.getElementById('panelNotes');
+            const chatBtn = document.getElementById('tabChatBtn');
+            const notesBtn = document.getElementById('tabNotesBtn');
+
+            if (tab === 'chat') {
+                chatPanel.style.display = 'flex';
+                notesPanel.style.display = 'none';
+                chatBtn.style.color = 'var(--primary)';
+                notesBtn.style.color = '#777';
+            } else {
+                chatPanel.style.display = 'none';
+                notesPanel.style.display = 'block';
+                chatBtn.style.color = '#777';
+                notesBtn.style.color = 'var(--primary)';
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const chatBox = document.getElementById('chatBox');
+            
+            const msgEl = document.createElement('div');
+            msgEl.className = 'chat-bubble self';
+            msgEl.textContent = text;
+            chatBox.appendChild(msgEl);
+
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Auto simulated doctor reply after 1.5 seconds
+            setTimeout(() => {
+                const replies = [
+                    "Noted. Please drink lots of fluids and take adequate rest.",
+                    "Understood. I am adding this to your digital prescription right now.",
+                    "Do you have any known allergies to antibiotic medicines like Amoxicillin?",
+                    "If symptoms persist beyond 48 hours, please visit the DTU Health Center lab for blood tests."
+                ];
+                const reply = replies[Math.floor(Math.random() * replies.length)];
+                const replyEl = document.createElement('div');
+                replyEl.className = 'chat-bubble remote';
+                replyEl.innerHTML = `<strong>Doctor:</strong><br>${reply}`;
+                chatBox.appendChild(replyEl);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 1400);
+        }
+
+        function saveConsultationNotes() {
+            const diag = document.getElementById('liveDiagnosis').value;
+            const med = document.getElementById('livePrescription').value;
+            if (!diag) {
+                alert("Please enter a provisional diagnosis before saving.");
+                return;
+            }
+
+            const newRx = {
+                id: "RX-" + Date.now().toString().slice(-4),
+                studentEmail: "student@dtu.ac.in",
+                studentName: "Consulted Student",
+                doctorName: (currentUser && currentUser.name) ? currentUser.name : "Dr. Rajesh Sharma",
+                department: (currentUser && currentUser.department) ? currentUser.department : "General Medicine",
+                date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+                diagnosis: diag,
+                medicines: [{ name: med || "Medication prescribed as per verbal advice", dosage: "As advised", duration: "3-5 Days" }],
+                tests: "Routine lab checkup if needed",
+                followUp: "After 4 Days",
+                notes: "Recorded during live video consultation"
+            };
+
+            savePrescription(newRx);
+            showNotification("Prescription recorded and shared with student!", "success");
+        }
+    </script>
+</body>
+</html>

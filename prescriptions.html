@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prescriptions & Medical Records - DTU Health Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        @media print {
+            .navbar, .footer, .no-print, .btn, #createRxSection {
+                display: none !important;
+            }
+            .prescription-card {
+                border: 2px solid #000 !important;
+                page-break-inside: avoid;
+                box-shadow: none !important;
+            }
+        }
+    </style>
+</head>
+<body onload="initPrescriptionPage()">
+
+    <!-- Dynamic Navbar Mount -->
+    <div id="navbar-mount"></div>
+
+    <div class="container section">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px;">
+            <div>
+                <h1 class="section-title" style="margin-bottom:5px;">Digital Prescriptions & Records</h1>
+                <p style="color:var(--text-light); font-size:0.95rem;">
+                    Official electronic health records issued by Delhi Technological University Health Center.
+                </p>
+            </div>
+            <div id="doctorActionBtn" style="display:none;">
+                <button onclick="toggleRxForm()" class="btn btn-primary">+ Write New Prescription</button>
+            </div>
+        </div>
+
+        <!-- DOCTOR ONLY: Write Prescription Form -->
+        <div class="card" id="createRxSection" style="display:none; margin-bottom:30px; border-top:4px solid var(--primary);">
+            <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
+                <h3 style="font-size:1.15rem; color:var(--primary);">
+                    💊 Issue Digital Prescription
+                </h3>
+            </div>
+            <div class="card-body">
+                <form onsubmit="submitNewPrescription(event)">
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:12px;">
+                        <div class="form-group">
+                            <label class="form-label">Student Name *</label>
+                            <input type="text" id="rxStudentName" class="form-input" placeholder="e.g. Rahul Meena" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Student DTU Email / Roll No</label>
+                            <input type="text" id="rxStudentEmail" class="form-input" placeholder="e.g. rahul.22co101@dtu.ac.in">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label class="form-label">Diagnosis / Clinical Condition *</label>
+                        <input type="text" id="rxDiagnosis" class="form-input" placeholder="e.g. Acute Viral Bronchitis, High Grade Fever" required>
+                    </div>
+
+                    <!-- Dynamic Medicine Rows -->
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="form-label">Prescribed Medicines & Dosage *</label>
+                        <div id="medicineRows">
+                            <div class="med-row" style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:8px;">
+                                <input type="text" class="form-input med-name" placeholder="Medicine Name (e.g. Paracetamol 650mg)" required>
+                                <input type="text" class="form-input med-dose" placeholder="Dosage (e.g. 1 Tab after food TDS)" required>
+                                <input type="text" class="form-input med-dur" placeholder="Duration (e.g. 3 Days)" required>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addMedicineRow()" class="btn btn-secondary btn-small" style="margin-top:5px;">
+                            + Add Another Medicine
+                        </button>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:12px;">
+                        <div class="form-group">
+                            <label class="form-label">Recommended Lab Tests</label>
+                            <input type="text" id="rxTests" class="form-input" placeholder="e.g. CBC, Dengue Serology, Rapid Antigen">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Follow-up Date</label>
+                            <input type="date" id="rxFollowUp" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label class="form-label">Dietary Advice & Clinical Notes</label>
+                        <textarea id="rxNotes" class="form-textarea" rows="2" placeholder="e.g. Avoid cold drinks, take steam inhalation twice daily, drink lukewarm water..."></textarea>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:10px;">
+                        <button type="button" onclick="toggleRxForm()" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save & Issue Prescription</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <!-- Prescriptions List -->
+        <div id="prescriptionsContainer">
+            <!-- Populated dynamically -->
+        </div>
+
+    </div>
+
+    <!-- Dynamic Footer Mount -->
+    <div id="footer-mount"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentUser = null;
+
+        function initPrescriptionPage() {
+            currentUser = getCurrentUser();
+            const role = currentUser ? currentUser.role : 'student';
+            initPage(role);
+
+            if (role === 'doctor') {
+                document.getElementById('doctorActionBtn').style.display = 'block';
+                // Set default follow-up date to 4 days from now
+                const follow = new Date();
+                follow.setDate(follow.getDate() + 4);
+                document.getElementById('rxFollowUp').value = follow.toISOString().split('T')[0];
+            }
+
+            renderPrescriptions();
+        }
+
+        function toggleRxForm() {
+            const formSection = document.getElementById('createRxSection');
+            formSection.style.display = formSection.style.display === 'none' ? 'block' : 'none';
+            if (formSection.style.display === 'block') {
+                formSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function addMedicineRow() {
+            const container = document.getElementById('medicineRows');
+            const newRow = document.createElement('div');
+            newRow.className = 'med-row';
+            newRow.style.cssText = 'display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:8px;';
+            newRow.innerHTML = `
+                <input type="text" class="form-input med-name" placeholder="Medicine Name" required>
+                <input type="text" class="form-input med-dose" placeholder="Dosage instruction" required>
+                <input type="text" class="form-input med-dur" placeholder="Duration" required>
+            `;
+            container.appendChild(newRow);
+        }
+
+        function submitNewPrescription(event) {
+            event.preventDefault();
+
+            const studentName = document.getElementById('rxStudentName').value.trim();
+            const studentEmail = document.getElementById('rxStudentEmail').value.trim() || "student@dtu.ac.in";
+            const diagnosis = document.getElementById('rxDiagnosis').value.trim();
+            const tests = document.getElementById('rxTests').value.trim() || "None";
+            const followUp = document.getElementById('rxFollowUp').value || "SOS";
+            const notes = document.getElementById('rxNotes').value.trim() || "Take medicines on time with water.";
+
+            // Gather medicines from dynamic inputs
+            const medRows = document.querySelectorAll('.med-row');
+            const meds = [];
+            medRows.forEach(row => {
+                const name = row.querySelector('.med-name').value.trim();
+                const dose = row.querySelector('.med-dose').value.trim();
+                const dur = row.querySelector('.med-dur').value.trim();
+                if (name) {
+                    meds.push({ name: name, dosage: dose, duration: dur });
+                }
+            });
+
+            const newRx = {
+                id: "RX-" + Date.now().toString().slice(-4),
+                studentName: studentName,
+                studentEmail: studentEmail,
+                doctorName: (currentUser && currentUser.name) ? currentUser.name : "Dr. Rajesh Sharma",
+                department: (currentUser && currentUser.department) ? currentUser.department : "General Medicine",
+                date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+                diagnosis: diagnosis,
+                medicines: meds,
+                tests: tests,
+                followUp: followUp,
+                notes: notes
+            };
+
+            savePrescription(newRx);
+            showNotification("Prescription generated & attached to student record!", "success");
+
+            toggleRxForm();
+            renderPrescriptions();
+        }
+
+        function renderPrescriptions() {
+            const container = document.getElementById('prescriptionsContainer');
+            const list = getPrescriptions();
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="card" style="text-align:center; padding:40px; color:var(--text-light);">
+                        <p style="font-size:1.1rem; margin-bottom:10px;">No prescriptions found on your health record.</p>
+                        <p style="font-size:0.9rem;">Consult a DTU Health Center doctor to receive digital prescriptions.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(rx => `
+                <div class="card" style="margin-bottom:25px; border-top:4px solid var(--primary); box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+                    
+                    <!-- Official Header -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #eee; padding-bottom:12px; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <div style="font-size:1.15rem; font-weight:bold; color:var(--primary);">
+                                🏥 DELHI TECHNOLOGICAL UNIVERSITY HEALTH CENTER
+                            </div>
+                            <div style="font-size:0.85rem; color:#666;">
+                                Bawana Road, Delhi-110042 | OPD Electronic Medical Slip
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="badge badge-info" style="font-size:0.85rem; margin-bottom:4px; display:inline-block;">
+                                Slip ID: ${rx.id}
+                            </span>
+                            <div style="font-size:0.85rem; color:#555;">Date: <strong>${rx.date}</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Patient & Doctor Metadata -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; background:#fbfbfb; padding:12px; border-radius:6px; margin-bottom:15px; font-size:0.9rem; border:1px solid #eee;">
+                        <div>
+                            <div>Patient: <strong style="color:#222;">${rx.studentName}</strong></div>
+                            <div style="color:#666; font-size:0.82rem;">Student ID/Email: ${rx.studentEmail}</div>
+                        </div>
+                        <div>
+                            <div>Prescribing Doctor: <strong style="color:var(--primary);">${rx.doctorName}</strong></div>
+                            <div style="color:#666; font-size:0.82rem;">Specialty: ${rx.department}</div>
+                        </div>
+                    </div>
+
+                    <!-- Diagnosis -->
+                    <div style="margin-bottom:15px;">
+                        <span style="font-size:0.85rem; color:var(--text-light); text-transform:uppercase; font-weight:bold; letter-spacing:0.5px;">Provisional Clinical Diagnosis</span>
+                        <div style="font-size:1.05rem; font-weight:600; color:#c00; margin-top:2px;">
+                            ${rx.diagnosis}
+                        </div>
+                    </div>
+
+                    <!-- Prescribed Rx Table -->
+                    <div style="margin-bottom:15px;">
+                        <span style="font-size:0.85rem; color:var(--text-light); text-transform:uppercase; font-weight:bold; letter-spacing:0.5px;">Rx - Medication Orders</span>
+                        <div class="table-container" style="margin-top:6px; overflow-x:auto;">
+                            <table class="table" style="font-size:0.88rem; width:100%;">
+                                <thead>
+                                    <tr style="background:#f5f5f5;">
+                                        <th>#</th>
+                                        <th>Medicine Name</th>
+                                        <th>Dosage & Frequency</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${(rx.medicines || []).map((m, i) => `
+                                        <tr>
+                                            <td>${i+1}</td>
+                                            <td><strong>${m.name}</strong></td>
+                                            <td>${m.dosage}</td>
+                                            <td><span class="badge badge-warning">${m.duration}</span></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tests & Advice -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; font-size:0.88rem; margin-bottom:15px;">
+                        <div style="background:#fff7f7; padding:10px; border-radius:4px; border-left:3px solid var(--primary);">
+                            <strong>🔬 Diagnostic Tests Recommended:</strong>
+                            <p style="margin-top:3px; color:#555;">${rx.tests || 'None'}</p>
+                        </div>
+                        <div style="background:#f9f9f9; padding:10px; border-radius:4px; border-left:3px solid var(--accent);">
+                            <strong>📅 Next Follow-Up:</strong>
+                            <p style="margin-top:3px; color:#555;">${rx.followUp || 'SOS (If needed)'}</p>
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.85rem; color:#666; margin-bottom:15px;">
+                        <strong>Doctor's Notes & Advice:</strong> ${rx.notes || 'Rest and stay hydrated.'}
+                    </div>
+
+                    <!-- Print / Download Footer -->
+                    <div class="no-print" style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #eee; padding-top:10px;">
+                        <button onclick="window.print()" class="btn btn-secondary btn-small">
+                            🖨️ Print / Save as PDF
+                        </button>
+                    </div>
+
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

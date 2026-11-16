@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - DTU Health Center</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body onload="initStudentDashboard()">
+
+    <!-- Dynamic Navbar Mount -->
+    <div id="navbar-mount"></div>
+
+    <!-- Main Container -->
+    <div class="container section">
+        
+        <!-- Header Banner -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px; padding-bottom:15px; border-bottom:2px solid #eee;">
+            <div>
+                <h1 style="color:var(--primary); font-size:1.8rem; margin-bottom:5px;">
+                    Welcome, <span id="studentNameDisplay">Student</span> 🎓
+                </h1>
+                <p style="color:var(--text-light); font-size:0.95rem;">
+                    DTU Roll No: <strong id="studentRollDisplay">Loading...</strong> | 
+                    Branch: <span id="studentBranchDisplay">Loading...</span> |
+                    <span class="badge badge-success">● Cloud Real-Time Active</span>
+                </p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <a href="book-appointment.html" class="btn btn-primary">+ Book Appointment</a>
+                <a href="emergency.html" class="btn btn-danger">🚑 Instant SOS</a>
+            </div>
+        </div>
+
+        <!-- 4 Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="statAppointments">0</div>
+                <div class="stat-label">Upcoming Appointments</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statPrescriptions">0</div>
+                <div class="stat-label">Prescriptions on Record</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statNotices">0</div>
+                <div class="stat-label">Campus Health Notices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color:var(--danger)">24/7</div>
+                <div class="stat-label">Emergency Health Support</div>
+            </div>
+        </div>
+
+        <!-- 2-Column Dashboard Grid -->
+        <div class="dashboard-grid" style="margin-top:25px;">
+
+            <!-- Left Column: Notices & Quick Links -->
+            <div>
+                <!-- Doctor Announcements / Notices -->
+                <div class="card" style="margin-bottom:25px;">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size:1.1rem; color:var(--primary-dark);">📢 Doctor Announcements & Notices</h3>
+                        <span class="badge badge-info">Live Cloud Feed</span>
+                    </div>
+                    <div class="card-body" id="noticesContainer">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Quick Services -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 style="font-size:1.1rem; color:var(--primary-dark);">⚡ Quick Health Actions</h3>
+                    </div>
+                    <div class="card-body" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <a href="book-appointment.html" class="btn btn-primary" style="text-align:center;">
+                            📅 Book Doctor Slot
+                        </a>
+                        <a href="video-call.html" class="btn btn-secondary" style="text-align:center; color:var(--primary);">
+                            📹 Video Consultation
+                        </a>
+                        <a href="prescriptions.html" class="btn btn-secondary" style="text-align:center; color:var(--primary);">
+                            💊 My Prescriptions
+                        </a>
+                        <a href="health-tips.html" class="btn btn-secondary" style="text-align:center; color:var(--primary);">
+                            🧠 Health & Wellness Tips
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: My Appointments & Profile Summary -->
+            <div>
+                <!-- My Appointments Card -->
+                <div class="card" style="margin-bottom:25px;">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size:1.1rem; color:var(--primary-dark);">🗓️ My Scheduled Appointments</h3>
+                        <a href="book-appointment.html" style="font-size:0.85rem; font-weight:600;">+ New</a>
+                    </div>
+                    <div class="card-body" id="appointmentsContainer">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Medical Profile Summary -->
+                <div class="card">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size:1.1rem; color:var(--primary-dark);">📋 Medical Profile Summary</h3>
+                        <a href="student-profile.html" style="font-size:0.85rem; font-weight:bold;">Edit Profile</a>
+                    </div>
+                    <div class="card-body" id="profileSummaryContainer">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Dynamic Footer Mount -->
+    <div id="footer-mount"></div>
+
+    <!-- Firebase Cloud SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/firebase-service.js"></script>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        function initStudentDashboard() {
+            // Verify student role & load navigation
+            const user = initPage('student');
+            if (!user) return;
+
+            // Load student profile details
+            const profile = JSON.parse(localStorage.getItem('studentProfile') || '{}');
+            document.getElementById('studentNameDisplay').textContent = profile.name || user.name || 'DTU Student';
+            document.getElementById('studentRollDisplay').textContent = profile.rollNo || '2K23/XX/000';
+            document.getElementById('studentBranchDisplay').textContent = profile.branch || 'DTU';
+
+            // Real-Time Listeners: Automatically receives new notices & appointment changes from Cloud
+            syncRealtimeNotices((liveNotices) => {
+                renderNotices(liveNotices);
+                renderStats();
+            });
+
+            syncRealtimeAppointments((liveAppointments) => {
+                renderAppointments(liveAppointments);
+                renderStats();
+            });
+
+            renderProfileSummary(profile);
+        }
+
+        // Render dashboard numerical counters
+        function renderStats() {
+            const appointments = getAppointments();
+            const prescriptions = getPrescriptions();
+            const notices = getNotices();
+
+            document.getElementById('statAppointments').textContent = appointments.length;
+            document.getElementById('statPrescriptions').textContent = prescriptions.length;
+            document.getElementById('statNotices').textContent = notices.length;
+        }
+
+        // Render notices posted by doctors
+        function renderNotices(customNotices) {
+            const container = document.getElementById('noticesContainer');
+            const notices = customNotices || getNotices();
+
+            if (!notices || notices.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-light); font-size:0.9rem;">No health notices at this moment.</p>';
+                return;
+            }
+
+            container.innerHTML = notices.map(n => `
+                <div class="notice-card" style="margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4 class="notice-title">${n.title}</h4>
+                        <span class="badge badge-warning" style="font-size:0.75rem;">${n.date}</span>
+                    </div>
+                    <p class="notice-body" style="margin:6px 0 8px 0; font-size:0.9rem;">${n.content}</p>
+                    <small style="color:var(--text-light);">
+                        👨‍⚕️ <strong>${n.doctorName || 'Health Center Doctor'}</strong> (${n.department || 'DTU OPD'})
+                    </small>
+                </div>
+            `).join('');
+        }
+
+        // Render student's appointments
+        function renderAppointments(customAppointments) {
+            const container = document.getElementById('appointmentsContainer');
+            const appointments = customAppointments || getAppointments();
+
+            if (!appointments || appointments.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:20px; color:var(--text-light);">
+                        <p>You have no appointments booked yet.</p>
+                        <a href="book-appointment.html" class="btn btn-primary btn-small" style="margin-top:10px;">Book Now</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = appointments.map((apt, index) => `
+                <div class="appointment-card" style="border-left:4px solid var(--primary); padding:12px; margin-bottom:12px; background:#fff; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <strong style="color:var(--primary); font-size:1rem;">${apt.doctorName}</strong>
+                            <p style="font-size:0.85rem; color:var(--text-light); margin:2px 0;">${apt.department}</p>
+                        </div>
+                        <span class="badge ${apt.status === 'confirmed' ? 'badge-success' : 'badge-warning'}">
+                            ${apt.status || 'Scheduled'}
+                        </span>
+                    </div>
+                    <div style="margin:8px 0; font-size:0.88rem;">
+                        <span>📅 <strong>${apt.date}</strong></span> &nbsp;|&nbsp;
+                        <span>⏰ <strong>${apt.time}</strong></span>
+                    </div>
+                    <p style="font-size:0.85rem; color:#555; background:#f9f9f9; padding:6px; border-radius:4px;">
+                        <strong>Reason:</strong> ${apt.reason || 'Routine consultation'}
+                    </p>
+                    <div style="margin-top:8px; display:flex; gap:8px;">
+                        <a href="video-call.html?doctor=${encodeURIComponent(apt.doctorName)}" class="btn btn-small btn-secondary" style="color:var(--primary);">
+                            📹 Join Video
+                        </a>
+                        <button onclick="cancelAppointment(${index})" class="btn btn-small btn-danger" style="padding:4px 8px; font-size:0.75rem;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render student profile card summary
+        function renderProfileSummary(profile) {
+            const container = document.getElementById('profileSummaryContainer');
+            if (!profile || !profile.rollNo) {
+                container.innerHTML = `
+                    <p style="color:var(--danger); font-size:0.9rem;">Profile incomplete. Please update your details.</p>
+                    <a href="student-profile.html" class="btn btn-small btn-primary" style="margin-top:8px;">Complete Profile</a>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="table" style="font-size:0.88rem; margin:0;">
+                    <tr><td style="color:var(--text-light); width:40%;">Full Name</td><td><strong>${profile.name}</strong></td></tr>
+                    <tr><td style="color:var(--text-light);">Roll Number</td><td><strong>${profile.rollNo}</strong></td></tr>
+                    <tr><td style="color:var(--text-light);">Branch & Year</td><td>${profile.branch} (${profile.year || 'Student'})</td></tr>
+                    <tr><td style="color:var(--text-light);">Blood Group</td><td><span class="badge badge-danger">${profile.bloodGroup || 'Not specified'}</span></td></tr>
+                    <tr><td style="color:var(--text-light);">DTU Email</td><td>${profile.email || profile.dtuEmail}</td></tr>
+                    <tr><td style="color:var(--text-light);">Contact No.</td><td>${profile.phone}</td></tr>
+                </table>
+            `;
+        }
+
+        function cancelAppointment(index) {
+            if (confirm("Are you sure you want to cancel this appointment?")) {
+                const list = getAppointments();
+                list.splice(index, 1);
+                localStorage.setItem("dtu_appointments", JSON.stringify(list));
+                showNotification("Appointment cancelled.", "warning");
+                renderStats();
+                renderAppointments(list);
+            }
+        }
+    </script>
+</body>
+</html>

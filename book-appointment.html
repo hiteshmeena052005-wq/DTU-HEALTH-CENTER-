@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - DTU Health Center</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body onload="initBookingPage()">
+
+    <!-- Dynamic Navbar Mount -->
+    <div id="navbar-mount"></div>
+
+    <div class="container section">
+        
+        <div style="margin-bottom:25px; text-align:center;">
+            <h1 class="section-title">Book Doctor Appointment</h1>
+            <p style="color:var(--text-light); max-width:650px; margin:0 auto;">
+                Doctors post weekly checkup sessions with a maximum limit (e.g., 10 students per session). 
+                Select an open slot below and fill the consultation form.
+            </p>
+        </div>
+
+        <!-- STEP 1: Available Doctor Slots -->
+        <div class="card" style="margin-bottom:30px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:1.15rem; color:var(--primary-dark);">
+                    📅 Step 1: Open Doctor Sessions & Available Slots
+                </h3>
+                <span class="badge badge-success">Live Real-Time Capacity Monitor</span>
+            </div>
+            <div class="card-body">
+                <div id="slotsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px;">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Interactive Appointment Form (Google-Form style) -->
+        <div class="card" id="bookingFormSection" style="max-width:760px; margin:0 auto; display:none; border-top:5px solid var(--primary);">
+            <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h3 style="font-size:1.25rem; color:var(--primary);">
+                            📝 Step 2: Student Consultation Request Form
+                        </h3>
+                        <p style="font-size:0.85rem; color:var(--text-light); margin-top:2px;">
+                            Session: <strong id="formSelectedDoctor">Dr. Rajesh Sharma</strong> 
+                            (<span id="formSelectedDept">General Medicine</span>)
+                        </p>
+                    </div>
+                    <button type="button" onclick="cancelSelection()" class="btn btn-secondary btn-small">Change Slot</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="appointmentForm" onsubmit="submitBooking(event)">
+                    
+                    <!-- Pre-filled Student Details from Profile -->
+                    <div style="background:#f9f9f9; padding:12px; border-radius:6px; margin-bottom:16px; font-size:0.88rem; border:1px solid #eee;">
+                        <h4 style="color:var(--primary); margin-bottom:6px;">🎓 Student Verification</h4>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div>Student Name: <strong id="formStudentName">--</strong></div>
+                            <div>Roll Number: <strong id="formStudentRoll">--</strong></div>
+                            <div>Branch: <strong id="formStudentBranch">--</strong></div>
+                            <div>Blood Group: <strong id="formStudentBlood">--</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden input to track selected slot ID -->
+                    <input type="hidden" id="selectedSlotId">
+                    <input type="hidden" id="selectedDoctorName">
+                    <input type="hidden" id="selectedDeptName">
+                    <input type="hidden" id="selectedDate">
+                    <input type="hidden" id="selectedTime">
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                        <div class="form-group">
+                            <label class="form-label">Consultation Date</label>
+                            <input type="text" id="displayDate" class="form-input" readonly style="background:#f4f4f4;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time Window</label>
+                            <input type="text" id="displayTime" class="form-input" readonly style="background:#f4f4f4;">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="form-label">Mode of Consultation *</label>
+                        <select id="consultationMode" class="form-select" required>
+                            <option value="Physical OPD Visit (Health Center)">🏥 Physical Visit at DTU Health Center</option>
+                            <option value="Online Video Consultation">📹 Online One-to-One Video Call</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="form-label">
+                            Emergency / Reason for Consultation * 
+                            <span style="font-weight:normal; color:#666;">(Explain what symptoms you are experiencing)</span>
+                        </label>
+                        <textarea id="reasonInput" class="form-textarea" rows="3" placeholder="e.g. High fever with shivering since yesterday night, sore throat and dizziness..." required></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="form-label">How urgent is this medical condition? *</label>
+                        <div style="display:flex; gap:20px; align-items:center; margin-top:5px;">
+                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                                <input type="radio" name="urgencyRadio" value="Normal / Routine" checked> Normal OPD Checkup
+                            </label>
+                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--danger); font-weight:bold;">
+                                <input type="radio" name="urgencyRadio" value="Urgent / High Severity"> Urgent / Need Fast Attention
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+                        <a href="emergency.html" style="color:var(--danger); font-size:0.9rem;">
+                            🚨 If this is a life-threatening emergency, tap here for Immediate Ambulance!
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            Confirm Appointment Booking
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Dynamic Footer Mount -->
+    <div id="footer-mount"></div>
+
+    <!-- Firebase Cloud SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/firebase-service.js"></script>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentStudentProfile = {};
+
+        function initBookingPage() {
+            const user = initPage('student');
+            if (!user) return;
+
+            currentStudentProfile = JSON.parse(localStorage.getItem('studentProfile') || '{}');
+            
+            document.getElementById('formStudentName').textContent = currentStudentProfile.name || user.name || 'Student';
+            document.getElementById('formStudentRoll').textContent = currentStudentProfile.rollNo || 'N/A';
+            document.getElementById('formStudentBranch').textContent = currentStudentProfile.branch || 'N/A';
+            document.getElementById('formStudentBlood').textContent = currentStudentProfile.bloodGroup || 'N/A';
+
+            // Real-Time Listener: Automatically updates slot availability when doctors add or students book
+            syncRealtimeSlots((liveSlots) => {
+                renderSlots(liveSlots);
+            });
+        }
+
+        // Render available doctor slots with live student count & limits
+        function renderSlots(customSlots) {
+            const grid = document.getElementById('slotsGrid');
+            const slots = customSlots || getSlots();
+
+            if (!slots || slots.length === 0) {
+                grid.innerHTML = '<p style="color:var(--text-light); grid-column:1/-1;">No open checkup slots scheduled by doctors right now. Please check back soon or visit Health Center directly for walk-in OPD.</p>';
+                return;
+            }
+
+            grid.innerHTML = slots.map(slot => {
+                const booked = slot.bookedCount || 0;
+                const max = slot.maxLimit || 10;
+                const remaining = max - booked;
+                const isFull = remaining <= 0;
+
+                return `
+                <div class="card" style="border-top:4px solid ${isFull ? '#dc3545' : 'var(--primary)'}; display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                            <h4 style="color:var(--primary); font-size:1.05rem;">${slot.doctorName}</h4>
+                            <span class="badge ${isFull ? 'badge-danger' : 'badge-success'}">
+                                ${isFull ? '🔒 FULL' : 'AVAILABLE'}
+                            </span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-light); margin-bottom:8px;">
+                            <strong>Dept:</strong> ${slot.department}
+                        </p>
+                        <div style="background:#f8f5f0; padding:8px; border-radius:4px; font-size:0.85rem; margin-bottom:10px;">
+                            <div>📅 <strong>Date:</strong> ${slot.date}</div>
+                            <div>⏰ <strong>Time:</strong> ${slot.startTime} - ${slot.endTime}</div>
+                        </div>
+                        <p style="font-size:0.85rem; color:#555; margin-bottom:12px;">
+                            ${slot.note || 'General checkup slots for DTU students'}
+                        </p>
+                    </div>
+
+                    <div>
+                        <!-- Slot counter bar -->
+                        <div style="margin-bottom:10px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
+                                <span>Slots filled: <strong>${booked} / ${max}</strong></span>
+                                <span style="color:${isFull ? '#dc3545' : 'var(--success)'}; font-weight:bold;">
+                                    ${isFull ? '0 left' : `${remaining} spots remaining`}
+                                </span>
+                            </div>
+                            <div style="background:#e0e0e0; height:8px; border-radius:4px; overflow:hidden;">
+                                <div style="background:${isFull ? '#dc3545' : 'var(--primary)'}; height:100%; width:${Math.min(100, (booked/max)*100)}%;"></div>
+                            </div>
+                        </div>
+
+                        ${isFull ? `
+                            <button class="btn btn-secondary" disabled style="width:100%; opacity:0.6; cursor:not-allowed;">
+                                Slot Closed (Max ${max} Reached)
+                            </button>
+                        ` : `
+                            <button onclick="selectSlot(${slot.id})" class="btn btn-primary" style="width:100%;">
+                                Fill Booking Form (${remaining} spots)
+                            </button>
+                        `}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function selectSlot(slotId) {
+            const slots = getSlots();
+            const slot = slots.find(s => s.id == slotId);
+            if (!slot) return;
+
+            const booked = slot.bookedCount || 0;
+            const max = slot.maxLimit || 10;
+            if (booked >= max) {
+                alert("This slot has just reached full capacity (10/10 students). Please select another slot!");
+                return;
+            }
+
+            document.getElementById('selectedSlotId').value = slot.id;
+            document.getElementById('selectedDoctorName').value = slot.doctorName;
+            document.getElementById('selectedDeptName').value = slot.department;
+            document.getElementById('selectedDate').value = slot.date;
+            document.getElementById('selectedTime').value = `${slot.startTime} - ${slot.endTime}`;
+
+            document.getElementById('formSelectedDoctor').textContent = slot.doctorName;
+            document.getElementById('formSelectedDept').textContent = slot.department;
+            document.getElementById('displayDate').value = slot.date;
+            document.getElementById('displayTime').value = `${slot.startTime} - ${slot.endTime}`;
+
+            document.getElementById('bookingFormSection').style.display = 'block';
+            document.getElementById('bookingFormSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelSelection() {
+            document.getElementById('bookingFormSection').style.display = 'none';
+        }
+
+        async function submitBooking(event) {
+            event.preventDefault();
+
+            const slotId = document.getElementById('selectedSlotId').value;
+            const doctorName = document.getElementById('selectedDoctorName').value;
+            const deptName = document.getElementById('selectedDeptName').value;
+            const date = document.getElementById('selectedDate').value;
+            const time = document.getElementById('selectedTime').value;
+            const mode = document.getElementById('consultationMode').value;
+            const reason = document.getElementById('reasonInput').value.trim();
+            const urgency = document.querySelector('input[name="urgencyRadio"]:checked').value;
+
+            // Double check slot limit
+            const slots = getSlots();
+            const targetSlot = slots.find(s => s.id == slotId);
+            if (targetSlot && targetSlot.bookedCount >= targetSlot.maxLimit) {
+                alert("Sorry, all 10 spots for this doctor session are already filled!");
+                return;
+            }
+
+            const newAppointment = {
+                id: "APT-" + Date.now().toString().slice(-4),
+                slotId: slotId,
+                studentEmail: currentStudentProfile.email || "student@dtu.ac.in",
+                studentName: currentStudentProfile.name || "Student",
+                rollNo: currentStudentProfile.rollNo || "2K22/CO/001",
+                branch: currentStudentProfile.branch || "DTU",
+                doctorName: doctorName,
+                department: deptName,
+                date: date,
+                time: time,
+                mode: mode,
+                reason: reason,
+                urgency: urgency,
+                status: "confirmed",
+                createdAt: new Date().toLocaleDateString()
+            };
+
+            // Save and Push to Firebase Real-Time Cloud
+            await cloudAddAppointment(newAppointment);
+            updateSlotBookedCount(slotId);
+
+            showNotification("Appointment confirmed & synced to Cloud in real-time!", "success");
+
+            setTimeout(() => {
+                window.location.href = "student-dashboard.html";
+            }, 800);
+        }
+    </script>
+</body>
+</html>
