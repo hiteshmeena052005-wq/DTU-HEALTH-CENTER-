@@ -1,4 +1,4 @@
-// DTU Health Center - Initial Mock Data
+// DTU Health Center - Clean Initial Data
 
 const departments = [
     { id: 1, name: "General Medicine (OPD)", icon: "🏥" },
@@ -94,18 +94,6 @@ const sampleStudents = [
         dob: "2003-05-14",
         bloodGroup: "B+",
         phone: "+91 9876543210"
-    },
-    {
-        id: 2,
-        name: "Ananya Sharma",
-        email: "ananya.23ec045@dtu.ac.in",
-        dtuEmail: "ananya.23ec045@dtu.ac.in",
-        rollNo: "2K23/EC/045",
-        branch: "Electronics & Communication",
-        year: "2nd Year",
-        dob: "2004-08-22",
-        bloodGroup: "O+",
-        phone: "+91 9876543211"
     }
 ];
 
@@ -167,55 +155,24 @@ const emergencyContacts = [
     { name: "Rohini Sector 16 Police Station", phone: "100 / 112", available: "24/7", location: "Rohini, Delhi" }
 ];
 
-const samplePrescriptions = [
-    {
-        id: "RX-101",
-        studentEmail: "rahul.22co101@dtu.ac.in",
-        studentName: "Rahul Meena",
-        doctorName: "Dr. Rajesh Sharma",
-        department: "General Medicine (OPD)",
-        date: "10 Nov 2026",
-        diagnosis: "Viral Pharyngitis & Mild Fever",
-        medicines: [
-            { name: "Paracetamol 650mg", dosage: "1 tablet after food", duration: "3 Days" },
-            { name: "Cetirizine 10mg", dosage: "1 tablet at night", duration: "5 Days" },
-            { name: "Pantoprazole 40mg", dosage: "1 tablet empty stomach in morning", duration: "3 Days" }
-        ],
-        tests: "CBC (Complete Blood Count) if fever persists > 3 days",
-        followUp: "15 Nov 2026",
-        notes: "Warm salt water gargles 3 times a day. Drink lukewarm water."
-    }
-];
+// Clean empty appointments array for fresh deployment
+const sampleAppointments = [];
 
-const sampleAppointments = [
-    {
-        id: "APT-101",
-        slotId: 1,
-        studentEmail: "rahul.22co101@dtu.ac.in",
-        studentName: "Rahul Meena",
-        rollNo: "2K22/CO/101",
-        branch: "Computer Science",
-        doctorName: "Dr. Rajesh Sharma",
-        department: "General Medicine (OPD)",
-        date: "17 Nov 2026",
-        time: "10:30 AM",
-        reason: "Mild fever and throat irritation since 2 days",
-        isUrgent: "No",
-        status: "confirmed"
-    }
-];
+// Clean initial prescriptions
+const samplePrescriptions = [];
 
+// Clean slots with 0 booked count
 const sampleSlots = [
     {
         id: 1,
         doctorId: 1,
         doctorName: "Dr. Rajesh Sharma",
         department: "General Medicine (OPD)",
-        date: "2026-11-17",
+        date: "2026-11-18",
         startTime: "10:00 AM",
         endTime: "01:00 PM",
         maxLimit: 10,
-        bookedCount: 1,
+        bookedCount: 0,
         note: "OPD physical checkup slots available for students with fever/cough"
     },
     {
@@ -223,11 +180,11 @@ const sampleSlots = [
         doctorId: 2,
         doctorName: "Dr. Priya Verma",
         department: "Dental",
-        date: "2026-11-18",
+        date: "2026-11-19",
         startTime: "11:00 AM",
         endTime: "02:00 PM",
         maxLimit: 10,
-        bookedCount: 2,
+        bookedCount: 0,
         note: "Dental examination & cavity screening"
     },
     {
@@ -235,10 +192,10 @@ const sampleSlots = [
         doctorId: 4,
         doctorName: "Dr. Sunita Gupta",
         department: "Psychiatry & Counseling",
-        date: "2026-11-19",
+        date: "2026-11-20",
         startTime: "02:00 PM",
         endTime: "05:00 PM",
-        maxLimit: 8,
+        maxLimit: 10,
         bookedCount: 0,
         note: "One-on-one stress and anxiety management session"
     }
@@ -251,44 +208,35 @@ const sampleNotices = [
         content: "Annual seasonal influenza vaccination drive will be conducted on 20th Nov from 10:00 AM to 4:00 PM. All students are advised to bring DTU ID.",
         doctorName: "Dr. Rajesh Sharma",
         department: "General Medicine",
-        date: "14 Nov 2026",
-        type: "announcement"
-    },
-    {
-        id: 2,
-        title: "Free Dental Check-up Camp This Thursday",
-        content: "Dental hygiene and scaling guidance camp organized at DTU Health Center Block. Special tooth care kits will be distributed.",
-        doctorName: "Dr. Priya Verma",
-        department: "Dental",
-        date: "13 Nov 2026",
+        date: "16 Nov 2026",
         type: "announcement"
     }
 ];
 
-// Seed localStorage if empty
-function initData() {
-    if (!localStorage.getItem("dtu_doctors")) {
+// Initialize clean data
+function initData(forceReset = false) {
+    if (forceReset || !localStorage.getItem("dtu_doctors")) {
         localStorage.setItem("dtu_doctors", JSON.stringify(doctors));
     }
-    if (!localStorage.getItem("dtu_medicines")) {
+    if (forceReset || !localStorage.getItem("dtu_medicines")) {
         localStorage.setItem("dtu_medicines", JSON.stringify(medicines));
     }
-    if (!localStorage.getItem("dtu_healthTips")) {
+    if (forceReset || !localStorage.getItem("dtu_healthTips")) {
         localStorage.setItem("dtu_healthTips", JSON.stringify(healthTips));
     }
-    if (!localStorage.getItem("dtu_emergency")) {
+    if (forceReset || !localStorage.getItem("dtu_emergency")) {
         localStorage.setItem("dtu_emergency", JSON.stringify(emergencyContacts));
     }
-    if (!localStorage.getItem("dtu_prescriptions")) {
+    if (forceReset || !localStorage.getItem("dtu_prescriptions")) {
         localStorage.setItem("dtu_prescriptions", JSON.stringify(samplePrescriptions));
     }
-    if (!localStorage.getItem("dtu_appointments")) {
+    if (forceReset || !localStorage.getItem("dtu_appointments")) {
         localStorage.setItem("dtu_appointments", JSON.stringify(sampleAppointments));
     }
-    if (!localStorage.getItem("dtu_slots")) {
+    if (forceReset || !localStorage.getItem("dtu_slots")) {
         localStorage.setItem("dtu_slots", JSON.stringify(sampleSlots));
     }
-    if (!localStorage.getItem("dtu_notices")) {
+    if (forceReset || !localStorage.getItem("dtu_notices")) {
         localStorage.setItem("dtu_notices", JSON.stringify(sampleNotices));
     }
 }

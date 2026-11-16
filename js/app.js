@@ -48,6 +48,20 @@ function logout() {
     window.location.href = "login.html";
 }
 
+// Reset all test data to a fresh clean state
+function resetAllDemoData() {
+    if (confirm("Reset all test appointments, queues, and demo bookings to fresh clean state?")) {
+        localStorage.clear();
+        if (typeof initData === "function") {
+            initData(true);
+        }
+        showNotification("All previous test data cleared! Fresh state initialized.", "success");
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+    }
+}
+
 // Show a simple toast alert notification
 function showNotification(message, type = "success") {
     let container = document.getElementById("toast-container");
@@ -148,7 +162,6 @@ function loadNavbar(role) {
     const userName = user ? (user.name || "User") : "Account";
     const currentPage = window.location.pathname.split("/").pop();
 
-    // When logged in, home link goes directly to their dashboard
     let homeUrl = "index.html";
     if (role === "student" || (user && user.role === "student")) {
         homeUrl = "student-dashboard.html";
@@ -226,6 +239,7 @@ function loadFooter() {
                     <li><a href="student-dashboard.html" style="color:#eee;">Student Portal</a></li>
                     <li><a href="doctor-dashboard.html" style="color:#eee;">Doctor Portal (Admin)</a></li>
                     <li><a href="emergency.html" style="color:#ff8888;">Instant Ambulance / SOS</a></li>
+                    <li><a href="javascript:void(0)" onclick="resetAllDemoData()" style="color:#bbb; font-size:0.8rem;">🔄 Reset Demo Data</a></li>
                 </ul>
             </div>
             <div>
