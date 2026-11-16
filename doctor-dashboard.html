@@ -267,6 +267,18 @@
                     showNotification(`🚨 URGENT SOS from ${alertData.location}! Ambulance dispatched.`, 'danger');
                 }
             });
+
+            // Listen to cross-tab real-time sync (Student booked or cancelled)
+            onDataChanged((event) => {
+                if (event.type === 'APPOINTMENT_CANCELLED') {
+                    showNotification("Patient cancelled appointment. Slot capacity freed up.", "warning");
+                } else if (event.type === 'APPOINTMENT_BOOKED') {
+                    showNotification("New appointment booked in live queue!", "success");
+                }
+                renderQueue();
+                renderDoctorSlots();
+                renderStats();
+            });
         }
 
         // Render live queue of appointments
@@ -320,7 +332,7 @@
                                class="btn btn-small btn-secondary" style="text-align:center; padding:4px 6px; font-size:0.75rem; color:var(--primary);">
                                🔄 Refer
                             </a>
-                            <button onclick="completeAppointment(${index})" 
+                            <button onclick="completeAppointment('${apt.id}')" 
                                     class="btn btn-small btn-success" style="padding:4px 6px; font-size:0.75rem;">
                                ✓ Done
                             </button>
@@ -433,14 +445,16 @@
             `).join('');
         }
 
-        function completeAppointment(index) {
+        async function completeAppointment(aptId) {
             const appointments = getAppointments();
-            const apt = appointments[index];
-            if (confirm(`Mark consultation complete for ${apt.studentName}?`)) {
-                appointments.splice(index, 1);
-                localStorage.setItem("dtu_appointments", JSON.stringify(appointments));
-                showNotification("Consultation marked completed.", "success");
-                renderQueue(appointments);
+            const apt = appointments.find(a => a.id === aptId);
+            if (!apt) return;
+
+            if (confirm(`Mark consultation complete for ${apt.studentName}? This will free up slot capacity.`)) {
+                await cancelAppointmentAndFreeSlot(apt.id, apt.slotId, apt.doctorName);
+                showNotification(`Consultation complete for ${apt.studentName}.`, "success");
+                renderQueue();
+                renderDoctorSlots();
                 renderStats();
             }
         }

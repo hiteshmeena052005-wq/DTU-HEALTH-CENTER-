@@ -31,8 +31,6 @@ function syncRealtimeAppointments(onUpdateCallback) {
 
 // Add Appointment to Cloud Database
 async function cloudAddAppointment(appointment) {
-    saveAppointment(appointment); // Save locally first for instant UI response
-
     if (isFirebaseConnected && db) {
         try {
             await db.collection("appointments").add({

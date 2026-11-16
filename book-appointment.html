@@ -155,6 +155,11 @@
             syncRealtimeSlots((liveSlots) => {
                 renderSlots(liveSlots);
             });
+
+            // Listen to cross-tab live real-time cancellations & bookings
+            onDataChanged((event) => {
+                renderSlots();
+            });
         }
 
         // Render available doctor slots with live student count & limits
@@ -304,12 +309,11 @@
                 createdAt: new Date().toLocaleDateString()
             };
 
-            // Save to Database & LocalStorage
+            // Save to Database & LocalStorage (Unified persistence)
             await saveAppointment(newAppointment);
             if (typeof cloudAddAppointment === 'function') {
                 await cloudAddAppointment(newAppointment);
             }
-            updateSlotBookedCount(slotId);
 
             showNotification("Appointment Confirmed!", "success");
 

@@ -5,7 +5,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 5000;
 const DB_FILE = path.join(__dirname, 'data', 'database.json');
 const PUBLIC_DIR = __dirname;
 
@@ -102,14 +102,24 @@ const server = http.createServer(async (req, res) => {
                 const body = await parseBody(req);
                 const db = readDatabase();
                 db.appointments = db.appointments || [];
-                db.appointments.unshift(body);
+                
+                // Avoid saving duplicate
+                const exists = db.appointments.some(a => a.id === body.id);
+                if (!exists) {
+                    db.appointments.unshift(body);
+                }
 
-                // Increment slot count
-                if (body.slotId) {
-                    const slot = (db.slots || []).find(s => s.id == body.slotId);
-                    if (slot) {
-                        slot.bookedCount = (slot.bookedCount || 0) + 1;
-                    }
+                // Increment slot count capped at maxLimit
+                const slot = (db.slots || []).find(s => 
+                    (body.slotId && s.id == body.slotId) || 
+                    (body.doctorName && s.doctorName === body.doctorName)
+                );
+                if (slot) {
+                    const activeCount = db.appointments.filter(a => 
+                        (a.slotId && a.slotId == slot.id) || 
+                        (a.doctorName && a.doctorName === slot.doctorName)
+                    ).length;
+                    slot.bookedCount = Math.min(slot.maxLimit || 10, activeCount);
                 }
 
                 writeDatabase(db);
@@ -120,10 +130,57 @@ const server = http.createServer(async (req, res) => {
             }
         }
 
+        // CANCEL APPOINTMENT API (Frees up slot count & deletes from doctor queue)
+        if (pathname === '/api/appointments/cancel' && req.method === 'POST') {
+            const body = await parseBody(req);
+            const db = readDatabase();
+            const aptId = body.id;
+            const slotId = body.slotId;
+            const docName = body.doctorName;
+
+            const targetApt = (db.appointments || []).find(a => a.id === aptId);
+            const effectiveSlotId = slotId || (targetApt ? targetApt.slotId : null);
+            const effectiveDocName = docName || (targetApt ? targetApt.doctorName : null);
+
+            db.appointments = (db.appointments || []).filter(a => a.id !== aptId);
+
+            if (db.slots) {
+                const targetSlot = db.slots.find(s => 
+                    (effectiveSlotId && s.id == effectiveSlotId) || 
+                    (effectiveDocName && s.doctorName === effectiveDocName)
+                );
+                if (targetSlot) {
+                    // Recount remaining active appointments for this doctor/slot
+                    const activeRemaining = db.appointments.filter(a => 
+                        (a.slotId && a.slotId == targetSlot.id) || 
+                        (a.doctorName && a.doctorName === targetSlot.doctorName)
+                    ).length;
+                    targetSlot.bookedCount = Math.max(0, activeRemaining);
+                    console.log(`📉 [DB CANCEL] Slot capacity freed for ${targetSlot.doctorName}: now ${targetSlot.bookedCount}/${targetSlot.maxLimit}`);
+                }
+            }
+
+            writeDatabase(db);
+            console.log(`❌ [DB CANCEL] Appointment ${aptId} cancelled & deleted from database`);
+            res.writeHead(200);
+            res.end(JSON.stringify({ success: true, appointments: db.appointments, slots: db.slots }));
+            return;
+        }
+
         // SLOTS API (Doctor Availability)
         if (pathname === '/api/slots') {
             const db = readDatabase();
             if (req.method === 'GET') {
+                // Ensure slots counts always match actual active appointments
+                if (db.slots && db.appointments) {
+                    db.slots.forEach(slot => {
+                        const activeCount = db.appointments.filter(a => 
+                            (a.slotId && a.slotId == slot.id) || 
+                            (a.doctorName && a.doctorName === slot.doctorName)
+                        ).length;
+                        slot.bookedCount = Math.min(slot.maxLimit || 10, activeCount);
+                    });
+                }
                 res.writeHead(200);
                 res.end(JSON.stringify(db.slots || []));
                 return;
@@ -217,7 +274,6 @@ const server = http.createServer(async (req, res) => {
                 const db = readDatabase();
                 db.medicines = db.medicines || [];
 
-                // Check if updating existing
                 if (body.id && body.stock !== undefined) {
                     const target = db.medicines.find(m => m.id == body.id);
                     if (target) {
@@ -288,7 +344,6 @@ const server = http.createServer(async (req, res) => {
 
     const filePath = path.join(PUBLIC_DIR, reqFile);
 
-    // Prevent directory traversal
     if (!filePath.startsWith(PUBLIC_DIR)) {
         res.writeHead(403);
         res.end('Access Denied');

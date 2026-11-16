@@ -23,7 +23,7 @@
                 <p style="color:var(--text-light); font-size:0.95rem;">
                     DTU Roll No: <strong id="studentRollDisplay">Loading...</strong> | 
                     Branch: <span id="studentBranchDisplay">Loading...</span> |
-                    <span class="badge badge-success">● Cloud Real-Time Active</span>
+                    <span class="badge badge-success">● Database Connected</span>
                 </p>
             </div>
             <div style="display:flex; gap:10px;">
@@ -61,7 +61,7 @@
                 <div class="card" style="margin-bottom:25px;">
                     <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                         <h3 style="font-size:1.1rem; color:var(--primary-dark);">📢 Doctor Announcements & Notices</h3>
-                        <span class="badge badge-info">Live Cloud Feed</span>
+                        <span class="badge badge-info">Live Feed</span>
                     </div>
                     <div class="card-body" id="noticesContainer">
                         <!-- Loaded dynamically -->
@@ -132,17 +132,14 @@
     <script src="js/app.js"></script>
     <script>
         function initStudentDashboard() {
-            // Verify student role & load navigation
             const user = initPage('student');
             if (!user) return;
 
-            // Load student profile details
             const profile = JSON.parse(localStorage.getItem('studentProfile') || '{}');
             document.getElementById('studentNameDisplay').textContent = profile.name || user.name || 'DTU Student';
             document.getElementById('studentRollDisplay').textContent = profile.rollNo || '2K23/XX/000';
             document.getElementById('studentBranchDisplay').textContent = profile.branch || 'DTU';
 
-            // Real-Time Listeners: Automatically receives new notices & appointment changes from Cloud
             syncRealtimeNotices((liveNotices) => {
                 renderNotices(liveNotices);
                 renderStats();
@@ -153,10 +150,15 @@
                 renderStats();
             });
 
+            // Listen to real-time sync across tabs
+            onDataChanged((event) => {
+                renderStats();
+                renderAppointments(getAppointments());
+            });
+
             renderProfileSummary(profile);
         }
 
-        // Render dashboard numerical counters
         function renderStats() {
             const appointments = getAppointments();
             const prescriptions = getPrescriptions();
@@ -167,7 +169,6 @@
             document.getElementById('statNotices').textContent = notices.length;
         }
 
-        // Render notices posted by doctors
         function renderNotices(customNotices) {
             const container = document.getElementById('noticesContainer');
             const notices = customNotices || getNotices();
@@ -191,7 +192,6 @@
             `).join('');
         }
 
-        // Render student's appointments
         function renderAppointments(customAppointments) {
             const container = document.getElementById('appointmentsContainer');
             const appointments = customAppointments || getAppointments();
@@ -228,15 +228,14 @@
                         <a href="video-call.html?doctor=${encodeURIComponent(apt.doctorName)}" class="btn btn-small btn-secondary" style="color:var(--primary);">
                             📹 Join Video
                         </a>
-                        <button onclick="cancelAppointment(${index})" class="btn btn-small btn-danger" style="padding:4px 8px; font-size:0.75rem;">
-                            Cancel
+                        <button onclick="cancelAppointment('${apt.id}')" class="btn btn-small btn-danger" style="padding:4px 8px; font-size:0.75rem;">
+                            Cancel Appointment
                         </button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Render student profile card summary
         function renderProfileSummary(profile) {
             const container = document.getElementById('profileSummaryContainer');
             if (!profile || !profile.rollNo) {
@@ -259,14 +258,16 @@
             `;
         }
 
-        function cancelAppointment(index) {
-            if (confirm("Are you sure you want to cancel this appointment?")) {
-                const list = getAppointments();
-                list.splice(index, 1);
-                localStorage.setItem("dtu_appointments", JSON.stringify(list));
-                showNotification("Appointment cancelled.", "warning");
+        async function cancelAppointment(aptId) {
+            const list = getAppointments();
+            const apt = list.find(a => a.id === aptId);
+            if (!apt) return;
+
+            if (confirm(`Are you sure you want to cancel your appointment with ${apt.doctorName}? This will free up the slot for other students.`)) {
+                await cancelAppointmentAndFreeSlot(apt.id, apt.slotId, apt.doctorName);
+                showNotification("Appointment cancelled & slot freed up in database!", "warning");
                 renderStats();
-                renderAppointments(list);
+                renderAppointments(getAppointments());
             }
         }
     </script>

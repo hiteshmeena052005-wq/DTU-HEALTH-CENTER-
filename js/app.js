@@ -1,6 +1,42 @@
 // DTU Health Center - Common Application Logic & Database Controller
 
-const API_BASE = "/api";
+const API_BASE = (window.location.protocol === "http:" || window.location.protocol === "https:")
+    ? "/api"
+    : "http://localhost:5000/api";
+
+// Cross-tab real-time sync bus (BroadcastChannel + storage event)
+const dtuSyncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('dtu_health_sync_bus') : null;
+const syncListeners = [];
+
+function broadcastDataChange(type, payload = {}) {
+    if (dtuSyncChannel) {
+        try {
+            dtuSyncChannel.postMessage({ type, payload, timestamp: Date.now() });
+        } catch (e) {}
+    }
+}
+
+function onDataChanged(callback) {
+    if (typeof callback === 'function') {
+        syncListeners.push(callback);
+    }
+}
+
+if (dtuSyncChannel) {
+    dtuSyncChannel.onmessage = (event) => {
+        syncListeners.forEach(cb => {
+            try { cb(event.data); } catch (e) {}
+        });
+    };
+}
+
+window.addEventListener('storage', (e) => {
+    if (e.key && e.key.startsWith('dtu_')) {
+        syncListeners.forEach(cb => {
+            try { cb({ type: 'STORAGE_UPDATE', key: e.key }); } catch (err) {}
+        });
+    }
+});
 
 // Get current logged-in user from localStorage
 function getCurrentUser() {
@@ -64,9 +100,7 @@ async function syncDatabaseFromServer() {
             const aptRes = await fetch(`${API_BASE}/appointments`);
             if (aptRes.ok) {
                 const liveApts = await aptRes.json();
-                if (Array.isArray(liveApts) && liveApts.length > 0) {
-                    localStorage.setItem("dtu_appointments", JSON.stringify(liveApts));
-                }
+                localStorage.setItem("dtu_appointments", JSON.stringify(liveApts || []));
             }
 
             // Fetch live slots from database
@@ -154,8 +188,22 @@ function getAppointments() {
 
 async function saveAppointment(appointment) {
     const list = getAppointments();
-    list.unshift(appointment);
-    localStorage.setItem("dtu_appointments", JSON.stringify(list));
+    const exists = list.some(a => a.id === appointment.id);
+    if (!exists) {
+        list.unshift(appointment);
+        localStorage.setItem("dtu_appointments", JSON.stringify(list));
+    }
+
+    // Auto update slot count in slots array
+    let slots = JSON.parse(localStorage.getItem("dtu_slots") || "[]");
+    const targetSlot = slots.find(s => 
+        (appointment.slotId && s.id == appointment.slotId) || 
+        (appointment.doctorName && s.doctorName === appointment.doctorName)
+    );
+    if (targetSlot) {
+        targetSlot.bookedCount = Math.min(targetSlot.maxLimit || 10, (targetSlot.bookedCount || 0) + 1);
+        localStorage.setItem("dtu_slots", JSON.stringify(slots));
+    }
 
     // Persist to Server Database File
     try {
@@ -166,6 +214,58 @@ async function saveAppointment(appointment) {
         });
         console.log("💾 Saved to database (data/database.json)");
     } catch (e) {}
+
+    // Broadcast live event to all other open tabs (Doctor Queue, Slot Monitor)
+    broadcastDataChange('APPOINTMENT_BOOKED', { appointment, slotId: targetSlot ? targetSlot.id : appointment.slotId });
+}
+
+// Cancel appointment and accurately decrement slot count everywhere
+async function cancelAppointmentAndFreeSlot(aptId, slotId, doctorName) {
+    let list = getAppointments();
+    const apt = list.find(a => a.id === aptId);
+    list = list.filter(a => a.id !== aptId);
+    localStorage.setItem("dtu_appointments", JSON.stringify(list));
+
+    const targetSlotId = slotId || (apt ? apt.slotId : null);
+    const targetDocName = doctorName || (apt ? apt.doctorName : null);
+
+    let slots = JSON.parse(localStorage.getItem("dtu_slots") || "[]");
+    const slot = slots.find(s => 
+        (targetSlotId && s.id == targetSlotId) || 
+        (targetDocName && s.doctorName === targetDocName)
+    );
+
+    if (slot) {
+        // Recount active non-cancelled appointments for this doctor/slot
+        const activeRemaining = list.filter(a => 
+            (a.slotId && a.slotId == slot.id) || 
+            (a.doctorName && a.doctorName === slot.doctorName)
+        ).length;
+        slot.bookedCount = Math.max(0, activeRemaining);
+        localStorage.setItem("dtu_slots", JSON.stringify(slots));
+        console.log(`📉 Slot capacity updated: ${slot.bookedCount}/${slot.maxLimit} for ${slot.doctorName}`);
+    }
+
+    // Inform Database Server
+    try {
+        await fetch(`${API_BASE}/appointments/cancel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: aptId, slotId: targetSlotId, doctorName: targetDocName })
+        });
+        console.log("💾 Cancellation synced to database file (data/database.json)");
+    } catch (e) {}
+
+    // Update Firebase if active
+    if (typeof isFirebaseConnected !== 'undefined' && isFirebaseConnected && db) {
+        try {
+            const snap = await db.collection("appointments").where("id", "==", aptId).get();
+            snap.forEach(doc => doc.ref.delete());
+        } catch (e) {}
+    }
+
+    // Broadcast cancellation to all tabs (Doctor Dashboard, Booking page)
+    broadcastDataChange('APPOINTMENT_CANCELLED', { id: aptId, slotId: targetSlotId, doctorName: targetDocName });
 }
 
 function getPrescriptions() {
@@ -184,6 +284,8 @@ async function savePrescription(prescription) {
             body: JSON.stringify(prescription)
         });
     } catch (e) {}
+
+    broadcastDataChange('PRESCRIPTION_ADDED', { prescription });
 }
 
 function getNotices() {
@@ -202,14 +304,38 @@ async function saveNotice(notice) {
             body: JSON.stringify(notice)
         });
     } catch (e) {}
+
+    broadcastDataChange('NOTICE_ADDED', { notice });
 }
 
 function getSlots() {
-    return JSON.parse(localStorage.getItem("dtu_slots") || "[]");
+    let slots = JSON.parse(localStorage.getItem("dtu_slots") || "[]");
+    const appointments = getAppointments();
+    let updated = false;
+
+    slots.forEach(slot => {
+        if (!slot.maxLimit) slot.maxLimit = 10;
+        
+        // Count active appointments for this doctor/slot
+        const activeCount = appointments.filter(a => 
+            (a.slotId && a.slotId == slot.id) || (a.doctorName && a.doctorName === slot.doctorName)
+        ).length;
+
+        // Auto-heal any overflow, negative, or desynced slot counts
+        if (slot.bookedCount > slot.maxLimit || slot.bookedCount !== activeCount) {
+            slot.bookedCount = Math.min(slot.maxLimit, activeCount);
+            updated = true;
+        }
+    });
+
+    if (updated) {
+        localStorage.setItem("dtu_slots", JSON.stringify(slots));
+    }
+    return slots;
 }
 
 async function saveSlot(slot) {
-    const list = getSlots();
+    const list = JSON.parse(localStorage.getItem("dtu_slots") || "[]");
     list.unshift(slot);
     localStorage.setItem("dtu_slots", JSON.stringify(list));
 
@@ -220,15 +346,13 @@ async function saveSlot(slot) {
             body: JSON.stringify(slot)
         });
     } catch (e) {}
+
+    broadcastDataChange('SLOT_ADDED', { slot });
 }
 
 function updateSlotBookedCount(slotId) {
-    const list = getSlots();
-    const target = list.find(s => s.id == slotId);
-    if (target) {
-        target.bookedCount = (target.bookedCount || 0) + 1;
-        localStorage.setItem("dtu_slots", JSON.stringify(list));
-    }
+    // Reconciles slot count directly from getSlots() auto-heal
+    getSlots();
 }
 
 function getMedicines() {
