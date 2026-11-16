@@ -1,6 +1,9 @@
-// DTU Health Center - Firebase Real-Time Synchronization Service
+// DTU Health Center - Firebase Real-Time Cloud Synchronization Service
+// Powered by Google Firebase Cloud Firestore
 
-// Real-Time Listener for Appointments
+// -------------------------------------------------------------
+// 1. APPOINTMENTS (Real-time Cloud Sync)
+// -------------------------------------------------------------
 function syncRealtimeAppointments(onUpdateCallback) {
     if (isFirebaseConnected && db) {
         db.collection("appointments")
@@ -8,7 +11,7 @@ function syncRealtimeAppointments(onUpdateCallback) {
             .onSnapshot((snapshot) => {
                 const liveList = [];
                 snapshot.forEach(doc => {
-                    liveList.push({ id: doc.id, ...doc.data() });
+                    liveList.push({ ...doc.data(), docId: doc.id });
                 });
                 if (liveList.length > 0) {
                     localStorage.setItem("dtu_appointments", JSON.stringify(liveList));
@@ -29,7 +32,6 @@ function syncRealtimeAppointments(onUpdateCallback) {
     }
 }
 
-// Add Appointment to Cloud Database
 async function cloudAddAppointment(appointment) {
     if (isFirebaseConnected && db) {
         try {
@@ -37,21 +39,35 @@ async function cloudAddAppointment(appointment) {
                 ...appointment,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log("☁️ Appointment synced to Firebase Cloud");
+            console.log("☁️ [FIREBASE CLOUD] Appointment synced to Google Firestore");
         } catch (e) {
-            console.warn("Cloud save queued locally:", e.message);
+            console.warn("Cloud save queued:", e.message);
         }
     }
 }
 
-// Real-Time Listener for Doctor Checkup Slots (Max 10 Limit)
+async function cloudCancelAppointment(aptId) {
+    if (isFirebaseConnected && db) {
+        try {
+            const snap = await db.collection("appointments").where("id", "==", aptId).get();
+            snap.forEach(doc => doc.ref.delete());
+            console.log(`☁️ [FIREBASE CLOUD] Appointment ${aptId} deleted from Google Firestore`);
+        } catch (e) {
+            console.warn("Cloud cancel error:", e.message);
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// 2. DOCTOR CHECKUP SLOTS (Real-time Cloud Sync)
+// -------------------------------------------------------------
 function syncRealtimeSlots(onUpdateCallback) {
     if (isFirebaseConnected && db) {
         db.collection("slots")
             .onSnapshot((snapshot) => {
                 const liveSlots = [];
                 snapshot.forEach(doc => {
-                    liveSlots.push({ id: doc.id, ...doc.data() });
+                    liveSlots.push({ ...doc.data(), docId: doc.id });
                 });
                 if (liveSlots.length > 0) {
                     localStorage.setItem("dtu_slots", JSON.stringify(liveSlots));
@@ -67,28 +83,109 @@ function syncRealtimeSlots(onUpdateCallback) {
     }
 }
 
-// Add Doctor Slot to Cloud Database
 async function cloudAddSlot(slot) {
     saveSlot(slot);
 
     if (isFirebaseConnected && db) {
         try {
             await db.collection("slots").add(slot);
-            console.log("☁️ Slot synced to Firebase Cloud");
+            console.log("☁️ [FIREBASE CLOUD] Slot synced to Google Firestore");
         } catch (e) {
-            console.warn("Slot saved locally:", e.message);
+            console.warn("Slot save error:", e.message);
         }
     }
 }
 
-// Real-Time Listener for Campus Health Notices
+// -------------------------------------------------------------
+// 3. DIGITAL PRESCRIPTIONS (Real-time Cloud Sync)
+// -------------------------------------------------------------
+function syncRealtimePrescriptions(onUpdateCallback) {
+    if (isFirebaseConnected && db) {
+        db.collection("prescriptions")
+            .orderBy("issuedAt", "desc")
+            .onSnapshot((snapshot) => {
+                const liveRx = [];
+                snapshot.forEach(doc => {
+                    liveRx.push({ ...doc.data(), docId: doc.id });
+                });
+                if (liveRx.length > 0) {
+                    localStorage.setItem("dtu_prescriptions", JSON.stringify(liveRx));
+                }
+                if (typeof onUpdateCallback === "function") {
+                    onUpdateCallback(liveRx.length > 0 ? liveRx : getPrescriptions());
+                }
+            }, (err) => {
+                if (typeof onUpdateCallback === "function") onUpdateCallback(getPrescriptions());
+            });
+    } else {
+        if (typeof onUpdateCallback === "function") onUpdateCallback(getPrescriptions());
+    }
+}
+
+async function cloudAddPrescription(rxData) {
+    if (isFirebaseConnected && db) {
+        try {
+            await db.collection("prescriptions").add({
+                ...rxData,
+                issuedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("☁️ [FIREBASE CLOUD] Prescription saved to Google Firestore");
+        } catch (e) {
+            console.warn("Prescription cloud save error:", e.message);
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// 4. SPECIALIST REFERRALS (Real-time Cloud Sync)
+// -------------------------------------------------------------
+function syncRealtimeReferrals(onUpdateCallback) {
+    if (isFirebaseConnected && db) {
+        db.collection("referrals")
+            .orderBy("referredAt", "desc")
+            .onSnapshot((snapshot) => {
+                const liveRefs = [];
+                snapshot.forEach(doc => {
+                    liveRefs.push({ ...doc.data(), docId: doc.id });
+                });
+                if (liveRefs.length > 0) {
+                    localStorage.setItem("dtu_referrals", JSON.stringify(liveRefs));
+                }
+                if (typeof onUpdateCallback === "function") {
+                    onUpdateCallback(liveRefs.length > 0 ? liveRefs : getReferrals());
+                }
+            }, (err) => {
+                if (typeof onUpdateCallback === "function") onUpdateCallback(getReferrals());
+            });
+    } else {
+        if (typeof onUpdateCallback === "function") onUpdateCallback(getReferrals());
+    }
+}
+
+async function cloudAddReferral(refData) {
+    if (isFirebaseConnected && db) {
+        try {
+            await db.collection("referrals").add({
+                ...refData,
+                referredAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("☁️ [FIREBASE CLOUD] Referral saved to Google Firestore");
+        } catch (e) {
+            console.warn("Referral cloud save error:", e.message);
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// 5. CAMPUS HEALTH NOTICES (Real-time Cloud Sync)
+// -------------------------------------------------------------
 function syncRealtimeNotices(onUpdateCallback) {
     if (isFirebaseConnected && db) {
         db.collection("notices")
             .onSnapshot((snapshot) => {
                 const liveNotices = [];
                 snapshot.forEach(doc => {
-                    liveNotices.push({ id: doc.id, ...doc.data() });
+                    liveNotices.push({ ...doc.data(), docId: doc.id });
                 });
                 if (liveNotices.length > 0) {
                     localStorage.setItem("dtu_notices", JSON.stringify(liveNotices));
@@ -104,21 +201,22 @@ function syncRealtimeNotices(onUpdateCallback) {
     }
 }
 
-// Add Notice to Cloud Database
 async function cloudAddNotice(notice) {
     saveNotice(notice);
 
     if (isFirebaseConnected && db) {
         try {
             await db.collection("notices").add(notice);
-            console.log("☁️ Notice broadcasted to Firebase Cloud");
+            console.log("☁️ [FIREBASE CLOUD] Notice broadcasted to Google Firestore");
         } catch (e) {
-            console.warn("Notice saved locally:", e.message);
+            console.warn("Notice save error:", e.message);
         }
     }
 }
 
-// Real-Time Ambulance SOS Alert Broadcast
+// -------------------------------------------------------------
+// 6. EMERGENCY AMBULANCE SOS ALERTS (Real-time Cloud Sync)
+// -------------------------------------------------------------
 function syncRealtimeEmergency(onAlertCallback) {
     if (isFirebaseConnected && db) {
         db.collection("emergency_alerts")
@@ -143,7 +241,7 @@ async function cloudTriggerSOS(sosData) {
                 ...sosData,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log("🚨 SOS dispatched to Firebase Cloud");
+            console.log("🚨 [FIREBASE CLOUD] SOS dispatched to Google Firestore");
         } catch (e) {
             console.warn("SOS queued locally:", e.message);
         }

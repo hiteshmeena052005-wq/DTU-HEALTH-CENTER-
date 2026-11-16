@@ -2,12 +2,13 @@
 // Powered by Google Firebase Firestore (Real-Time Cloud Sync)
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDTU_HEALTH_CENTER_PROTOTYPE_DEMO",
+    apiKey: "AIzaSyCMbvBTlx5sWzSvH6rYD3AVcGj9ny6FjnI",
     authDomain: "dtu-health-center.firebaseapp.com",
     projectId: "dtu-health-center",
-    storageBucket: "dtu-health-center.appspot.com",
-    messagingSenderId: "1029384756",
-    appId: "1:1029384756:web:dtuhealthcenterdemo"
+    storageBucket: "dtu-health-center.firebasestorage.app",
+    messagingSenderId: "901301135872",
+    appId: "1:901301135872:web:47e50ab6df03bb7c9b06e5",
+    measurementId: "G-S8NFZYY8X9"
 };
 
 // Check if Firebase is available and initialize

@@ -299,12 +299,9 @@ async function cancelAppointmentAndFreeSlot(aptId, slotId, doctorName) {
         console.log("💾 Cancellation synced to database file (data/database.json)");
     } catch (e) {}
 
-    // Update Firebase if active
-    if (typeof isFirebaseConnected !== 'undefined' && isFirebaseConnected && db) {
-        try {
-            const snap = await db.collection("appointments").where("id", "==", aptId).get();
-            snap.forEach(doc => doc.ref.delete());
-        } catch (e) {}
+    // Update Firebase Cloud if active
+    if (typeof cloudCancelAppointment === 'function') {
+        cloudCancelAppointment(aptId);
     }
 
     // Broadcast cancellation to all tabs (Doctor Dashboard, Booking page)
@@ -329,6 +326,11 @@ async function savePrescription(prescription) {
         console.log("💾 Prescription saved to Hospital DBMS (database/hospital.db)");
     } catch (e) {}
 
+    // Cloud Firebase sync
+    if (typeof cloudAddPrescription === 'function') {
+        cloudAddPrescription(prescription);
+    }
+
     broadcastDataChange('PRESCRIPTION_ADDED', { prescription });
 }
 
@@ -349,6 +351,11 @@ async function saveReferral(referral) {
         });
         console.log("💾 Referral saved to Hospital DBMS (database/hospital.db)");
     } catch (e) {}
+
+    // Cloud Firebase sync
+    if (typeof cloudAddReferral === 'function') {
+        cloudAddReferral(referral);
+    }
 
     broadcastDataChange('REFERRAL_ADDED', { referral });
 }
