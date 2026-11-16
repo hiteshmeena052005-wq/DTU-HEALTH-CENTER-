@@ -1,4 +1,6 @@
-// DTU Health Center - Common Application Logic
+// DTU Health Center - Common Application Logic & Database Controller
+
+const API_BASE = "/api";
 
 // Get current logged-in user from localStorage
 function getCurrentUser() {
@@ -28,7 +30,6 @@ function checkLogin(expectedRole) {
         return null;
     }
 
-    // If student has not set up profile yet, redirect to profile setup
     if (user.role === "student") {
         const profile = localStorage.getItem("studentProfile");
         const currentPage = window.location.pathname.split("/").pop();
@@ -48,14 +49,70 @@ function logout() {
     window.location.href = "login.html";
 }
 
-// Reset all test data to a fresh clean state
-function resetAllDemoData() {
+// ==========================================
+// 🗄️ REAL DATABASE SYNC (API + LOCAL FALLBACK)
+// ==========================================
+
+// Sync data from Node.js database file (data/database.json)
+async function syncDatabaseFromServer() {
+    try {
+        const res = await fetch(`${API_BASE}/status`);
+        if (res.ok) {
+            console.log("🟢 Connected to DTU Health Center Database Engine");
+
+            // Fetch live appointments from database
+            const aptRes = await fetch(`${API_BASE}/appointments`);
+            if (aptRes.ok) {
+                const liveApts = await aptRes.json();
+                if (Array.isArray(liveApts) && liveApts.length > 0) {
+                    localStorage.setItem("dtu_appointments", JSON.stringify(liveApts));
+                }
+            }
+
+            // Fetch live slots from database
+            const slotRes = await fetch(`${API_BASE}/slots`);
+            if (slotRes.ok) {
+                const liveSlots = await slotRes.json();
+                if (Array.isArray(liveSlots) && liveSlots.length > 0) {
+                    localStorage.setItem("dtu_slots", JSON.stringify(liveSlots));
+                }
+            }
+
+            // Fetch live notices
+            const noticeRes = await fetch(`${API_BASE}/notices`);
+            if (noticeRes.ok) {
+                const liveNotices = await noticeRes.json();
+                if (Array.isArray(liveNotices) && liveNotices.length > 0) {
+                    localStorage.setItem("dtu_notices", JSON.stringify(liveNotices));
+                }
+            }
+
+            // Fetch live prescriptions
+            const rxRes = await fetch(`${API_BASE}/prescriptions`);
+            if (rxRes.ok) {
+                const liveRx = await rxRes.json();
+                if (Array.isArray(liveRx) && liveRx.length > 0) {
+                    localStorage.setItem("dtu_prescriptions", JSON.stringify(liveRx));
+                }
+            }
+        }
+    } catch (e) {
+        console.log("ℹ️ Server offline. Operating in autonomous local mode.");
+    }
+}
+
+// Reset all test data in database & localStorage
+async function resetAllDemoData() {
     if (confirm("Reset all test appointments, queues, and demo bookings to fresh clean state?")) {
+        try {
+            await fetch(`${API_BASE}/reset`, { method: "POST" });
+        } catch (e) {}
+
         localStorage.clear();
         if (typeof initData === "function") {
             initData(true);
         }
-        showNotification("All previous test data cleared! Fresh state initialized.", "success");
+        showNotification("All previous test data cleared! Fresh database state initialized.", "success");
         setTimeout(() => {
             window.location.reload();
         }, 500);
@@ -90,45 +147,79 @@ function showNotification(message, type = "success") {
     }, 3500);
 }
 
-// Helpers for localStorage data
+// Helpers for Database Operations
 function getAppointments() {
     return JSON.parse(localStorage.getItem("dtu_appointments") || "[]");
 }
 
-function saveAppointment(appointment) {
+async function saveAppointment(appointment) {
     const list = getAppointments();
     list.unshift(appointment);
     localStorage.setItem("dtu_appointments", JSON.stringify(list));
+
+    // Persist to Server Database File
+    try {
+        await fetch(`${API_BASE}/appointments`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(appointment)
+        });
+        console.log("💾 Saved to database (data/database.json)");
+    } catch (e) {}
 }
 
 function getPrescriptions() {
     return JSON.parse(localStorage.getItem("dtu_prescriptions") || "[]");
 }
 
-function savePrescription(prescription) {
+async function savePrescription(prescription) {
     const list = getPrescriptions();
     list.unshift(prescription);
     localStorage.setItem("dtu_prescriptions", JSON.stringify(list));
+
+    try {
+        await fetch(`${API_BASE}/prescriptions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(prescription)
+        });
+    } catch (e) {}
 }
 
 function getNotices() {
     return JSON.parse(localStorage.getItem("dtu_notices") || "[]");
 }
 
-function saveNotice(notice) {
+async function saveNotice(notice) {
     const list = getNotices();
     list.unshift(notice);
     localStorage.setItem("dtu_notices", JSON.stringify(list));
+
+    try {
+        await fetch(`${API_BASE}/notices`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(notice)
+        });
+    } catch (e) {}
 }
 
 function getSlots() {
     return JSON.parse(localStorage.getItem("dtu_slots") || "[]");
 }
 
-function saveSlot(slot) {
+async function saveSlot(slot) {
     const list = getSlots();
     list.unshift(slot);
     localStorage.setItem("dtu_slots", JSON.stringify(list));
+
+    try {
+        await fetch(`${API_BASE}/slots`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(slot)
+        });
+    } catch (e) {}
 }
 
 function updateSlotBookedCount(slotId) {
@@ -144,16 +235,24 @@ function getMedicines() {
     return JSON.parse(localStorage.getItem("dtu_medicines") || "[]");
 }
 
-function updateMedicineStock(id, newStock) {
+async function updateMedicineStock(id, newStock) {
     const list = getMedicines();
     const item = list.find(m => m.id == id);
     if (item) {
         item.stock = parseInt(newStock);
         localStorage.setItem("dtu_medicines", JSON.stringify(list));
+
+        try {
+            await fetch(`${API_BASE}/medicines`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: id, stock: parseInt(newStock) })
+            });
+        } catch (e) {}
     }
 }
 
-// Render dynamic navbar based on role
+// Dynamic navbar
 function loadNavbar(role) {
     const headerContainer = document.getElementById("navbar-mount");
     if (!headerContainer) return;
@@ -239,7 +338,7 @@ function loadFooter() {
                     <li><a href="student-dashboard.html" style="color:#eee;">Student Portal</a></li>
                     <li><a href="doctor-dashboard.html" style="color:#eee;">Doctor Portal (Admin)</a></li>
                     <li><a href="emergency.html" style="color:#ff8888;">Instant Ambulance / SOS</a></li>
-                    <li><a href="javascript:void(0)" onclick="resetAllDemoData()" style="color:#bbb; font-size:0.8rem;">🔄 Reset Demo Data</a></li>
+                    <li><a href="javascript:void(0)" onclick="resetAllDemoData()" style="color:#bbb; font-size:0.8rem;">🔄 Reset Database Data</a></li>
                 </ul>
             </div>
             <div>
@@ -251,7 +350,7 @@ function loadFooter() {
             </div>
         </div>
         <div style="text-align:center; margin-top:25px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.85rem; color:#bbb;">
-            © 2026 Delhi Technological University (DTU) Health Center. Minor Project Prototype.
+            © 2026 Delhi Technological University (DTU) Health Center. Minor Project Database Engine.
         </div>
     </footer>
     `;
@@ -265,5 +364,9 @@ function initPage(role) {
     const user = checkLogin(role);
     loadNavbar(role);
     loadFooter();
+
+    // Trigger asynchronous sync with database file
+    syncDatabaseFromServer();
+
     return user;
 }
