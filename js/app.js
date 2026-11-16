@@ -564,7 +564,7 @@ function loadNavbar(role) {
 // ==========================================================================
 function getSavedTheme() {
     try {
-        return localStorage.getItem('dtu_theme') || 'dark';
+        return localStorage.getItem('dtu_theme') || localStorage.getItem('app_theme') || 'dark';
     } catch (e) {
         return 'dark';
     }
@@ -572,12 +572,19 @@ function getSavedTheme() {
 
 function applyTheme(theme) {
     const isLight = (theme === 'light');
-    if (isLight) {
-        document.body.classList.add('light-mode');
-        document.documentElement.classList.add('light-mode');
-    } else {
-        document.body.classList.remove('light-mode');
-        document.documentElement.classList.remove('light-mode');
+    if (document.body) {
+        if (isLight) {
+            document.body.classList.add('light-mode');
+        } else {
+            document.body.classList.remove('light-mode');
+        }
+    }
+    if (document.documentElement) {
+        if (isLight) {
+            document.documentElement.classList.add('light-mode');
+        } else {
+            document.documentElement.classList.remove('light-mode');
+        }
     }
 
     const btn = document.getElementById('themeToggleBtn');
@@ -594,6 +601,7 @@ function toggleTheme() {
     const nextTheme = current === 'light' ? 'dark' : 'light';
     try {
         localStorage.setItem('dtu_theme', nextTheme);
+        localStorage.setItem('app_theme', nextTheme);
     } catch (e) {}
     applyTheme(nextTheme);
 
