@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentation Deck - DTU Campus Health Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            overflow: hidden;
+            background: #0a0c10;
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            user-select: none;
+        }
+
+        /* Top Slide Bar */
+        .pres-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            background: rgba(18, 22, 32, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-glass);
+            z-index: 100;
+        }
+
+        .pres-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .pres-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .slide-counter-badge {
+            background: rgba(230, 57, 70, 0.15);
+            color: #e63946;
+            border: 1px solid rgba(230, 57, 70, 0.3);
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
+            font-weight: 700;
+        }
+
+        /* Slide Stage */
+        .slide-stage {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 40px;
+        }
+
+        .slide-frame {
+            display: none;
+            width: 100%;
+            max-width: 1240px;
+            height: 100%;
+            max-height: 640px;
+            animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .slide-frame.active {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(14px) scale(0.985); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .slide-title-wrap {
+            margin-bottom: 24px;
+        }
+
+        .slide-category {
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--amber);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slide-h1 {
+            font-size: 2.3rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin: 0;
+            color: #ffffff;
+        }
+
+        .slide-cols-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            flex: 1;
+        }
+
+        .slide-cols-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .slide-cols-4 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            flex: 1;
+        }
+
+        .slide-box {
+            background: rgba(18, 22, 32, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-card);
+            padding: 24px 28px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+        }
+
+        .slide-box-accent {
+            background: linear-gradient(135deg, rgba(160, 25, 50, 0.92) 0%, rgba(80, 15, 30, 0.88) 100%);
+            border: 1px solid rgba(230, 57, 70, 0.45);
+            box-shadow: 0 12px 36px rgba(160, 25, 50, 0.35);
+        }
+
+        .slide-box-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slide-bullet-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex: 1;
+        }
+
+        .slide-bullet-list li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            line-height: 1.55;
+            color: var(--text-light);
+        }
+
+        .slide-bullet-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-size: 1.4rem;
+            line-height: 1;
+            top: -1px;
+        }
+
+        /* Bottom Controls Bar */
+        .pres-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 32px;
+            background: rgba(14, 18, 26, 0.95);
+            border-top: 1px solid var(--border-glass);
+            z-index: 100;
+        }
+
+        .pres-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass-light);
+            color: #ffffff;
+            padding: 8px 20px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .pres-btn:hover {
+            background: rgba(255, 255, 255, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .pres-btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        .pres-btn-primary:hover {
+            background: var(--primary-gradient);
+            box-shadow: 0 6px 20px rgba(230, 57, 70, 0.65);
+        }
+
+        .key-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .key-kbd {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-glass);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-weight: 700;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Bar -->
+    <header class="pres-header">
+        <div class="pres-brand">
+            <span class="brand-badge">DTU</span>
+            <span>Campus Health Center</span>
+            <span style="color: var(--amber); font-weight: 400; font-size: 0.9rem;">| Minor Project Presentation</span>
+        </div>
+        <div class="pres-meta">
+            <span class="slide-counter-badge" id="slideIndicator">Slide 1 / 10</span>
+            <a href="index.html" class="pres-btn" style="text-decoration:none;">🚀 Launch App</a>
+            <button class="pres-btn" onclick="toggleFullScreen()" title="Full Screen (F11)">⛶ Fullscreen</button>
+        </div>
+    </header>
+
+    <!-- Stage Area -->
+    <main class="slide-stage">
+
+        <!-- SLIDE 1 -->
+        <div class="slide-frame active" id="slide-1">
+            <div class="slide-title-wrap">
+                <div class="slide-category">B.TECH PROJECT-I (MINOR PROJECT) · AY 2026–27</div>
+                <h1 class="slide-h1" style="font-size: 2.8rem;">
+                    DTU Campus Health Center<br>
+                    <span style="color: var(--amber);">Awareness and Management System</span>
+                </h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 10px;">
+                    Department of Computer Science & Engineering · Delhi Technological University (DTU)
+                </p>
+            </div>
+            <div class="slide-cols-2">
+                <div class="slide-box">
+                    <div class="slide-box-title">🏛️ Academic Context & Problem Scope</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>Degree:</strong> Bachelor of Technology (B.Tech)</li>
+                        <li><strong>Department:</strong> Computer Science & Engineering</li>
+                        <li><strong>Campus Footprint:</strong> 15,000+ Students across 14+ Hostel Blocks</li>
+                        <li><strong>Core Problem:</strong> Lack of student awareness regarding existing campus medical services, doctor availability, and emergency procedures.</li>
+                    </ul>
+                </div>
+                <div class="slide-box slide-box-accent">
+                    <div class="slide-box-title" style="color:#ffffff;">✨ Project Innovations</div>
+                    <ul class="slide-bullet-list" style="color:#ffffff;">
+                        <li style="color:#fff;">🏥 Single-window digital information and awareness portal</li>
+                        <li style="color:#fff;">🗓️ Quota-enforced OPD appointment booking (Max 10 / session)</li>
+                        <li style="color:#fff;">📹 WebRTC peer-to-peer telehealth video consultation</li>
+                        <li style="color:#fff;">⚡ Google Cloud Firebase Firestore (24×7 persistence)</li>
+                        <li style="color:#fff;">🚑 One-tap campus ambulance SOS dispatch (3-5 min ETA)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2 -->
+        <div class="slide-frame" id="slide-2">
+            <div class="slide-title-wrap">
+                <div class="slide-category">BACKGROUND ANALYSIS</div>
+                <h1 class="slide-h1">Introduction & Background: The Need for Digital Health</h1>
+            </div>
+            <div class="slide-cols-2">
+                <div class="slide-box">
+                    <div class="slide-box-title">🏥 DTU Healthcare Infrastructure</div>
+                    <ul class="slide-bullet-list">
+                        <li>DTU operates a dedicated campus health dispensary staffed by qualified general physicians and specialists.</li>
+                        <li>Provides primary checkups, first-aid, routine diagnostics, and essential medications to students free of charge.</li>
+                        <li>Departments include General OPD, Dentistry, Orthopedics, Mental Health & Counseling, and Physiotherapy.</li>
+                        <li>Historically operated through manual walk-in queues and physical pin-board paper notices.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">⚠️ The Campus Communication Gap</div>
+                    <ul class="slide-bullet-list">
+                        <li>Information about consulting doctor timings is published on physical notice boards, rarely seen by busy students.</li>
+                        <li>Bedridden hostellers suffering from fever, sprains, or viral infections face physical hardship walking across campus.</li>
+                        <li>Students have no digital mechanism to check doctor availability or queue status beforehand.</li>
+                        <li>A unified, student-friendly digital gateway connects residents to on-campus medical aid effortlessly.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3 -->
+        <div class="slide-frame" id="slide-3">
+            <div class="slide-title-wrap">
+                <div class="slide-category">IDENTIFIED INEFFICIENCIES</div>
+                <h1 class="slide-h1">Problem Statement: Real Campus Healthcare Inefficiencies</h1>
+            </div>
+            <div class="slide-cols-3">
+                <div class="slide-box">
+                    <div class="slide-box-title">1. Low Awareness</div>
+                    <ul class="slide-bullet-list">
+                        <li>Students are unaware of available facilities and doctors on campus.</li>
+                        <li>Students visit expensive outside private clinics for minor ailments (headache, fever, cold).</li>
+                        <li>Notice boards fail to reach digital-first students.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">2. Overcrowding</div>
+                    <ul class="slide-bullet-list">
+                        <li>Surges during lecture break hours cause unpredictable queues.</li>
+                        <li>Doctors face burnout due to un-triaged simultaneous walk-ins.</li>
+                        <li>Lack of quotas prevents allocating dedicated time per student.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">3. Hostel Gaps</div>
+                    <ul class="slide-bullet-list">
+                        <li>Late-night hostel emergencies suffer delays finding ambulance contacts.</li>
+                        <li>Quarantined students cannot get clinical guidance without exposing others.</li>
+                        <li>Paper prescriptions are easily misplaced or lost.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4 -->
+        <div class="slide-frame" id="slide-4">
+            <div class="slide-title-wrap">
+                <div class="slide-category">PROJECT GOALS</div>
+                <h1 class="slide-h1">Project Objectives & Scope: Solving the Core Challenges</h1>
+            </div>
+            <div class="slide-cols-2">
+                <div class="slide-box">
+                    <div class="slide-box-title">🎯 Objective 1: Unified Transparency</div>
+                    <ul class="slide-bullet-list">
+                        <li>Single digital portal showcasing operating hours, doctor bios, cabin locations, and specialized clinical departments.</li>
+                        <li>Promote healthy campus living through digital wellness bulletins and preventative care tips.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">🗓️ Objective 2: Quota-Controlled Booking</div>
+                    <ul class="slide-bullet-list">
+                        <li>Enable campus doctors to publish availability slots with a strict threshold (Max 10 students/session).</li>
+                        <li>Eliminate waiting lines by allocating digital tokens and live queue status updates.</li>
+                    </ul>
+                </div>
+                <div class="slide-box" style="margin-top: 14px;">
+                    <div class="slide-box-title">📄 Objective 3: Paperless Clinical Suite</div>
+                    <ul class="slide-bullet-list">
+                        <li>Allow doctors to draft standardized digital prescriptions with automated dosages and instructions.</li>
+                        <li>Facilitate specialist referrals (Dental, Orthopedics, Psychiatry) with clinical findings.</li>
+                    </ul>
+                </div>
+                <div class="slide-box" style="margin-top: 14px;">
+                    <div class="slide-box-title">📹 Objective 4: Telehealth & Rapid SOS</div>
+                    <ul class="slide-bullet-list">
+                        <li>Equip the portal with an interactive browser-based video consultation room for remote triage.</li>
+                        <li>Deploy a one-click hostel ambulance SOS button with simulated sirens and 3-5 minute response tracking.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5 -->
+        <div class="slide-frame" id="slide-5">
+            <div class="slide-title-wrap">
+                <div class="slide-category">NATIONAL BENCHMARK</div>
+                <h1 class="slide-h1">Motivation & National Context: AICTE Higher Ed Benchmark</h1>
+            </div>
+            <div class="slide-cols-2">
+                <div class="slide-box">
+                    <div class="slide-box-title">📊 AICTE National Statistics (2025–26)</div>
+                    <ul class="slide-bullet-list">
+                        <li>India has approximately <strong>5,875 AICTE-approved engineering institutions</strong> for the 2025–26 academic session.</li>
+                        <li>Across millions of students, dedicated digital campus health portals remain virtually non-existent.</li>
+                        <li>Most universities continue to rely on manual logbooks, walk-in registers, and physical notice boards.</li>
+                        <li>DTU has the opportunity to pioneer a scalable, replicable digital campus healthcare model.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">💡 Why Campus-Specific Healthcare Matters</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>Reduces Financial Burden:</strong> Prevents unnecessary out-of-pocket spending at private neighborhood clinics.</li>
+                        <li><strong>Prevents Campus Contagion:</strong> Rapid reporting of conjunctivitis or flu stops hostel-wide outbreaks.</li>
+                        <li><strong>Academic Productivity:</strong> Timely medical aid ensures hostellers miss fewer lectures, labs, and exams.</li>
+                        <li><strong>Institutional Modernization:</strong> Aligns DTU with national Digital India & e-Health directives.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6 -->
+        <div class="slide-frame" id="slide-6">
+            <div class="slide-title-wrap">
+                <div class="slide-category">GLOBAL IMPACT</div>
+                <h1 class="slide-h1">Alignment with UN Sustainable Development Goals (SDGs)</h1>
+            </div>
+            <div class="slide-cols-3">
+                <div class="slide-box">
+                    <div class="slide-box-title">🌿 SDG 3: Good Health</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>Target 3.8:</strong> Access to quality essential healthcare services and safe medicines.</li>
+                        <li>Empowers students with immediate medical guidance, mental health counseling, and emergency aid.</li>
+                        <li>Improves awareness of free campus clinical consultations and essential drugs.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">📚 SDG 4: Quality Education</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>Target 4.a:</strong> Upgrading education facilities to be inclusive and supportive.</li>
+                        <li>Physical and mental wellness directly correlates with student academic performance.</li>
+                        <li>Minimizes classroom absenteeism by resolving health issues promptly on campus.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">💡 SDG 9: Innovation</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>Target 9.c:</strong> Significantly increase access to information technology.</li>
+                        <li>Applies modern cloud database and web technologies to institutional health infrastructure.</li>
+                        <li>Provides a paperless, cost-effective framework for residential universities across India.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7 -->
+        <div class="slide-frame" id="slide-7">
+            <div class="slide-title-wrap">
+                <div class="slide-category">TECHNICAL ARCHITECTURE</div>
+                <h1 class="slide-h1">System Architecture & Dual-Database Engineering</h1>
+            </div>
+            <div class="slide-cols-2">
+                <div class="slide-box">
+                    <div class="slide-box-title">☁️ Google Cloud Firebase Firestore</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>Real-Time Push:</strong> Event listeners stream live updates to student & doctor screens in &lt;10ms.</li>
+                        <li><strong>24×7 Cloud Persistence:</strong> Hosted on Google Cloud — data stays permanently live even if the host laptop is shut down.</li>
+                        <li><strong>Multi-Device Sync:</strong> Instant sync between student smartphones and clinical doctor workstations.</li>
+                        <li><strong>Collections:</strong> <code>appointments</code>, <code>doctor_slots</code>, <code>prescriptions</code>, <code>campus_notices</code>.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">🗄️ Relational Hospital DBMS (SQLite 3)</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>Textbook 3NF Normalization:</strong> Clean separation across 11 relational tables (<code>students</code>, <code>doctors</code>, <code>departments</code>, etc.).</li>
+                        <li><strong>ACID Guarantees:</strong> Atomic transaction control ensuring slot capacities never overflow.</li>
+                        <li><strong>Capacity Constraint:</strong> <code>CHECK (booked_count &lt;= max_capacity)</code> stops race conditions at the engine level.</li>
+                        <li><strong>Server-Sent Events:</strong> Local <code>/api/events</code> event stream for real-time notifications.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8 -->
+        <div class="slide-frame" id="slide-8">
+            <div class="slide-title-wrap">
+                <div class="slide-category">DEMO & CAPABILITIES</div>
+                <h1 class="slide-h1">Key Functional Modules & Tested Capabilities</h1>
+            </div>
+            <div class="slide-cols-4">
+                <div class="slide-box">
+                    <div class="slide-box-title">1. Student Portal</div>
+                    <p style="font-size:0.85rem; color:var(--text-light); line-height:1.5;">Mandatory profile check (Roll No, Branch, Blood Group) and dashboard with upcoming appointments.</p>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">2. Quota Booking</div>
+                    <p style="font-size:0.85rem; color:var(--text-light); line-height:1.5;">Strict 10-student cap per doctor window with symptom questionnaires and automatic lockout when full.</p>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">3. Doctor Queue</div>
+                    <p style="font-size:0.85rem; color:var(--text-light); line-height:1.5;">Live patient queue cards with urgency badges, token counters, and instant Call / Refer / Done actions.</p>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">4. Telehealth Room</div>
+                    <p style="font-size:0.85rem; color:var(--text-light); line-height:1.5;">Browser WebRTC webcam stream with in-call chat, duration timer, and real-time prescription draft pad.</p>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">5. Digital Rx & Referrals</div>
+                    <p style="font-size:0.85rem; color:var(--text-light); line-height:1.5;">Standardized digital prescription writer with printable/PDF export and specialist referral transfer slips.</p>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">6. 24×7 Ambulance SOS</div>
+                    <p style="font-size:0.85rem; color:var(--text-light); line-height:1.5;">One-tap hostel emergency trigger with simulated audio siren, direct driver call, and 3-5 min ETA tracking.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 9 -->
+        <div class="slide-frame" id="slide-9">
+            <div class="slide-title-wrap">
+                <div class="slide-category">IMPLEMENTATION SPECIFICATIONS</div>
+                <h1 class="slide-h1">Technologies, Tools & Implementation Stack</h1>
+            </div>
+            <div class="slide-cols-2">
+                <div class="slide-box">
+                    <div class="slide-box-title">💻 Frontend & Design Stack</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>HTML5:</strong> Clean semantic layout (forms, navigation, media tags).</li>
+                        <li><strong>CSS3:</strong> Ultra-Modern Dark Glassmorphism (<code>#0a0c10</code>) with instant Light Mode (<code>#f3f5f9</code>) toggle controller.</li>
+                        <li><strong>JavaScript:</strong> Native ES6+ client controller without heavy third-party framework bloat.</li>
+                        <li><strong>Visuals:</strong> Responsive on mobile, tablet, and high-res projectors.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">🛠️ Tools, Cloud & Hardware</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>Cloud:</strong> Google Cloud Firebase Firestore (NoSQL Reactive Layer).</li>
+                        <li><strong>DBMS:</strong> SQLite 3 (<code>database/hospital.db</code>) via Node.js native <code>node:sqlite</code>.</li>
+                        <li><strong>Dev Tools:</strong> Visual Studio Code, Git Version Control, Windows 10/11.</li>
+                        <li><strong>Hardware:</strong> Intel Core i3 or equivalent, 4GB RAM, cross-device support.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 10 -->
+        <div class="slide-frame" id="slide-10">
+            <div class="slide-title-wrap">
+                <div class="slide-category">SUMMARY & ROADMAP</div>
+                <h1 class="slide-h1">Expected Outcomes & Conclusion</h1>
+            </div>
+            <div class="slide-cols-2">
+                <div class="slide-box slide-box-accent">
+                    <div class="slide-box-title" style="color:#ffffff;">🎯 Measurable Project Outcomes</div>
+                    <ul class="slide-bullet-list" style="color:#ffffff;">
+                        <li style="color:#fff;"><strong>Elevated Awareness:</strong> Students discover clinic hours, doctors, and free medicines right from their phones.</li>
+                        <li style="color:#fff;"><strong>Zero Waiting Lines:</strong> Quota-enforced slots (max 10) eliminate waiting room congestion.</li>
+                        <li style="color:#fff;"><strong>Care for Hostellers:</strong> Telehealth consultations protect sick hostellers and prevent contagion.</li>
+                        <li style="color:#fff;"><strong>24×7 Cloud Persistence:</strong> Google Cloud Firebase ensures continuous availability even when local hosts power off.</li>
+                        <li style="color:#fff;"><strong>Emergency Readiness:</strong> One-click ambulance dispatch delivers care within 3-5 minutes.</li>
+                    </ul>
+                </div>
+                <div class="slide-box">
+                    <div class="slide-box-title">🔮 Conclusion & Future Roadmap</div>
+                    <ul class="slide-bullet-list">
+                        <li><strong>Conclusion:</strong> The DTU Campus Health Center Awareness and Management System bridges the critical gap between campus healthcare providers and 15,000+ residents, establishing a modern digital health benchmark.</li>
+                        <li><strong>Future Roadmap (Phase 2):</strong></li>
+                        <li style="padding-left:30px;">• Automated SMS/WhatsApp notifications via university SMS gateways.</li>
+                        <li style="padding-left:30px;">• Smart IoT dispensary health kiosk integration for automated vitals logging.</li>
+                        <li style="padding-left:30px;">• AI epidemiological forecaster for seasonal outbreak tracking.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Controls -->
+    <footer class="pres-footer">
+        <div class="key-hint">
+            <span>Navigate:</span>
+            <span class="key-kbd">←</span>
+            <span class="key-kbd">→</span>
+            <span>or</span>
+            <span class="key-kbd">Space</span>
+            <span>| Fullscreen:</span>
+            <span class="key-kbd">F11</span>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button class="pres-btn" onclick="prevSlide()">◀ Previous</button>
+            <button class="pres-btn pres-btn-primary" onclick="nextSlide()">Next ▶</button>
+        </div>
+    </footer>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 10;
+
+        function updateSlide() {
+            for (let i = 1; i <= totalSlides; i++) {
+                const el = document.getElementById(`slide-${i}`);
+                if (el) {
+                    el.classList.toggle('active', i === currentSlide);
+                }
+            }
+            document.getElementById('slideIndicator').textContent = `Slide ${currentSlide} / ${totalSlides}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            } else if (e.key === 'Home') {
+                currentSlide = 1;
+                updateSlide();
+            } else if (e.key === 'End') {
+                currentSlide = totalSlides;
+                updateSlide();
+            }
+        });
+    </script>
+</body>
+</html>
