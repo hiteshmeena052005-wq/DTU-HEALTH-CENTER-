@@ -777,6 +777,19 @@ a:hover {
     box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.25);
 }
 
+.form-select {
+    color-scheme: dark;
+    cursor: pointer;
+}
+
+.form-select option,
+select option {
+    background-color: #161b26 !important;
+    color: #ffffff !important;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+}
+
 .form-input::placeholder, .form-textarea::placeholder {
     color: var(--text-subtle);
 }
@@ -1345,6 +1358,17 @@ body.light-mode .form-textarea:focus {
     background: #ffffff;
     border-color: #e63946;
     box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.18);
+}
+
+body.light-mode .form-select {
+    color-scheme: light;
+}
+
+body.light-mode .form-select option,
+body.light-mode select option {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    padding: 10px 14px;
 }
 body.light-mode .form-input::placeholder,
 body.light-mode .form-textarea::placeholder {
