@@ -1,6 +1,5 @@
-// DTU Health Center - Clean Initial Datasets & Runtime In-Memory Database
-// Note: Real database is persisted in Google Firebase Cloud Firestore and SQLite 3 DBMS.
-// Browser LocalStorage is ONLY reserved for user session (currentUser & studentProfile).
+// DTU Health Center - Core Datasets & State Store
+// Decoupled frontend mock datasets for UI prototyping and testing
 
 const departments = [
     { id: 1, name: "General Medicine (OPD)", icon: "🏥" },
@@ -167,7 +166,7 @@ const sampleSlots = [
         startTime: "10:00 AM",
         endTime: "01:00 PM",
         maxLimit: 10,
-        bookedCount: 0,
+        bookedCount: 1,
         note: "OPD physical checkup slots available for students with fever/cough"
     },
     {
@@ -196,6 +195,58 @@ const sampleSlots = [
     }
 ];
 
+const sampleAppointments = [
+    {
+        id: "APT-101",
+        studentName: "Rahul Meena",
+        rollNo: "2K22/CO/101",
+        doctorName: "Dr. Rajesh Sharma",
+        department: "General Medicine (OPD)",
+        slotId: 1,
+        date: "2026-11-18",
+        time: "10:00 AM - 01:00 PM",
+        reason: "Seasonal viral fever and persistent dry cough",
+        status: "Confirmed",
+        createdAt: "16 Nov 2026"
+    }
+];
+
+const samplePrescriptions = [
+    {
+        id: "RX-101",
+        studentName: "Rahul Meena",
+        studentEmail: "rahul.22co101@dtu.ac.in",
+        doctorName: "Dr. Rajesh Sharma",
+        department: "General Medicine",
+        date: "16 Nov 2026",
+        diagnosis: "Acute viral nasopharyngitis with mild pyrexia",
+        medicines: [
+            { name: "Paracetamol 650mg", dosage: "1 tab TDS after meals", duration: "3 Days" },
+            { name: "Cetirizine 10mg", dosage: "1 tab OD at bedtime", duration: "5 Days" }
+        ],
+        tests: "None required currently",
+        followUp: "After 3 days if fever persists",
+        notes: "Take warm saline gargles twice daily and ensure adequate hydration."
+    }
+];
+
+const sampleReferrals = [
+    {
+        id: "REF-101",
+        studentName: "Rahul Meena",
+        rollNo: "2K22/CO/101",
+        fromDoctor: "Dr. Rajesh Sharma",
+        fromDept: "General Medicine (OPD)",
+        toDoctor: "Dr. Amit Kumar",
+        toDept: "Orthopedic",
+        priority: "Routine OPD Referral",
+        reason: "Complaining of persistent lower back stiffness after prolonged coding sessions.",
+        tests: "Lumbosacral spine posture evaluation",
+        date: "12 Nov 2026",
+        status: "Consultation Completed"
+    }
+];
+
 const sampleNotices = [
     {
         id: 1,
@@ -208,45 +259,64 @@ const sampleNotices = [
     }
 ];
 
-// In-Memory Runtime Store (Single Source of Truth is Firebase Firestore & SQLite DBMS)
-window._dtuMemoryDB = window._dtuMemoryDB || {
-    appointments: [],
+// Client State Storage Adapter (Decoupled store for client-side state across pages)
+const CLIENT_STORAGE_KEY = 'dtu_client_store';
+
+function loadClientStore() {
+    try {
+        if (typeof localStorage !== 'undefined') {
+            const raw = localStorage.getItem(CLIENT_STORAGE_KEY);
+            if (raw) return JSON.parse(raw);
+        }
+    } catch (e) {}
+    return null;
+}
+
+function saveClientStore(db) {
+    try {
+        if (typeof localStorage !== 'undefined' && db) {
+            localStorage.setItem(CLIENT_STORAGE_KEY, JSON.stringify(db));
+        }
+    } catch (e) {}
+}
+
+// In-Memory Runtime Store
+window._dtuMemoryDB = window._dtuMemoryDB || loadClientStore() || {
+    appointments: sampleAppointments.slice(),
     slots: sampleSlots.slice(),
-    prescriptions: [],
-    referrals: [],
+    prescriptions: samplePrescriptions.slice(),
+    referrals: sampleReferrals.slice(),
     notices: sampleNotices.slice(),
     medicines: medicines.slice(),
     doctors: doctors.slice(),
     emergency: emergencyContacts.slice()
 };
 
-// Initialize runtime datasets and PURGE legacy table keys from localStorage
+// Initialize runtime datasets
 function initData(forceReset = false) {
-    // Purge any old table keys from browser localStorage so it's not a fake database
-    const tableKeysToPurge = [
-        "dtu_appointments",
-        "dtu_slots",
-        "dtu_prescriptions",
-        "dtu_referrals",
-        "dtu_notices",
-        "dtu_medicines",
-        "dtu_doctors",
-        "dtu_emergency",
-        "dtu_healthTips"
-    ];
-
-    tableKeysToPurge.forEach(key => {
-        try { localStorage.removeItem(key); } catch (e) {}
-    });
-
-    if (forceReset) {
-        window._dtuMemoryDB.appointments = [];
-        window._dtuMemoryDB.slots = JSON.parse(JSON.stringify(sampleSlots));
-        window._dtuMemoryDB.prescriptions = [];
-        window._dtuMemoryDB.referrals = [];
-        window._dtuMemoryDB.notices = JSON.parse(JSON.stringify(sampleNotices));
-        window._dtuMemoryDB.medicines = JSON.parse(JSON.stringify(medicines));
+    if (!forceReset) {
+        const stored = loadClientStore();
+        if (stored && Array.isArray(stored.appointments)) {
+            window._dtuMemoryDB = stored;
+            return;
+        }
     }
 
-    console.log("☁️ [DATABASE ARCHITECTURE] Running on Cloud Firebase Firestore & SQLite 3 DBMS. Browser localStorage cleared of tables.");
+    window._dtuMemoryDB = {
+        appointments: JSON.parse(JSON.stringify(sampleAppointments)),
+        slots: JSON.parse(JSON.stringify(sampleSlots)),
+        prescriptions: JSON.parse(JSON.stringify(samplePrescriptions)),
+        referrals: JSON.parse(JSON.stringify(sampleReferrals)),
+        notices: JSON.parse(JSON.stringify(sampleNotices)),
+        medicines: JSON.parse(JSON.stringify(medicines)),
+        doctors: JSON.parse(JSON.stringify(doctors)),
+        emergency: JSON.parse(JSON.stringify(emergencyContacts))
+    };
+
+    saveClientStore(window._dtuMemoryDB);
+}
+
+// Reset data to defaults
+function resetAllData() {
+    initData(true);
 }

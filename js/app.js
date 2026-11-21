@@ -1,8 +1,4 @@
-// DTU Health Center - Common Application Logic & Database Controller
-
-const API_BASE = (window.location.protocol === "http:" || window.location.protocol === "https:")
-    ? "/api"
-    : "http://localhost:5000/api";
+// DTU Health Center - Common Application Logic & State Controller
 
 // Cross-tab real-time sync bus (BroadcastChannel + storage event)
 const dtuSyncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('dtu_health_sync_bus') : null;
@@ -24,6 +20,11 @@ function onDataChanged(callback) {
 
 if (dtuSyncChannel) {
     dtuSyncChannel.onmessage = (event) => {
+        // Sync memory store if updated in another tab
+        if (typeof loadClientStore === 'function') {
+            const stored = loadClientStore();
+            if (stored) window._dtuMemoryDB = stored;
+        }
         syncListeners.forEach(cb => {
             try { cb(event.data); } catch (e) {}
         });
@@ -31,39 +32,18 @@ if (dtuSyncChannel) {
 }
 
 window.addEventListener('storage', (e) => {
-    if (e.key && e.key.startsWith('dtu_')) {
+    if (e.key === 'dtu_client_store' || (e.key && e.key.startsWith('dtu_'))) {
+        if (typeof loadClientStore === 'function') {
+            const stored = loadClientStore();
+            if (stored) window._dtuMemoryDB = stored;
+        }
         syncListeners.forEach(cb => {
             try { cb({ type: 'STORAGE_UPDATE', key: e.key }); } catch (err) {}
         });
     }
 });
 
-// Live Server-Sent Events (SSE) Database Push Stream
-let sseConnection = null;
-function initSSE() {
-    if (typeof EventSource !== 'undefined') {
-        try {
-            const sseUrl = (window.location.protocol === "http:" || window.location.protocol === "https:")
-                ? "/api/events"
-                : "http://localhost:5000/api/events";
-            sseConnection = new EventSource(sseUrl);
-            sseConnection.onmessage = (event) => {
-                try {
-                    const parsed = JSON.parse(event.data);
-                    console.log("⚡ [SSE LIVE DATABASE PUSH]:", parsed);
-                    // Refresh data cache from SQLite database
-                    syncDatabaseFromServer();
-                    syncListeners.forEach(cb => {
-                        try { cb(parsed); } catch (e) {}
-                    });
-                } catch (e) {}
-            };
-        } catch (e) {}
-    }
-}
-initSSE();
-
-// Get current logged-in user from localStorage
+// User Session Management (Ready for new Authentication Provider)
 function getCurrentUser() {
     try {
         const user = localStorage.getItem("currentUser");
@@ -73,150 +53,34 @@ function getCurrentUser() {
     }
 }
 
-// Check login status and enforce student profile completion
+// Check session role context without blocking navigation
 function checkLogin(expectedRole) {
     const user = getCurrentUser();
-    
-    if (!user) {
-        window.location.href = "login.html";
-        return null;
+    if (user) {
+        return user;
     }
-    
-    if (expectedRole && user.role !== expectedRole) {
-        if (user.role === "doctor") {
-            window.location.href = "doctor-dashboard.html";
-        } else {
-            window.location.href = "student-dashboard.html";
-        }
-        return null;
-    }
-
-    if (user.role === "student") {
-        const profile = localStorage.getItem("studentProfile");
-        const currentPage = window.location.pathname.split("/").pop();
-        if (!profile && currentPage !== "student-profile.html" && currentPage !== "login.html") {
-            window.location.href = "student-profile.html";
-            return null;
-        }
-    }
-
-    return user;
+    // Return clean default role context for seamless UI browsing and initialize session
+    const defaultUser = {
+        role: expectedRole || 'student',
+        name: expectedRole === 'doctor' ? 'Dr. Rajesh Sharma' : 'Rahul Sharma',
+        email: expectedRole === 'doctor' ? 'dr.sharma@dtu.ac.in' : 'rahul@dtu.ac.in',
+        department: expectedRole === 'doctor' ? 'General Medicine (OPD)' : undefined
+    };
+    try {
+        localStorage.setItem("currentUser", JSON.stringify(defaultUser));
+        localStorage.setItem("userRole", defaultUser.role);
+    } catch (e) {}
+    return defaultUser;
 }
 
-// Logout user and clear session
+// Sign out user and clear active session
 function logout() {
     localStorage.removeItem("currentUser");
     localStorage.removeItem("userRole");
     window.location.href = "login.html";
 }
 
-// ==========================================
-// 🗄️ REAL DATABASE SYNC (API + LOCAL FALLBACK)
-// ==========================================
-
-// ==========================================
-// 🗄️ REAL DATABASE SYNC (FIREBASE CLOUD + SQLITE DBMS)
-// LocalStorage is NEVER used for tables — ONLY in-memory store & real databases!
-// ==========================================
-
-// Ensure in-memory database store exists
-window._dtuMemoryDB = window._dtuMemoryDB || {
-    appointments: [],
-    slots: [],
-    prescriptions: [],
-    referrals: [],
-    notices: [],
-    medicines: []
-};
-
-// Sync data from Node.js SQLite database controller
-async function syncDatabaseFromServer() {
-    try {
-        const res = await fetch(`${API_BASE}/status`);
-        if (res.ok) {
-            console.log("🟢 Connected to DTU Health Center SQLite DBMS Engine");
-
-            // Fetch live appointments from database
-            const aptRes = await fetch(`${API_BASE}/appointments`);
-            if (aptRes.ok) {
-                const liveApts = await aptRes.json();
-                if (Array.isArray(liveApts)) {
-                    window._dtuMemoryDB.appointments = liveApts;
-                }
-            }
-
-            // Fetch live slots from database
-            const slotRes = await fetch(`${API_BASE}/slots`);
-            if (slotRes.ok) {
-                const liveSlots = await slotRes.json();
-                if (Array.isArray(liveSlots) && liveSlots.length > 0) {
-                    window._dtuMemoryDB.slots = liveSlots;
-                }
-            }
-
-            // Fetch live notices
-            const noticeRes = await fetch(`${API_BASE}/notices`);
-            if (noticeRes.ok) {
-                const liveNotices = await noticeRes.json();
-                if (Array.isArray(liveNotices) && liveNotices.length > 0) {
-                    window._dtuMemoryDB.notices = liveNotices;
-                }
-            }
-
-            // Fetch live prescriptions
-            const rxRes = await fetch(`${API_BASE}/prescriptions`);
-            if (rxRes.ok) {
-                const liveRx = await rxRes.json();
-                if (Array.isArray(liveRx) && liveRx.length > 0) {
-                    window._dtuMemoryDB.prescriptions = liveRx;
-                }
-            }
-
-            // Fetch live referrals
-            const refRes = await fetch(`${API_BASE}/referrals`);
-            if (refRes.ok) {
-                const liveRefs = await refRes.json();
-                if (Array.isArray(liveRefs) && liveRefs.length > 0) {
-                    window._dtuMemoryDB.referrals = liveRefs;
-                }
-            }
-
-            // Fetch live medicines inventory
-            const medRes = await fetch(`${API_BASE}/medicines`);
-            if (medRes.ok) {
-                const liveMeds = await medRes.json();
-                if (Array.isArray(liveMeds) && liveMeds.length > 0) {
-                    window._dtuMemoryDB.medicines = liveMeds;
-                }
-            }
-        }
-    } catch (e) {
-        console.log("ℹ️ Server running autonomously with Firebase Cloud sync.");
-    }
-}
-
-// Reset all test data in database
-async function resetAllDemoData() {
-    if (confirm("Reset all test appointments, queues, and demo bookings to fresh clean state?")) {
-        try {
-            await fetch(`${API_BASE}/reset`, { method: "POST" });
-        } catch (e) {}
-
-        // Clear only tables, keeping currentUser
-        const tableKeys = ['dtu_appointments', 'dtu_slots', 'dtu_prescriptions', 'dtu_referrals', 'dtu_notices', 'dtu_medicines'];
-        tableKeys.forEach(k => { try { localStorage.removeItem(k); } catch(err) {} });
-
-        if (typeof initData === "function") {
-            initData(true);
-        }
-        showNotification("All database test tables cleared! Fresh state initialized.", "success");
-        setTimeout(() => {
-            window.location.reload();
-        }, 500);
-    }
-}
-
-// Show a simple toast alert notification
+// Show toast alert notification
 function showNotification(message, type = "success") {
     let container = document.getElementById("toast-container");
     if (!container) {
@@ -244,7 +108,7 @@ function showNotification(message, type = "success") {
     }, 3500);
 }
 
-// Helpers for Database Operations (Single Source of Truth: Firebase Cloud & SQLite)
+// In-Memory Data Store Operations
 function getAppointments() {
     return (window._dtuMemoryDB && window._dtuMemoryDB.appointments) || [];
 }
@@ -256,7 +120,7 @@ async function saveAppointment(appointment) {
         list.unshift(appointment);
     }
 
-    // Auto update slot count in slots array
+    // Update slot count in slots array
     let slots = getSlots();
     const targetSlot = slots.find(s => 
         (appointment.slotId && s.id == appointment.slotId) || 
@@ -266,21 +130,16 @@ async function saveAppointment(appointment) {
         targetSlot.bookedCount = Math.min(targetSlot.maxLimit || 10, (targetSlot.bookedCount || 0) + 1);
     }
 
-    // Persist to SQLite Database Server
-    try {
-        await fetch(`${API_BASE}/appointments`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(appointment)
-        });
-        console.log("💾 Saved to SQLite database (database/hospital.db)");
-    } catch (e) {}
+    // Persist to client store
+    if (typeof saveClientStore === 'function') {
+        saveClientStore(window._dtuMemoryDB);
+    }
 
-    // Broadcast live event to all other open tabs (Doctor Queue, Slot Monitor)
+    // Broadcast change across open tabs
     broadcastDataChange('APPOINTMENT_BOOKED', { appointment, slotId: targetSlot ? targetSlot.id : appointment.slotId });
 }
 
-// Cancel appointment and accurately decrement slot count everywhere
+// Cancel appointment and free up slot capacity
 async function cancelAppointmentAndFreeSlot(aptId, slotId, doctorName) {
     let list = getAppointments();
     const apt = list.find(a => a.id === aptId);
@@ -301,25 +160,14 @@ async function cancelAppointmentAndFreeSlot(aptId, slotId, doctorName) {
             (a.doctorName && a.doctorName === slot.doctorName)
         ).length;
         slot.bookedCount = Math.max(0, activeRemaining);
-        console.log(`📉 Slot capacity updated: ${slot.bookedCount}/${slot.maxLimit} for ${slot.doctorName}`);
     }
 
-    // Inform SQLite Database Server
-    try {
-        await fetch(`${API_BASE}/appointments/cancel`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: aptId, slotId: targetSlotId, doctorName: targetDocName })
-        });
-        console.log("💾 Cancellation synced to SQLite database (database/hospital.db)");
-    } catch (e) {}
-
-    // Update Firebase Cloud Firestore
-    if (typeof cloudCancelAppointment === 'function') {
-        cloudCancelAppointment(aptId, targetSlotId);
+    // Persist to client store
+    if (typeof saveClientStore === 'function') {
+        saveClientStore(window._dtuMemoryDB);
     }
 
-    // Broadcast cancellation to all tabs (Doctor Dashboard, Booking page)
+    // Broadcast cancellation across tabs
     broadcastDataChange('APPOINTMENT_CANCELLED', { id: aptId, slotId: targetSlotId, doctorName: targetDocName });
 }
 
@@ -330,21 +178,9 @@ function getPrescriptions() {
 async function savePrescription(prescription) {
     const list = getPrescriptions();
     list.unshift(prescription);
-
-    try {
-        await fetch(`${API_BASE}/prescriptions`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(prescription)
-        });
-        console.log("💾 Prescription saved to Hospital DBMS (database/hospital.db)");
-    } catch (e) {}
-
-    // Cloud Firebase Firestore sync
-    if (typeof cloudAddPrescription === 'function') {
-        cloudAddPrescription(prescription);
+    if (typeof saveClientStore === 'function') {
+        saveClientStore(window._dtuMemoryDB);
     }
-
     broadcastDataChange('PRESCRIPTION_ADDED', { prescription });
 }
 
@@ -355,34 +191,13 @@ function getReferrals() {
 async function saveReferral(referral) {
     const list = getReferrals();
     list.unshift(referral);
-
-    try {
-        await fetch(`${API_BASE}/referrals`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(referral)
-        });
-        console.log("💾 Referral saved to Hospital DBMS (database/hospital.db)");
-    } catch (e) {}
-
-    // Cloud Firebase Firestore sync
-    if (typeof cloudAddReferral === 'function') {
-        cloudAddReferral(referral);
+    if (typeof saveClientStore === 'function') {
+        saveClientStore(window._dtuMemoryDB);
     }
-
     broadcastDataChange('REFERRAL_ADDED', { referral });
 }
 
 async function triggerEmergencySOS(sosData) {
-    try {
-        await fetch(`${API_BASE}/emergency`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(sosData)
-        });
-        console.log("🚨 Emergency SOS saved to Hospital DBMS (database/hospital.db)");
-    } catch (e) {}
-
     broadcastDataChange('EMERGENCY_SOS', sosData);
 }
 
@@ -393,15 +208,9 @@ function getNotices() {
 async function saveNotice(notice) {
     const list = getNotices();
     list.unshift(notice);
-
-    try {
-        await fetch(`${API_BASE}/notices`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(notice)
-        });
-    } catch (e) {}
-
+    if (typeof saveClientStore === 'function') {
+        saveClientStore(window._dtuMemoryDB);
+    }
     broadcastDataChange('NOTICE_ADDED', { notice });
 }
 
@@ -417,7 +226,7 @@ function getSlots() {
             (a.slotId && a.slotId == slot.id) || (a.doctorName && a.doctorName === slot.doctorName)
         ).length;
 
-        // Auto-heal any overflow, negative, or desynced slot counts
+        // Ensure valid booked count
         if (slot.bookedCount > slot.maxLimit || slot.bookedCount !== activeCount) {
             slot.bookedCount = Math.min(slot.maxLimit, activeCount);
         }
@@ -429,15 +238,9 @@ function getSlots() {
 async function saveSlot(slot) {
     const list = getSlots();
     list.unshift(slot);
-
-    try {
-        await fetch(`${API_BASE}/slots`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(slot)
-        });
-    } catch (e) {}
-
+    if (typeof saveClientStore === 'function') {
+        saveClientStore(window._dtuMemoryDB);
+    }
     broadcastDataChange('SLOT_ADDED', { slot });
 }
 
@@ -454,14 +257,10 @@ async function updateMedicineStock(id, newStock) {
     const item = list.find(m => m.id == id);
     if (item) {
         item.stock = parseInt(newStock);
-
-        try {
-            await fetch(`${API_BASE}/medicines`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: id, stock: parseInt(newStock) })
-            });
-        } catch (e) {}
+        if (typeof saveClientStore === 'function') {
+            saveClientStore(window._dtuMemoryDB);
+        }
+        broadcastDataChange('MEDICINE_STOCK_UPDATED', { id, stock: item.stock });
     }
 }
 
@@ -481,7 +280,7 @@ function loadNavbar(role) {
         homeUrl = "doctor-dashboard.html";
     }
 
-    // Determine initials for avatar circle (e.g. RS for Dr. Rajesh Sharma)
+    // Determine initials for avatar circle
     let initials = "HC";
     if (role === "doctor" || (user && user.role === "doctor")) {
         initials = "RS";
@@ -559,9 +358,7 @@ function loadNavbar(role) {
     applyTheme(currentTheme);
 }
 
-// ==========================================================================
-// THEME MANAGEMENT (Dark Glassmorphism <-> Modern Crisp Light Mode)
-// ==========================================================================
+// Theme Management (Dark Glassmorphism <-> Modern Crisp Light Mode)
 function getSavedTheme() {
     try {
         return localStorage.getItem('dtu_theme') || localStorage.getItem('app_theme') || 'dark';
@@ -656,7 +453,6 @@ function loadFooter() {
                     <li><a href="student-dashboard.html">Student OPD Portal</a></li>
                     <li><a href="doctor-dashboard.html">Doctor Clinical Portal</a></li>
                     <li><a href="emergency.html" style="color:#e63946; font-weight:600;">🚨 Campus SOS Dispatch</a></li>
-                    <li><a href="javascript:void(0)" onclick="resetAllDemoData()" style="color:var(--text-subtle);">🔄 Reset DBMS State</a></li>
                 </ul>
             </div>
             <div>
@@ -668,7 +464,7 @@ function loadFooter() {
             </div>
         </div>
         <div style="text-align:center; margin-top:30px; padding-top:18px; border-top:1px solid var(--border-glass); font-size:0.8rem; color:var(--text-subtle);">
-            © 2026 Delhi Technological University (DTU) Health Center. Real-Time Cloud + SQLite 3 DBMS.
+            © 2026 Delhi Technological University (DTU) Health Center. All rights reserved.
         </div>
     </footer>
     `;
@@ -683,9 +479,6 @@ function initPage(role) {
     loadNavbar(role);
     loadFooter();
     applyTheme(getSavedTheme());
-
-    // Trigger asynchronous sync with database file
-    syncDatabaseFromServer();
 
     return user;
 }

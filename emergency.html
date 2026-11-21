@@ -234,12 +234,6 @@
     <!-- Dynamic Footer Mount -->
     <div id="footer-mount"></div>
 
-    <!-- Firebase Cloud SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="js/firebase-config.js"></script>
-    <script src="js/firebase-service.js"></script>
-
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script>
@@ -288,23 +282,14 @@
             document.getElementById('modalFormStep').style.display = 'none';
             document.getElementById('modalDispatchedStep').style.display = 'block';
 
-            // Record in Hospital DBMS (database/hospital.db)
+            // Record Emergency Alert
             await triggerEmergencySOS({
                 location: loc,
                 details: emType,
                 studentName: (getCurrentUser() && getCurrentUser().name) ? getCurrentUser().name : "DTU Student"
             });
 
-            // Dispatch to Cloud
-            if (typeof cloudTriggerSOS === 'function') {
-                await cloudTriggerSOS({
-                    location: loc,
-                    emergencyType: emType,
-                    student: (getCurrentUser() && getCurrentUser().name) ? getCurrentUser().name : "DTU Student"
-                });
-            }
-
-            showNotification('Emergency call broadcasted to DTU Ambulance & Security (Real-Time Cloud Synced)!', 'danger');
+            showNotification('Emergency call broadcasted to DTU Ambulance & Security!', 'danger');
         }
     </script>
 </body>

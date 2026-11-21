@@ -187,12 +187,7 @@
 
         function handleServiceClick(type) {
             const user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            if (user.role === 'doctor') {
+            if (user && user.role === 'doctor') {
                 window.location.href = 'doctor-dashboard.html';
                 return;
             }
