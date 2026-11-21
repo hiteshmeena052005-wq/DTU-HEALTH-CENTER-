@@ -40,3 +40,20 @@
      - If using **Firebase Hosting with GitHub Actions**: A workflow file (`.github/workflows/firebase-hosting-merge.yml`) automatically executes `firebase-tools deploy` in a headless Ubuntu runner on GitHub's cloud.
   4. **Zero-Downtime Rollout:** The global CDN updates atomically, ensuring users worldwide see the latest version instantly with zero downtime.
 * **Viva Key Takeaway:** "We use Git-triggered CI/CD so that every code commit pushed to the GitHub master branch automatically synchronizes and deploys directly to production."
+
+---
+
+### Q4: Can Authentication and Firebase Database work seamlessly when hosted on Vercel? How do they interact in a Decoupled Architecture?
+* **Direct Answer:** **Yes, 100%!** In fact, pairing **Vercel (Frontend)** with **Google Firebase (Backend/Auth/Database)** is an industry-standard modern web architecture known as **Jamstack / Decoupled 3-Tier Architecture**.
+* **Architectural Division of Responsibilities:**
+  1. **Vercel (Frontend Presentation Tier):**
+     - Hosts the compiled HTML5, CSS3, assets, and client-side JavaScript.
+     - Delivers files instantly worldwide using Vercel's Anycast Edge Network with automated GitHub CI/CD git push deployments.
+     - Does **not** manage databases or user passwords; its sole job is lightning-fast asset delivery.
+  2. **Firebase (Data & Authentication Tier - BaaS):**
+     - When a student or doctor logs into the portal on `https://dtu-health-center.vercel.app`, the client-side Firebase SDK running in their web browser directly initiates a TLS/HTTPS handshake with Google Cloud servers (`identitytoolkit.googleapis.com` and `firestore.googleapis.com`).
+     - Firebase verifies credentials, returns signed JWT session tokens, and streams real-time Firestore database snapshots.
+     - Vercel does not block or intercept this traffic because the communication happens directly between the user's browser client and Google's cloud infrastructure.
+* **Key Configuration Detail (Authorized Domains):**
+  - In Firebase Console (`Authentication -> Settings -> Authorized Domains`), you simply ensure that both `localhost` and your Vercel URL (e.g. `dtu-health-center.vercel.app`) are listed so Firebase allows OAuth redirects and sign-in requests from that origin.
+* **Viva Key Takeaway:** "Vercel acts as our global Edge CDN for lightning-fast frontend delivery and GitHub-triggered CI/CD, while Google Firebase provides serverless Authentication and real-time Cloud Firestore database syncing. They operate completely in harmony without any server conflict."
