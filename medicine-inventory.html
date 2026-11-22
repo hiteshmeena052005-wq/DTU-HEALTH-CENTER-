@@ -106,15 +106,25 @@
     <!-- Dynamic Footer Mount -->
     <div id="footer-mount"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-service.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script>
-        function initInventoryPage() {
+        async function initInventoryPage() {
             // Strictly restricted to Doctor / Admin
             const user = initPage('doctor');
             if (!user) return;
 
             renderInventory();
+
+            try {
+                await fetchMedicinesAsync();
+                renderInventory();
+            } catch (e) {
+                console.warn("Async fetch medicines warning:", e.message);
+            }
         }
 
         function renderInventory() {

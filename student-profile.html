@@ -90,8 +90,8 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="email">DTU Official Email (@dtu.ac.in) *</label>
-                <input type="email" id="email" class="form-input" placeholder="e.g. student.22co123@dtu.ac.in" required>
+                <label class="form-label" for="email">Student Email (Personal or College) *</label>
+                <input type="email" id="email" class="form-input" placeholder="e.g. yourname@gmail.com" required>
             </div>
 
             <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
@@ -106,10 +106,13 @@
     <div id="footer-mount"></div>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-service.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script>
-        function loadCurrentProfile() {
+        async function loadCurrentProfile() {
             const user = checkLogin('student');
             if (!user) return;
 
@@ -130,9 +133,30 @@
                 if (user.name) document.getElementById('fullName').value = user.name;
                 if (user.email) document.getElementById('email').value = user.email;
             }
+
+            // Sync from Supabase if live
+            if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive() && user && user.id) {
+                try {
+                    const client = window.DTU_SUPABASE.getClient();
+                    if (client) {
+                        const { data: sRow } = await client.from('students').select('*').eq('id', user.id).single();
+                        const { data: pRow } = await client.from('profiles').select('*').eq('id', user.id).single();
+                        if (pRow && pRow.full_name) document.getElementById('fullName').value = pRow.full_name;
+                        if (sRow) {
+                            if (sRow.roll_no) document.getElementById('rollNo').value = sRow.roll_no;
+                            if (sRow.branch) document.getElementById('branch').value = sRow.branch;
+                            if (sRow.year_of_study) document.getElementById('year').value = sRow.year_of_study;
+                            if (sRow.blood_group) document.getElementById('bloodGroup').value = sRow.blood_group;
+                            if (sRow.date_of_birth) document.getElementById('dob').value = sRow.date_of_birth;
+                            if (sRow.phone) document.getElementById('phone').value = sRow.phone;
+                            if (sRow.dtu_email) document.getElementById('email').value = sRow.dtu_email;
+                        }
+                    }
+                } catch (err) {}
+            }
         }
 
-        function saveProfile(e) {
+        async function saveProfile(e) {
             e.preventDefault();
 
             const profile = {
@@ -157,11 +181,36 @@
             localStorage.setItem('currentUser', JSON.stringify(user));
             localStorage.setItem('userRole', 'student');
 
+            // Persist to Supabase if live
+            if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive() && user.id) {
+                try {
+                    const client = window.DTU_SUPABASE.getClient();
+                    if (client) {
+                        await client.from('profiles').update({
+                            full_name: profile.name,
+                            phone: profile.phone
+                        }).eq('id', user.id);
+
+                        await client.from('students').update({
+                            roll_no: profile.rollNo,
+                            branch: profile.branch,
+                            year_of_study: profile.year,
+                            blood_group: profile.bloodGroup,
+                            date_of_birth: profile.dob || null,
+                            phone: profile.phone,
+                            dtu_email: profile.dtuEmail
+                        }).eq('id', user.id);
+                    }
+                } catch (err) {
+                    console.warn("Supabase profile update warning:", err.message);
+                }
+            }
+
             showNotification('Profile updated successfully!', 'success');
 
             setTimeout(() => {
                 window.location.href = 'student-dashboard.html';
-            }, 300);
+            }, 500);
         }
 
         window.addEventListener('DOMContentLoaded', () => {

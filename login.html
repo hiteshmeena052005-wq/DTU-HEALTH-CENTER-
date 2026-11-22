@@ -15,7 +15,7 @@
     <div class="login-container" style="flex: 1; padding: 2.5rem 1rem;">
         
         <!-- CARD 1: LOGIN BOX -->
-        <div class="login-box" id="authBox">
+        <div class="login-box" id="authBox" style="max-width: 480px;">
             <div style="text-align: center; margin-bottom: 1.8rem;">
                 <div style="display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background: rgba(230, 57, 70, 0.15); font-size: 1.6rem; margin-bottom: 0.5rem; border: 1px solid rgba(230, 57, 70, 0.3);">
                     🏥
@@ -26,41 +26,160 @@
 
             <!-- Tabs -->
             <div class="login-tabs">
-                <button type="button" class="login-tab active" id="studentTabBtn" onclick="switchTab('student')">Student Login</button>
-                <button type="button" class="login-tab" id="doctorTabBtn" onclick="switchTab('doctor')">Doctor Login</button>
+                <button type="button" class="login-tab active" id="studentTabBtn" onclick="switchTab('student')">Student Portal</button>
+                <button type="button" class="login-tab" id="doctorTabBtn" onclick="switchTab('doctor')">Doctor Portal</button>
             </div>
 
-            <!-- STUDENT LOGIN FORM -->
-            <form id="studentLoginForm" onsubmit="handleStudentLogin(event)">
-                <div class="form-group">
-                    <label class="form-label" for="studentEmail">DTU Student Email</label>
-                    <input type="email" id="studentEmail" class="form-input" placeholder="e.g. rahul@dtu.ac.in" required>
+            <!-- STUDENT SECTION -->
+            <div id="studentSection">
+                <!-- Toggle between Sign In & Sign Up -->
+                <div style="display: flex; gap: 8px; margin-bottom: 16px; background: rgba(255,255,255,0.04); padding: 4px; border-radius: var(--radius-inner); border: 1px solid var(--border-glass);">
+                    <button type="button" id="studentSignInToggle" class="btn btn-pill-glass btn-small" style="flex: 1; font-weight: 700; background: rgba(230,57,70,0.2); border-color: rgba(230,57,70,0.4);" onclick="toggleStudentMode('signin')">
+                        Sign In
+                    </button>
+                    <button type="button" id="studentSignUpToggle" class="btn btn-pill-glass btn-small" style="flex: 1; font-weight: 700;" onclick="toggleStudentMode('signup')">
+                        Register Account
+                    </button>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="studentPassword">Password</label>
-                    <input type="password" id="studentPassword" class="form-input" placeholder="Enter your password" required>
-                </div>
+                <!-- STUDENT LOGIN FORM -->
+                <form id="studentLoginForm" onsubmit="handleStudentLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="studentEmail">Student Email (Personal or College)</label>
+                        <input type="email" id="studentEmail" class="form-input" placeholder="e.g. yourname@gmail.com or rahul@dtu.ac.in" required>
+                    </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem; margin-top: 0.5rem;">
-                    Sign In as Student
-                </button>
-            </form>
+                    <div class="form-group">
+                        <label class="form-label" for="studentPassword">Password</label>
+                        <input type="password" id="studentPassword" class="form-input" placeholder="Enter your password" required>
+                    </div>
+
+                    <button type="submit" id="studentLoginBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem; margin-top: 0.5rem;">
+                        Sign In as Student
+                    </button>
+                </form>
+
+                <!-- STUDENT REGISTRATION FORM -->
+                <form id="studentRegisterForm" onsubmit="handleStudentSignup(event)" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="regStudentName">Full Name</label>
+                        <input type="text" id="regStudentName" class="form-input" placeholder="e.g. Rahul Sharma" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label class="form-label" for="regStudentRoll">Roll Number</label>
+                            <input type="text" id="regStudentRoll" class="form-input" placeholder="2K23/CO/123" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regStudentBlood">Blood Group</label>
+                            <select id="regStudentBlood" class="form-input" style="color: #ffffff; background: #161b26;" required>
+                                <option value="B+">B+</option>
+                                <option value="A+">A+</option>
+                                <option value="O+">O+</option>
+                                <option value="AB+">AB+</option>
+                                <option value="B-">B-</option>
+                                <option value="A-">A-</option>
+                                <option value="O-">O-</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label class="form-label" for="regStudentBranch">Branch</label>
+                            <select id="regStudentBranch" class="form-input" style="color: #ffffff; background: #161b26;" required>
+                                <option value="Computer Science & Engineering">Computer Science (COE)</option>
+                                <option value="Information Technology">Information Tech (IT)</option>
+                                <option value="Software Engineering">Software Engg (SE)</option>
+                                <option value="Electronics & Communication">Electronics (ECE)</option>
+                                <option value="Electrical Engineering">Electrical (EE)</option>
+                                <option value="Mechanical Engineering">Mechanical (ME)</option>
+                                <option value="Civil Engineering">Civil Engg (CE)</option>
+                                <option value="Mathematics & Computing">Maths & Computing (MC)</option>
+                                <option value="Biotechnology">Biotechnology (BT)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regStudentYear">Year of Study</label>
+                            <select id="regStudentYear" class="form-input" style="color: #ffffff; background: #161b26;" required>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                                <option value="Postgraduate">Postgraduate</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label class="form-label" for="regStudentDob">Date of Birth</label>
+                            <input type="date" id="regStudentDob" class="form-input" value="2003-05-15" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regStudentPhone">Phone Number</label>
+                            <input type="tel" id="regStudentPhone" class="form-input" placeholder="9876543210" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="regStudentEmail">Student Email (Personal or College)</label>
+                        <input type="email" id="regStudentEmail" class="form-input" placeholder="e.g. yourname@gmail.com or rahul@dtu.ac.in" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="regStudentPassword">Create Password</label>
+                        <input type="password" id="regStudentPassword" class="form-input" placeholder="Minimum 6 characters" minlength="6" required>
+                    </div>
+
+                    <button type="submit" id="studentRegBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem; margin-top: 0.5rem;">
+                        Create Student Account
+                    </button>
+                </form>
+            </div>
 
             <!-- DOCTOR LOGIN FORM -->
             <form id="doctorLoginForm" onsubmit="handleDoctorLogin(event)" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label" for="doctorEmail">Doctor Email</label>
-                    <input type="email" id="doctorEmail" class="form-input" placeholder="e.g. doctor@dtu.ac.in" required>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label" for="doctorSelect">
+                        👨‍⚕️ Select Doctor Name (DTU Medical Officer)
+                    </label>
+                    <select id="doctorSelect" class="form-select" onchange="onDoctorSelectChanged()" required style="background: rgba(255,255,255,0.06); color: #ffffff;">
+                        <option value="">-- Choose Doctor Name --</option>
+                        <option value="dr.ravibansal@dtu.ac.in" data-name="Dr. Ravi Bansal" data-dept="General Medicine (OPD)" data-exp="General Physician">1. Dr. Ravi Bansal (General Physician)</option>
+                        <option value="dr.rajeshsinghai@dtu.ac.in" data-name="Dr. Rajesh Singhai" data-dept="General Medicine (OPD)" data-exp="General Physician">2. Dr. Rajesh Singhai (General Physician)</option>
+                        <option value="dr.arpanabansal@dtu.ac.in" data-name="Dr. Arpana Bansal" data-dept="Ophthalmology (Eye Specialist)" data-exp="Eye Specialist">3. Dr. Arpana Bansal (Eye Specialist)</option>
+                        <option value="dr.bharatsethi@dtu.ac.in" data-name="Dr. Bharat Bhushan Sethi" data-dept="Dental Care" data-exp="Dentist">4. Dr. Bharat Bhushan Sethi (Dentist)</option>
+                        <option value="dr.subodhmor@dtu.ac.in" data-name="Dr. Subodh Mor" data-dept="Sports Medicine &amp; Physiotherapy" data-exp="Sports Medicine cum Physiotherapist(MPT)">5. Dr. Subodh Mor (Sports Medicine &amp; MPT)</option>
+                        <option value="dr.dineshbansal@dtu.ac.in" data-name="Dr. Dinesh Bansal" data-dept="Orthopedic" data-exp="Orthopedician">6. Dr. Dinesh Bansal (Orthopedician)</option>
+                        <option value="dr.gauravgupta@dtu.ac.in" data-name="Dr. Gaurav Gupta" data-dept="Psychiatry" data-exp="Psychiatrist">7. Dr. Gaurav Gupta (Psychiatrist)</option>
+                        <option value="dr.nishajha@dtu.ac.in" data-name="Dr. Nisha Jha" data-dept="Gynecology" data-exp="Gynaecologist">8. Dr. Nisha Jha (Gynaecologist)</option>
+                        <option value="dr.mohitgulia@dtu.ac.in" data-name="Dr. Mohit Gulia" data-dept="General Medicine (Evening OPD)" data-exp="General Physician">9. Dr. Mohit Gulia (General Physician - Evening OPD)</option>
+                        <option value="dr.aditibansal@dtu.ac.in" data-name="Dr. Aditi Bansal" data-dept="Clinical Psychology &amp; Counseling" data-exp="Clinical Psychologist">10. Dr. Aditi Bansal (Clinical Psychologist)</option>
+                        <option value="custom">✍️ Other / Enter Custom Email</option>
+                    </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="doctorPassword">Password</label>
-                    <input type="password" id="doctorPassword" class="form-input" placeholder="Enter your password" required>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label" for="doctorEmail">Allocated Official Email ID</label>
+                    <input type="email" id="doctorEmail" class="form-input" placeholder="Select your name above to auto-fill" required readonly style="background: rgba(255,255,255,0.04); color: #ffffff; cursor: not-allowed;">
+                    <div id="doctorBadgeInfo" style="display: none; margin-top: 6px; font-size: 0.8rem; color: var(--amber); align-items: center; gap: 6px;">
+                        <span>🩺</span>
+                        <span id="doctorDeptText"></span>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem; margin-top: 0.5rem;">
-                    Sign In as Doctor
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" for="doctorPassword">
+                        Doctor Password <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 400;">(Enter password manually)</span>
+                    </label>
+                    <input type="password" id="doctorPassword" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" id="doctorLoginBtn" class="btn btn-pill-primary" style="width: 100%; padding: 0.8rem; font-size: 1rem; margin-top: 0.5rem;">
+                    Sign In to Doctor Clinical Portal →
                 </button>
             </form>
 
@@ -76,6 +195,9 @@
     <div id="footer-mount"></div>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-service.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script>
@@ -89,36 +211,86 @@
         function switchTab(role) {
             const studentBtn = document.getElementById('studentTabBtn');
             const doctorBtn = document.getElementById('doctorTabBtn');
-            const studentForm = document.getElementById('studentLoginForm');
+            const studentSection = document.getElementById('studentSection');
             const doctorForm = document.getElementById('doctorLoginForm');
 
             if (role === 'student') {
                 studentBtn.classList.add('active');
                 doctorBtn.classList.remove('active');
-                studentForm.style.display = 'block';
+                studentSection.style.display = 'block';
                 doctorForm.style.display = 'none';
             } else {
                 doctorBtn.classList.add('active');
                 studentBtn.classList.remove('active');
                 doctorForm.style.display = 'block';
-                studentForm.style.display = 'none';
+                studentSection.style.display = 'none';
             }
         }
 
-        // Handle Student Login (Decoupled - ready for new authentication provider)
-        function handleStudentLogin(event) {
+        // Toggle between Sign In and Sign Up in Student Section
+        function toggleStudentMode(mode) {
+            const inToggle = document.getElementById('studentSignInToggle');
+            const upToggle = document.getElementById('studentSignUpToggle');
+            const inForm = document.getElementById('studentLoginForm');
+            const upForm = document.getElementById('studentRegisterForm');
+
+            if (mode === 'signup') {
+                upToggle.style.background = 'rgba(230,57,70,0.2)';
+                upToggle.style.borderColor = 'rgba(230,57,70,0.4)';
+                inToggle.style.background = 'transparent';
+                inToggle.style.borderColor = 'var(--border-glass)';
+                inForm.style.display = 'none';
+                upForm.style.display = 'block';
+            } else {
+                inToggle.style.background = 'rgba(230,57,70,0.2)';
+                inToggle.style.borderColor = 'rgba(230,57,70,0.4)';
+                upToggle.style.background = 'transparent';
+                upToggle.style.borderColor = 'var(--border-glass)';
+                inForm.style.display = 'block';
+                upForm.style.display = 'none';
+            }
+        }
+
+        // Handle Student Login via Supabase Auth (with offline fallback)
+        async function handleStudentLogin(event) {
             event.preventDefault();
             const email = document.getElementById('studentEmail').value.trim();
             const password = document.getElementById('studentPassword').value;
+            const btn = document.getElementById('studentLoginBtn');
 
             if (!email) {
                 alert('Please enter your DTU student email');
                 return;
             }
 
+            btn.disabled = true;
+            btn.textContent = 'Verifying credentials...';
+
+            try {
+                if (window.SupabaseService && SupabaseService.isLive()) {
+                    const sessionUser = await SupabaseService.signInUser({
+                        email: email,
+                        password: password,
+                        expectedRole: 'student'
+                    });
+                    if (typeof showNotification === 'function') {
+                        showNotification(`Welcome back, ${sessionUser.name}!`, 'success');
+                    }
+                    setTimeout(() => {
+                        window.location.href = 'student-dashboard.html';
+                    }, 800);
+                    return;
+                }
+            } catch (err) {
+                alert('Login failed: ' + (err.message || err));
+                btn.disabled = false;
+                btn.textContent = 'Sign In as Student';
+                return;
+            }
+
+            // Fallback for offline/demo mode if live credentials are not active
             const rawName = email.split('@')[0].replace(/[._-]/g, ' ');
             const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-
             const user = {
                 role: 'student',
                 email: email,
@@ -146,17 +318,232 @@
             window.location.href = 'student-dashboard.html';
         }
 
-        // Handle Doctor Login (Decoupled - ready for new authentication provider)
-        function handleDoctorLogin(event) {
+        // Handle Student Registration via Supabase Auth (with profile metadata)
+        async function handleStudentSignup(event) {
             event.preventDefault();
-            const email = document.getElementById('doctorEmail').value.trim();
-            const password = document.getElementById('doctorPassword').value;
+            const btn = document.getElementById('studentRegBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
 
-            if (!email) {
-                alert('Please enter doctor email');
+            const fullName = document.getElementById('regStudentName').value.trim();
+            const rollNo = document.getElementById('regStudentRoll').value.trim();
+            const bloodGroup = document.getElementById('regStudentBlood').value;
+            const branch = document.getElementById('regStudentBranch').value;
+            const year = document.getElementById('regStudentYear').value;
+            const dob = document.getElementById('regStudentDob').value;
+            const phone = document.getElementById('regStudentPhone').value.trim();
+            const email = document.getElementById('regStudentEmail').value.trim();
+            const password = document.getElementById('regStudentPassword').value;
+
+            try {
+                if (window.SupabaseService && SupabaseService.isLive()) {
+                    const res = await SupabaseService.signUpStudent({
+                        email: email,
+                        password: password,
+                        fullName: fullName,
+                        rollNo: rollNo,
+                        branch: branch,
+                        year: year,
+                        bloodGroup: bloodGroup,
+                        dob: dob,
+                        phone: phone
+                    });
+
+                    // Cache profile details locally for immediate dashboard display
+                    localStorage.setItem('studentProfile', JSON.stringify({
+                        name: fullName,
+                        rollNo: rollNo,
+                        branch: branch,
+                        year: year,
+                        bloodGroup: bloodGroup,
+                        dob: dob,
+                        phone: phone,
+                        email: email,
+                        dtuEmail: email
+                    }));
+
+                    // If Supabase has "Confirm email" disabled, a live session is returned immediately
+                    if (res && res.session) {
+                        const user = {
+                            id: res.user.id,
+                            role: 'student',
+                            email: email,
+                            name: fullName,
+                            rollNo: rollNo,
+                            branch: branch
+                        };
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        localStorage.setItem('userRole', 'student');
+
+                        if (typeof showNotification === 'function') {
+                            showNotification(`Welcome, ${fullName}! Account created and signed in.`, 'success');
+                        }
+                        setTimeout(() => {
+                            window.location.href = 'student-dashboard.html';
+                        }, 800);
+                        return;
+                    }
+
+                    // Check if email already existed
+                    if (res && res.user && res.user.identities && res.user.identities.length === 0) {
+                        alert('This email is already registered! Please sign in with your password.');
+                        toggleStudentMode('signin');
+                        document.getElementById('studentEmail').value = email;
+                        btn.disabled = false;
+                        btn.textContent = 'Create Student Account';
+                        return;
+                    }
+
+                    // Attempt immediate direct sign in without OTP
+                    try {
+                        const directUser = await SupabaseService.signInUser({
+                            email: email,
+                            password: password,
+                            expectedRole: 'student'
+                        });
+                        if (directUser) {
+                            if (typeof showNotification === 'function') {
+                                showNotification(`Welcome, ${fullName}! Account created and signed in.`, 'success');
+                            }
+                            setTimeout(() => {
+                                window.location.href = 'student-dashboard.html';
+                            }, 800);
+                            return;
+                        }
+                    } catch (e) {}
+
+                    alert('Account registered in Supabase! Signing you in...');
+                    toggleStudentMode('signin');
+                    document.getElementById('studentEmail').value = email;
+                    document.getElementById('studentPassword').value = password;
+                    btn.disabled = false;
+                    btn.textContent = 'Create Student Account';
+                    if (typeof document.getElementById('studentLoginForm').requestSubmit === 'function') {
+                        document.getElementById('studentLoginForm').requestSubmit();
+                    }
+                    return;
+                }
+            } catch (err) {
+                alert(err.message || err);
+                btn.disabled = false;
+                btn.textContent = 'Create Student Account';
                 return;
             }
 
+            // Fallback for offline/demo mode
+            const profile = {
+                name: fullName,
+                rollNo: rollNo,
+                branch: branch,
+                year: year,
+                bloodGroup: bloodGroup,
+                dob: dob,
+                phone: phone,
+                email: email,
+                dtuEmail: email
+            };
+            localStorage.setItem('studentProfile', JSON.stringify(profile));
+            const user = { role: 'student', email: email, name: fullName };
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            localStorage.setItem('userRole', 'student');
+
+            if (typeof showNotification === 'function') {
+                showNotification('Account registered successfully! Redirecting...', 'success');
+            }
+            setTimeout(() => {
+                window.location.href = 'student-dashboard.html';
+            }, 800);
+        }
+
+        // Doctor Select Change Handler - Auto-fills allocated ID
+        function onDoctorSelectChanged() {
+            const sel = document.getElementById('doctorSelect');
+            const emailInput = document.getElementById('doctorEmail');
+            const badgeInfo = document.getElementById('doctorBadgeInfo');
+            const deptText = document.getElementById('doctorDeptText');
+            const passInput = document.getElementById('doctorPassword');
+
+            const selectedVal = sel.value;
+            if (!selectedVal) {
+                emailInput.value = '';
+                emailInput.readOnly = true;
+                emailInput.placeholder = 'Select your name above to auto-fill';
+                emailInput.style.background = 'rgba(255,255,255,0.04)';
+                emailInput.style.cursor = 'not-allowed';
+                if (badgeInfo) badgeInfo.style.display = 'none';
+                return;
+            }
+
+            if (selectedVal === 'custom') {
+                emailInput.value = '';
+                emailInput.readOnly = false;
+                emailInput.placeholder = 'Enter doctor email (e.g. dr.name@dtu.ac.in)';
+                emailInput.style.background = 'transparent';
+                emailInput.style.cursor = 'text';
+                emailInput.focus();
+                if (badgeInfo) badgeInfo.style.display = 'none';
+                return;
+            }
+
+            // Doctor name chosen from official DTU list
+            emailInput.value = selectedVal;
+            emailInput.readOnly = true;
+            emailInput.style.background = 'rgba(255,255,255,0.04)';
+            emailInput.style.cursor = 'not-allowed';
+
+            const selectedOption = sel.options[sel.selectedIndex];
+            const dept = selectedOption.getAttribute('data-dept') || '';
+            const exp = selectedOption.getAttribute('data-exp') || '';
+
+            if (badgeInfo && deptText) {
+                badgeInfo.style.display = 'flex';
+                deptText.textContent = `${exp} · ${dept}`;
+            }
+
+            // Move focus directly to password input so doctor can enter password right away
+            if (passInput) passInput.focus();
+        }
+
+        // Handle Doctor Login via Supabase Auth (with offline fallback)
+        async function handleDoctorLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('doctorEmail').value.trim();
+            const password = document.getElementById('doctorPassword').value;
+            const btn = document.getElementById('doctorLoginBtn');
+
+            if (!email) {
+                alert('Please select your doctor name or enter your official email');
+                return;
+            }
+
+            if (!password) {
+                alert('Please enter your password manually');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying doctor access...';
+
+            try {
+                if (window.SupabaseService && SupabaseService.isLive()) {
+                    const sessionUser = await SupabaseService.signInUser({
+                        email: email,
+                        password: password,
+                        expectedRole: 'doctor'
+                    });
+                    if (typeof showNotification === 'function') {
+                        showNotification(`Welcome, ${sessionUser.name}!`, 'success');
+                    }
+                    setTimeout(() => {
+                        window.location.href = 'doctor-dashboard.html';
+                    }, 800);
+                    return;
+                }
+            } catch (err) {
+                console.warn("Supabase doctor auth fallback:", err.message);
+            }
+
+            // Fallback for offline/demo mode
             let doctorData = null;
             if (typeof doctors !== 'undefined' && Array.isArray(doctors)) {
                 doctorData = doctors.find(d => d.email && d.email.toLowerCase() === email.toLowerCase());
@@ -166,7 +553,7 @@
                 const namePart = email.split('@')[0].replace(/^dr\.?/i, '').replace(/[._-]/g, ' ');
                 doctorData = {
                     id: Date.now(),
-                    name: 'Dr. ' + (namePart ? namePart.charAt(0).toUpperCase() + namePart.slice(1) : 'Rajesh Sharma'),
+                    name: 'Dr. ' + (namePart ? namePart.charAt(0).toUpperCase() + namePart.slice(1) : 'Medical Officer'),
                     department: 'General Medicine (OPD)',
                     qualification: 'MBBS, MD',
                     photo: '👨‍⚕️',
@@ -182,7 +569,13 @@
             localStorage.setItem('currentUser', JSON.stringify(doctorUser));
             localStorage.setItem('userRole', 'doctor');
 
-            window.location.href = 'doctor-dashboard.html';
+            if (typeof showNotification === 'function') {
+                showNotification(`Welcome, ${doctorUser.name}!`, 'success');
+            }
+
+            setTimeout(() => {
+                window.location.href = 'doctor-dashboard.html';
+            }, 600);
         }
     </script>
 </body>

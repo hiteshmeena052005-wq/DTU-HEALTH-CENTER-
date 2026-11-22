@@ -234,29 +234,41 @@
     <!-- Dynamic Footer Mount -->
     <div id="footer-mount"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-service.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script>
-        function initEmergencyPage() {
+        async function initEmergencyPage() {
             const user = getCurrentUser();
             const role = user ? user.role : 'student';
             initPage(role);
 
             renderEmergencyContacts();
+
+            if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+                try {
+                    const liveContacts = await SupabaseService.getEmergencyContacts();
+                    if (liveContacts && liveContacts.length > 0) {
+                        renderEmergencyContacts(liveContacts);
+                    }
+                } catch (e) {}
+            }
         }
 
-        function renderEmergencyContacts() {
+        function renderEmergencyContacts(customList) {
             const container = document.getElementById('emergencyContactsList');
-            const contacts = (typeof emergencyContacts !== 'undefined') ? emergencyContacts : [];
+            const contacts = customList || ((typeof emergencyContacts !== 'undefined') ? emergencyContacts : []);
 
             container.innerHTML = contacts.map(c => `
                 <div class="contact-card">
                     <div>
                         <h4 style="color:var(--primary-dark); font-size:1.05rem; margin-bottom:4px;">${c.name}</h4>
                         <p style="font-size:0.85rem; color:#666; margin-bottom:8px;">📍 ${c.location || 'DTU Main Campus'}</p>
-                        <div style="font-size:0.8rem; color:#28a745; font-weight:bold; margin-bottom:12px;">● Available: ${c.available}</div>
+                        <div style="font-size:0.8rem; color:#28a745; font-weight:bold; margin-bottom:12px;">● Available: ${c.available || '24x7'}</div>
                     </div>
-                    <a href="tel:${c.phone.replace(/[^0-9]/g, '')}" class="btn btn-danger" style="text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <a href="tel:${(c.phone || '').replace(/[^0-9]/g, '')}" class="btn btn-danger" style="text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;">
                         📞 Call ${c.phone}
                     </a>
                 </div>

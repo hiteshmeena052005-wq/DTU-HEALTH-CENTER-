@@ -113,12 +113,15 @@
     <!-- Dynamic Footer Mount -->
     <div id="footer-mount"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-service.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script>
         let currentUser = null;
 
-        function initPrescriptionPage() {
+        async function initPrescriptionPage() {
             currentUser = getCurrentUser();
             const role = currentUser ? currentUser.role : 'student';
             initPage(role);
@@ -132,6 +135,13 @@
             }
 
             renderPrescriptions();
+
+            try {
+                await fetchPrescriptionsAsync();
+                renderPrescriptions();
+            } catch (err) {
+                console.warn("Async fetch prescriptions warning:", err.message);
+            }
         }
 
         function toggleRxForm() {
@@ -155,7 +165,7 @@
             container.appendChild(newRow);
         }
 
-        function submitNewPrescription(event) {
+        async function submitNewPrescription(event) {
             event.preventDefault();
 
             const studentName = document.getElementById('rxStudentName').value.trim();
@@ -191,7 +201,7 @@
                 notes: notes
             };
 
-            savePrescription(newRx);
+            await savePrescription(newRx);
             showNotification("Prescription generated & attached to student record!", "success");
 
             toggleRxForm();
@@ -202,17 +212,25 @@
             const container = document.getElementById('prescriptionsContainer');
             const list = getPrescriptions();
 
-            if (list.length === 0) {
+            if (!list || list.length === 0) {
                 container.innerHTML = `
-                    <div class="card" style="text-align:center; padding:40px; color:var(--text-light);">
-                        <p style="font-size:1.1rem; margin-bottom:10px;">No prescriptions found on your health record.</p>
-                        <p style="font-size:0.9rem;">Consult a DTU Health Center doctor to receive digital prescriptions.</p>
+                    <div class="card" style="text-align:center; padding:40px; color:var(--text-light); border:1px solid var(--border-glass-light);">
+                        <p style="font-size:1.1rem; margin-bottom:10px; color:#fff;">No prescriptions found on your health record.</p>
+                        <p style="font-size:0.9rem; color:var(--text-muted);">Consult a DTU Health Center doctor to receive digital prescriptions.</p>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = list.map(rx => `
+            container.innerHTML = list.map(rx => {
+                let meds = [];
+                if (Array.isArray(rx.medicines)) {
+                    meds = rx.medicines;
+                } else if (typeof rx.medicines === 'string') {
+                    try { meds = JSON.parse(rx.medicines); } catch (e) { meds = [{ name: rx.medicines, dosage: 'As advised', duration: 'As advised' }]; }
+                }
+
+                return `
                 <div class="card" style="margin-bottom:25px; border:1px solid var(--border-glass-light); box-shadow:0 12px 36px rgba(0,0,0,0.45);">
                     
                     <!-- Official Header -->
@@ -268,12 +286,12 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${(rx.medicines || []).map((m, i) => `
+                                    ${(meds || []).map((m, i) => `
                                         <tr>
                                             <td style="color:var(--text-muted);">${i+1}</td>
-                                            <td><strong style="color:#ffffff;">${m.name}</strong></td>
-                                            <td style="color:var(--text-light);">${m.dosage}</td>
-                                            <td><span class="pill-tag badge-warning">${m.duration}</span></td>
+                                            <td><strong style="color:#ffffff;">${m.name || m.medicine || ''}</strong></td>
+                                            <td style="color:var(--text-light);">${m.dosage || m.dose || ''}</td>
+                                            <td><span class="pill-tag badge-warning">${m.duration || ''}</span></td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -305,7 +323,8 @@
                     </div>
 
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
     </script>
 </body>

@@ -1492,3 +1492,84 @@ body.light-mode [style*="background: rgba(255, 255, 255, 0.0"],
 body.light-mode [style*="background:rgba(255,255,255,0.0"] {
     background: rgba(0, 0, 0, 0.03) !important;
 }
+
+
+/* ==========================================================================
+   SUPABASE INTEGRATION STATUS PILL & CONFIGURATION MODAL
+   ========================================================================== */
+.supabase-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.supabase-status-pill:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--border-glass-light);
+    color: #ffffff;
+}
+
+.supabase-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.supabase-status-dot.status-online {
+    background: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
+}
+
+.supabase-status-dot.status-offline {
+    background: #f5a623;
+    box-shadow: 0 0 8px rgba(245, 166, 35, 0.5);
+}
+
+.supabase-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.supabase-modal-card {
+    background: #121620;
+    border: 1px solid var(--border-glass-light);
+    border-radius: 20px;
+    max-width: 520px;
+    width: 90%;
+    padding: 28px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    animation: fadeIn 0.25s ease;
+}
+
+body.light-mode .supabase-status-pill {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #334155;
+}
+
+body.light-mode .supabase-modal-card {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #0f172a;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+}

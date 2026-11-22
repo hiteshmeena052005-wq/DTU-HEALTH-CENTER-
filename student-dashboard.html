@@ -107,6 +107,24 @@
                         </a>
                     </div>
                 </div>
+
+                <!-- DTU Hospital Block & Facilities Overview -->
+                <div class="card" style="margin-top: 24px; padding: 20px; border: 1px solid var(--border-glass-light); background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(230,57,70,0.05) 100%);">
+                    <div style="display: flex; gap: 14px; align-items: flex-start;">
+                        <span style="font-size: 2rem;">🏥</span>
+                        <div>
+                            <h4 style="color: #ffffff; font-size: 1rem; font-weight: 700; margin-bottom: 6px;">The DTU Health Center</h4>
+                            <p style="color: var(--text-light); font-size: 0.84rem; line-height: 1.5; margin-bottom: 10px;">
+                                DTU has a full-fledged 20 bed hospital block. Services of two medical practitioners are available to the students throughout day and evening. The college invites specialized medical practitioners for ENT, eye, dental care, nutrition experts once a week.
+                            </p>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <span class="pill-tag badge-info" style="font-size: 0.72rem;">🛏️ 20-Bed Hospital Block</span>
+                                <span class="pill-tag badge-success" style="font-size: 0.72rem;">🩺 Day &amp; Evening Practitioners</span>
+                                <span class="pill-tag badge-warning" style="font-size: 0.72rem;">👨‍⚕️ Weekly Visiting Specialists</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Right Column: My Appointments & Profile Summary -->
@@ -151,10 +169,13 @@
     <!-- Dynamic Footer Mount (Includes Fixed Bottom-Left Ambulance SOS Button) -->
     <div id="footer-mount"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-service.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script>
-        function initStudentDashboard() {
+        async function initStudentDashboard() {
             const user = initPage('student');
             if (!user) return;
 
@@ -163,17 +184,33 @@
             document.getElementById('studentRollDisplay').textContent = profile.rollNo || '2K23/CO/001';
             document.getElementById('studentBranchDisplay').textContent = profile.branch || 'DTU';
 
+            renderProfileSummary(profile);
+
+            // Initial render from local cache
             renderNotices();
             renderAppointments();
             renderStats();
 
-            // Listen to real-time sync across tabs
+            // Fetch live data from Supabase
+            try {
+                await Promise.all([
+                    fetchAppointmentsAsync(),
+                    fetchNoticesAsync(),
+                    fetchPrescriptionsAsync()
+                ]);
+                renderNotices();
+                renderAppointments();
+                renderStats();
+            } catch (err) {
+                console.warn("Async Supabase fetch warning:", err.message);
+            }
+
+            // Listen to real-time sync across tabs and Supabase websocket
             onDataChanged((event) => {
                 renderStats();
                 renderAppointments(getAppointments());
+                renderNotices(getNotices());
             });
-
-            renderProfileSummary(profile);
         }
 
         function renderStats() {

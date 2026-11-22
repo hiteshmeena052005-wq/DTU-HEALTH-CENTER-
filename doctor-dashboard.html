@@ -249,12 +249,15 @@
     <!-- Dynamic Footer Mount (Includes Fixed Bottom-Left Ambulance SOS Button) -->
     <div id="footer-mount"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-service.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script>
         let currentDoctor = {};
 
-        function initDoctorDashboard() {
+        async function initDoctorDashboard() {
             const user = initPage('doctor');
             if (!user) return;
 
@@ -272,12 +275,29 @@
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('slotDate').value = tomorrow.toISOString().split('T')[0];
 
+            // Immediate render from local cache
             renderQueue();
             renderDoctorSlots();
             renderDoctorNotices();
             renderStats();
 
-            // Listen to cross-tab real-time sync
+            // Fetch live data from Supabase
+            try {
+                await Promise.all([
+                    fetchAppointmentsAsync(),
+                    fetchSlotsAsync(currentDoctor.id, currentDoctor.name),
+                    fetchNoticesAsync(),
+                    fetchPrescriptionsAsync()
+                ]);
+                renderQueue();
+                renderDoctorSlots();
+                renderDoctorNotices();
+                renderStats();
+            } catch (err) {
+                console.warn("Doctor live fetch warning:", err.message);
+            }
+
+            // Listen to cross-tab & Supabase real-time sync
             onDataChanged((event) => {
                 if (event.type === 'APPOINTMENT_CANCELLED') {
                     showNotification("Patient cancelled appointment. Slot capacity freed up.", "warning");
@@ -370,33 +390,41 @@
                 return `${h}:${m} ${ampm}`;
             }
 
+            const docUuid = (typeof getDoctorUUID === 'function') 
+                ? getDoctorUUID(currentDoctor.id || currentDoctor.uuid || currentDoctor.name)
+                : (currentDoctor.id || "d0000000-0000-0000-0000-000000000001");
+
             const newSlot = {
                 id: Date.now(),
-                doctorId: currentDoctor.id || 1,
-                doctorName: currentDoctor.name || 'Dr. Rajesh Sharma',
+                doctorId: docUuid,
+                doctorName: currentDoctor.name || 'Dr. Ravi Bansal',
                 department: currentDoctor.department || 'General Medicine (OPD)',
                 date: date,
+                startTimeRaw: startTimeRaw,
+                endTimeRaw: endTimeRaw,
                 startTime: formatTime(startTimeRaw),
                 endTime: formatTime(endTimeRaw),
                 maxLimit: limit,
                 bookedCount: 0,
-                note: note || `OPD consultation session with Dr. ${currentDoctor.name || 'Sharma'}`
+                note: note || `OPD consultation session with ${currentDoctor.name || 'Doctor'}`
             };
 
             await saveSlot(newSlot);
             showNotification(`Checkup slot published! ${limit} student seats available.`, 'success');
             
             document.getElementById('slotNote').value = '';
+            renderDoctorSlots();
             renderStats();
         }
 
         // Render active slots with real-time capacity and progress bar
         function renderDoctorSlots(customSlots) {
             const container = document.getElementById('activeSlotsList');
-            const slots = customSlots || getSlots();
+            const docFilter = currentDoctor.name || currentDoctor.id;
+            const slots = customSlots || getSlots(docFilter);
 
             if (!slots || slots.length === 0) {
-                container.innerHTML = '<p style="font-size:0.84rem; color:var(--text-muted); padding:10px 0;">No active slots posted yet.</p>';
+                container.innerHTML = '<p style="font-size:0.84rem; color:var(--text-muted); padding:10px 0;">No active slots posted yet. Use the form above to publish your consultation availability.</p>';
                 return;
             }
 
@@ -484,7 +512,8 @@
 
         function renderStats() {
             const appointments = getAppointments();
-            const slots = getSlots();
+            const docFilter = currentDoctor.name || currentDoctor.id;
+            const slots = getSlots(docFilter);
             const prescriptions = getPrescriptions();
             const notices = getNotices();
 

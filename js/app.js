@@ -1,4 +1,6 @@
-// DTU Health Center - Common Application Logic & State Controller
+// =============================================================================
+// DTU Health Center - Common Application Logic, Supabase Bridge & State Controller
+// =============================================================================
 
 // Cross-tab real-time sync bus (BroadcastChannel + storage event)
 const dtuSyncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('dtu_health_sync_bus') : null;
@@ -31,19 +33,42 @@ if (dtuSyncChannel) {
     };
 }
 
-window.addEventListener('storage', (e) => {
-    if (e.key === 'dtu_client_store' || (e.key && e.key.startsWith('dtu_'))) {
-        if (typeof loadClientStore === 'function') {
-            const stored = loadClientStore();
-            if (stored) window._dtuMemoryDB = stored;
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'dtu_client_store' || (e.key && e.key.startsWith('dtu_'))) {
+            if (typeof loadClientStore === 'function') {
+                const stored = loadClientStore();
+                if (stored) window._dtuMemoryDB = stored;
+            }
+            syncListeners.forEach(cb => {
+                try { cb({ type: 'STORAGE_UPDATE', key: e.key }); } catch (err) {}
+            });
         }
-        syncListeners.forEach(cb => {
-            try { cb({ type: 'STORAGE_UPDATE', key: e.key }); } catch (err) {}
+    });
+}
+
+// Setup Supabase live postgres_changes listener when configured
+function initSupabaseRealtimeSync() {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        const tables = ['appointments', 'doctor_slots', 'consultations', 'referrals', 'notifications', 'emergency_sos_logs'];
+        tables.forEach(tableName => {
+            try {
+                SupabaseService.subscribeRealtime(tableName, (payload) => {
+                    broadcastDataChange('SUPABASE_' + tableName.toUpperCase(), payload);
+                    syncListeners.forEach(cb => {
+                        try { cb({ type: 'SUPABASE_REALTIME', table: tableName, payload }); } catch (e) {}
+                    });
+                });
+            } catch (err) {
+                console.warn(`Supabase realtime subscription for ${tableName} skipped:`, err.message);
+            }
         });
     }
-});
+}
 
-// User Session Management (Ready for new Authentication Provider)
+// -----------------------------------------------------------------------------
+// User Session Management
+// -----------------------------------------------------------------------------
 function getCurrentUser() {
     try {
         const user = localStorage.getItem("currentUser");
@@ -53,17 +78,16 @@ function getCurrentUser() {
     }
 }
 
-// Check session role context without blocking navigation
 function checkLogin(expectedRole) {
     const user = getCurrentUser();
     if (user) {
         return user;
     }
-    // Return clean default role context for seamless UI browsing and initialize session
+    // Return clean default role context for seamless UI browsing
     const defaultUser = {
         role: expectedRole || 'student',
-        name: expectedRole === 'doctor' ? 'Dr. Rajesh Sharma' : 'Rahul Sharma',
-        email: expectedRole === 'doctor' ? 'dr.sharma@dtu.ac.in' : 'rahul@dtu.ac.in',
+        name: expectedRole === 'doctor' ? 'Dr. Ravi Bansal' : 'Rahul Sharma',
+        email: expectedRole === 'doctor' ? 'dr.ravibansal@dtu.ac.in' : 'rahul@dtu.ac.in',
         department: expectedRole === 'doctor' ? 'General Medicine (OPD)' : undefined
     };
     try {
@@ -74,9 +98,19 @@ function checkLogin(expectedRole) {
 }
 
 // Sign out user and clear active session
-function logout() {
+async function logout() {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            await SupabaseService.signOutUser();
+            return;
+        } catch (e) {
+            console.warn("Supabase signout warning:", e.message);
+        }
+    }
     localStorage.removeItem("currentUser");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("studentProfile");
+    localStorage.removeItem("dtu_supabase_auth_token");
     window.location.href = "login.html";
 }
 
@@ -89,7 +123,7 @@ function showNotification(message, type = "success") {
         container.style.position = "fixed";
         container.style.top = "20px";
         container.style.right = "20px";
-        container.style.zIndex = "9999";
+        container.style.zIndex = "99999";
         document.body.appendChild(container);
     }
 
@@ -108,12 +142,75 @@ function showNotification(message, type = "success") {
     }, 3500);
 }
 
-// In-Memory Data Store Operations
+// -----------------------------------------------------------------------------
+// Data Store Operations (Dual-Mode: Live Supabase + Seamless Memory Fallback)
+// -----------------------------------------------------------------------------
+
+// Appointments
 function getAppointments() {
-    return (window._dtuMemoryDB && window._dtuMemoryDB.appointments) || [];
+    const all = (window._dtuMemoryDB && window._dtuMemoryDB.appointments) || [];
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!user) return all;
+
+    if (user.role === 'student') {
+        const studentEmail = (user.email || '').toLowerCase().trim();
+        const studentId = user.id;
+        const studentRoll = (user.rollNo || '').toLowerCase().trim();
+        const studentName = (user.name || '').toLowerCase().trim();
+
+        return all.filter(a => {
+            const aptEmail = (a.studentEmail || '').toLowerCase().trim();
+            const aptId = a.studentId;
+            const aptRoll = (a.rollNo || '').toLowerCase().trim();
+            const aptName = (a.studentName || '').toLowerCase().trim();
+
+            if (studentEmail && aptEmail && studentEmail === aptEmail) return true;
+            if (studentId && aptId && studentId === aptId) return true;
+            if (studentRoll && aptRoll && studentRoll === aptRoll) return true;
+            if (studentName && aptName && studentName !== 'student' && studentName === aptName) return true;
+            return false;
+        });
+    }
+
+    if (user.role === 'doctor') {
+        const doctorName = (user.name || '').toLowerCase().trim();
+        const doctorId = user.id;
+        return all.filter(a => {
+            const aptDocName = (a.doctorName || '').toLowerCase().trim();
+            const aptDocId = a.doctorId;
+            if (doctorId && aptDocId && doctorId === aptDocId) return true;
+            if (doctorName && aptDocName && (aptDocName.includes(doctorName) || doctorName.includes(aptDocName))) return true;
+            return false;
+        });
+    }
+
+    return all;
+}
+
+async function fetchAppointmentsAsync() {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            const data = await SupabaseService.getAppointments();
+            if (window._dtuMemoryDB) {
+                window._dtuMemoryDB.appointments = data;
+            }
+            return data;
+        } catch (e) {
+            console.warn("Live fetch appointments failed, using local store:", e.message);
+        }
+    }
+    return getAppointments();
 }
 
 async function saveAppointment(appointment) {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            await SupabaseService.bookAppointment(appointment);
+        } catch (e) {
+            console.error("Supabase booking failed, falling back to local store:", e.message);
+        }
+    }
+
     const list = getAppointments();
     const exists = list.some(a => a.id === appointment.id);
     if (!exists) {
@@ -135,15 +232,21 @@ async function saveAppointment(appointment) {
         saveClientStore(window._dtuMemoryDB);
     }
 
-    // Broadcast change across open tabs
     broadcastDataChange('APPOINTMENT_BOOKED', { appointment, slotId: targetSlot ? targetSlot.id : appointment.slotId });
 }
 
-// Cancel appointment and free up slot capacity
 async function cancelAppointmentAndFreeSlot(aptId, slotId, doctorName) {
-    let list = getAppointments();
-    const apt = list.find(a => a.id === aptId);
-    window._dtuMemoryDB.appointments = list.filter(a => a.id !== aptId);
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            await SupabaseService.cancelAppointment(aptId);
+        } catch (e) {
+            console.warn("Supabase cancel failed, using local fallback:", e.message);
+        }
+    }
+
+    let allApts = (window._dtuMemoryDB && window._dtuMemoryDB.appointments) || [];
+    const apt = allApts.find(a => a.id === aptId);
+    window._dtuMemoryDB.appointments = allApts.filter(a => a.id !== aptId);
 
     const targetSlotId = slotId || (apt ? apt.slotId : null);
     const targetDocName = doctorName || (apt ? apt.doctorName : null);
@@ -162,33 +265,152 @@ async function cancelAppointmentAndFreeSlot(aptId, slotId, doctorName) {
         slot.bookedCount = Math.max(0, activeRemaining);
     }
 
-    // Persist to client store
     if (typeof saveClientStore === 'function') {
         saveClientStore(window._dtuMemoryDB);
     }
 
-    // Broadcast cancellation across tabs
     broadcastDataChange('APPOINTMENT_CANCELLED', { id: aptId, slotId: targetSlotId, doctorName: targetDocName });
 }
 
+// Prescriptions / Consultations
 function getPrescriptions() {
-    return (window._dtuMemoryDB && window._dtuMemoryDB.prescriptions) || [];
+    const all = (window._dtuMemoryDB && window._dtuMemoryDB.prescriptions) || [];
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!user) return all;
+
+    if (user.role === 'student') {
+        const studentEmail = (user.email || '').toLowerCase().trim();
+        const studentId = user.id;
+        const studentRoll = (user.rollNo || '').toLowerCase().trim();
+        const studentName = (user.name || '').toLowerCase().trim();
+
+        return all.filter(p => {
+            const rxEmail = (p.studentEmail || '').toLowerCase().trim();
+            const rxId = p.studentId;
+            const rxRoll = (p.rollNo || '').toLowerCase().trim();
+            const rxName = (p.studentName || '').toLowerCase().trim();
+
+            if (studentEmail && rxEmail && studentEmail === rxEmail) return true;
+            if (studentId && rxId && studentId === rxId) return true;
+            if (studentRoll && rxRoll && studentRoll === rxRoll) return true;
+            if (studentName && rxName && studentName !== 'student' && studentName === rxName) return true;
+            return false;
+        });
+    }
+
+    if (user.role === 'doctor') {
+        const doctorName = (user.name || '').toLowerCase().trim();
+        const doctorId = user.id;
+        return all.filter(p => {
+            const rxDocName = (p.doctorName || '').toLowerCase().trim();
+            const rxDocId = p.doctorId;
+            if (doctorId && rxDocId && doctorId === rxDocId) return true;
+            if (doctorName && rxDocName && (rxDocName.includes(doctorName) || doctorName.includes(rxDocName))) return true;
+            return false;
+        });
+    }
+
+    return all;
+}
+
+async function fetchPrescriptionsAsync() {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            const data = await SupabaseService.getPrescriptions();
+            if (window._dtuMemoryDB) {
+                window._dtuMemoryDB.prescriptions = data;
+            }
+            return data;
+        } catch (e) {
+            console.warn("Live fetch prescriptions failed:", e.message);
+        }
+    }
+    return getPrescriptions();
 }
 
 async function savePrescription(prescription) {
-    const list = getPrescriptions();
-    list.unshift(prescription);
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            await SupabaseService.createPrescription(prescription);
+        } catch (e) {
+            console.error("Supabase create prescription failed, fallback:", e.message);
+        }
+    }
+
+    if (!window._dtuMemoryDB) window._dtuMemoryDB = {};
+    if (!Array.isArray(window._dtuMemoryDB.prescriptions)) window._dtuMemoryDB.prescriptions = [];
+    window._dtuMemoryDB.prescriptions.unshift(prescription);
+
     if (typeof saveClientStore === 'function') {
         saveClientStore(window._dtuMemoryDB);
     }
     broadcastDataChange('PRESCRIPTION_ADDED', { prescription });
 }
 
+// Referrals
 function getReferrals() {
-    return (window._dtuMemoryDB && window._dtuMemoryDB.referrals) || [];
+    const all = (window._dtuMemoryDB && window._dtuMemoryDB.referrals) || [];
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!user) return all;
+
+    if (user.role === 'student') {
+        const studentEmail = (user.email || '').toLowerCase().trim();
+        const studentId = user.id;
+        const studentRoll = (user.rollNo || '').toLowerCase().trim();
+        const studentName = (user.name || '').toLowerCase().trim();
+
+        return all.filter(r => {
+            const rEmail = (r.studentEmail || '').toLowerCase().trim();
+            const rId = r.studentId;
+            const rRoll = (r.rollNo || '').toLowerCase().trim();
+            const rName = (r.studentName || '').toLowerCase().trim();
+
+            if (studentEmail && rEmail && studentEmail === rEmail) return true;
+            if (studentId && rId && studentId === rId) return true;
+            if (studentRoll && rRoll && studentRoll === rRoll) return true;
+            if (studentName && rName && studentName !== 'student' && studentName === rName) return true;
+            return false;
+        });
+    }
+
+    if (user.role === 'doctor') {
+        const doctorName = (user.name || '').toLowerCase().trim();
+        const doctorId = user.id;
+        return all.filter(r => {
+            const fromDoc = (r.fromDoctor || '').toLowerCase().trim();
+            const toDoc = (r.toDoctor || '').toLowerCase().trim();
+            return (doctorId && (r.fromDoctorId === doctorId || r.toDoctorId === doctorId)) ||
+                   (doctorName && (fromDoc.includes(doctorName) || toDoc.includes(doctorName)));
+        });
+    }
+
+    return all;
+}
+
+async function fetchReferralsAsync() {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            const data = await SupabaseService.getReferrals();
+            if (window._dtuMemoryDB) {
+                window._dtuMemoryDB.referrals = data;
+            }
+            return data;
+        } catch (e) {
+            console.warn("Live fetch referrals failed:", e.message);
+        }
+    }
+    return getReferrals();
 }
 
 async function saveReferral(referral) {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            await SupabaseService.createReferral(referral);
+        } catch (e) {
+            console.error("Supabase create referral failed, fallback:", e.message);
+        }
+    }
+
     const list = getReferrals();
     list.unshift(referral);
     if (typeof saveClientStore === 'function') {
@@ -197,15 +419,47 @@ async function saveReferral(referral) {
     broadcastDataChange('REFERRAL_ADDED', { referral });
 }
 
+// Emergency SOS
 async function triggerEmergencySOS(sosData) {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            await SupabaseService.triggerSOS(sosData);
+        } catch (e) {
+            console.error("Supabase emergency SOS failed, broadcasting locally:", e.message);
+        }
+    }
     broadcastDataChange('EMERGENCY_SOS', sosData);
 }
 
+// Notices & Advisories
 function getNotices() {
     return (window._dtuMemoryDB && window._dtuMemoryDB.notices) || [];
 }
 
+async function fetchNoticesAsync() {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            const data = await SupabaseService.getNotices();
+            if (window._dtuMemoryDB) {
+                window._dtuMemoryDB.notices = data;
+            }
+            return data;
+        } catch (e) {
+            console.warn("Live fetch notices failed:", e.message);
+        }
+    }
+    return getNotices();
+}
+
 async function saveNotice(notice) {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            await SupabaseService.createNotice(notice);
+        } catch (e) {
+            console.error("Supabase notice creation failed, fallback:", e.message);
+        }
+    }
+
     const list = getNotices();
     list.unshift(notice);
     if (typeof saveClientStore === 'function') {
@@ -214,28 +468,59 @@ async function saveNotice(notice) {
     broadcastDataChange('NOTICE_ADDED', { notice });
 }
 
-function getSlots() {
+// Slots
+function getSlots(filterDoctor) {
     let slots = (window._dtuMemoryDB && window._dtuMemoryDB.slots) || [];
-    const appointments = getAppointments();
+    const appointments = (window._dtuMemoryDB && window._dtuMemoryDB.appointments) || [];
 
     slots.forEach(slot => {
         if (!slot.maxLimit) slot.maxLimit = 10;
-        
-        // Count active appointments for this doctor/slot
         const activeCount = appointments.filter(a => 
             (a.slotId && a.slotId == slot.id) || (a.doctorName && a.doctorName === slot.doctorName)
         ).length;
-
-        // Ensure valid booked count
         if (slot.bookedCount > slot.maxLimit || slot.bookedCount !== activeCount) {
             slot.bookedCount = Math.min(slot.maxLimit, activeCount);
         }
     });
 
+    if (filterDoctor) {
+        const docStr = String(filterDoctor).toLowerCase().trim();
+        return slots.filter(s => {
+            const sName = (s.doctorName || '').toLowerCase().trim();
+            const sId = String(s.doctorId || s.id || '');
+            return (sId && sId === docStr) || (sName && (sName.includes(docStr) || docStr.includes(sName)));
+        });
+    }
+
     return slots;
 }
 
+async function fetchSlotsAsync(doctorId, doctorName) {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            const data = await SupabaseService.getSlots(doctorId, doctorName);
+            if (window._dtuMemoryDB) {
+                if (!doctorId && !doctorName) {
+                    window._dtuMemoryDB.slots = data;
+                }
+            }
+            return data;
+        } catch (e) {
+            console.warn("Live fetch slots failed:", e.message);
+        }
+    }
+    return getSlots(doctorName || doctorId);
+}
+
 async function saveSlot(slot) {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            await SupabaseService.createSlot(slot);
+        } catch (e) {
+            console.error("Supabase create slot failed, fallback:", e.message);
+        }
+    }
+
     const list = getSlots();
     list.unshift(slot);
     if (typeof saveClientStore === 'function') {
@@ -244,15 +529,35 @@ async function saveSlot(slot) {
     broadcastDataChange('SLOT_ADDED', { slot });
 }
 
-function updateSlotBookedCount(slotId) {
-    getSlots();
-}
-
+// Medicine Inventory
 function getMedicines() {
     return (window._dtuMemoryDB && window._dtuMemoryDB.medicines) || [];
 }
 
+async function fetchMedicinesAsync() {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            const data = await SupabaseService.getMedicines();
+            if (window._dtuMemoryDB) {
+                window._dtuMemoryDB.medicines = data;
+            }
+            return data;
+        } catch (e) {
+            console.warn("Live fetch medicines failed:", e.message);
+        }
+    }
+    return getMedicines();
+}
+
 async function updateMedicineStock(id, newStock) {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            await SupabaseService.updateMedicineStock(id, newStock);
+        } catch (e) {
+            console.warn("Supabase update stock failed, fallback:", e.message);
+        }
+    }
+
     const list = getMedicines();
     const item = list.find(m => m.id == id);
     if (item) {
@@ -264,7 +569,24 @@ async function updateMedicineStock(id, newStock) {
     }
 }
 
-// Dynamic modern floating pill navbar
+// Health Tips
+function getHealthTips() {
+    return (typeof healthTips !== 'undefined' ? healthTips : []);
+}
+
+async function fetchHealthTipsAsync() {
+    if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+        try {
+            const data = await SupabaseService.getHealthTips();
+            return data;
+        } catch (e) {}
+    }
+    return getHealthTips();
+}
+
+// -----------------------------------------------------------------------------
+// Dynamic Floating Pill Navbar
+// -----------------------------------------------------------------------------
 function loadNavbar(role) {
     const headerContainer = document.getElementById("navbar-mount");
     if (!headerContainer) return;
@@ -280,7 +602,6 @@ function loadNavbar(role) {
         homeUrl = "doctor-dashboard.html";
     }
 
-    // Determine initials for avatar circle
     let initials = "HC";
     if (role === "doctor" || (user && user.role === "doctor")) {
         initials = "RS";
@@ -346,7 +667,7 @@ function loadNavbar(role) {
             <ul class="nav-links">
                 ${navLinksHtml}
             </ul>
-            <div class="nav-right">
+            <div class="nav-right" style="display:flex; align-items:center; gap:8px;">
                 <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" title="${themeTitle}" aria-label="${themeTitle}">${themeIcon}</button>
                 ${userRightHtml}
             </div>
@@ -358,7 +679,9 @@ function loadNavbar(role) {
     applyTheme(currentTheme);
 }
 
-// Theme Management (Dark Glassmorphism <-> Modern Crisp Light Mode)
+// -----------------------------------------------------------------------------
+// Theme Management (Dark Glassmorphism <-> Modern Light Mode)
+// -----------------------------------------------------------------------------
 function getSavedTheme() {
     try {
         return localStorage.getItem('dtu_theme') || localStorage.getItem('app_theme') || 'dark';
@@ -370,18 +693,12 @@ function getSavedTheme() {
 function applyTheme(theme) {
     const isLight = (theme === 'light');
     if (document.body) {
-        if (isLight) {
-            document.body.classList.add('light-mode');
-        } else {
-            document.body.classList.remove('light-mode');
-        }
+        if (isLight) document.body.classList.add('light-mode');
+        else document.body.classList.remove('light-mode');
     }
     if (document.documentElement) {
-        if (isLight) {
-            document.documentElement.classList.add('light-mode');
-        } else {
-            document.documentElement.classList.remove('light-mode');
-        }
+        if (isLight) document.documentElement.classList.add('light-mode');
+        else document.documentElement.classList.remove('light-mode');
     }
 
     const btn = document.getElementById('themeToggleBtn');
@@ -407,24 +724,9 @@ function toggleTheme() {
     }
 }
 
-// Auto-apply theme immediately on script load to prevent white flash
-(function () {
-    try {
-        const saved = localStorage.getItem('dtu_theme');
-        if (saved === 'light') {
-            document.documentElement.classList.add('light-mode');
-            if (document.body) {
-                document.body.classList.add('light-mode');
-            } else {
-                document.addEventListener('DOMContentLoaded', function () {
-                    document.body.classList.add('light-mode');
-                });
-            }
-        }
-    } catch (e) {}
-})();
-
-// Render modern DTU footer with floating SOS ambulance button
+// -----------------------------------------------------------------------------
+// Footer & Supabase Configuration Modal Mount
+// -----------------------------------------------------------------------------
 function loadFooter() {
     const footerContainer = document.getElementById("footer-mount");
     if (!footerContainer) return;
@@ -435,6 +737,48 @@ function loadFooter() {
         <span>⚠️</span> Ambulance - 102
     </a>
 
+    <!-- Supabase Connection Config Modal -->
+    <div id="supabaseModalBackdrop" class="supabase-modal-backdrop" onclick="if(event.target === this) closeSupabaseConfigModal();">
+        <div class="supabase-modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                <div>
+                    <h3 style="font-size:1.25rem; font-weight:800; color:#ffffff; margin:0;">
+                        ⚙️ Supabase Backend Settings
+                    </h3>
+                    <p style="font-size:0.84rem; color:var(--text-muted); margin-top:4px;">
+                        Connect your live Supabase project to the DTU Health Center portal.
+                    </p>
+                </div>
+                <button type="button" onclick="closeSupabaseConfigModal()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer; line-height:1;">&times;</button>
+            </div>
+
+            <form onsubmit="saveSupabaseConfigFromModal(event)">
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label class="form-label" style="font-size:0.85rem; font-weight:600; color:#fff;">Supabase Project URL / ID</label>
+                    <input type="text" id="modalSupabaseUrl" class="form-input" placeholder="e.g. zifgkxkrpimyxjaqjvwd or https://zifgkxkrpimyxjaqjvwd.supabase.co" required>
+                    <small style="color:var(--text-subtle); font-size:0.75rem;">Found in your Supabase Dashboard under Project Settings &gt; API</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom:18px;">
+                    <label class="form-label" style="font-size:0.85rem; font-weight:600; color:#fff;">Supabase Anon / Publishable Key</label>
+                    <input type="text" id="modalSupabaseAnonKey" class="form-input" placeholder="sb_publishable_... or eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+                    <small style="color:#ff6b6b; font-size:0.75rem; display:block; margin-top:3px;">
+                        🛡️ Strict Security: Use ONLY the anon/publishable key. NEVER expose your service_role secret key in frontend code.
+                    </small>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button type="submit" class="btn btn-pill-primary" style="flex:2; padding:10px;">
+                        Save &amp; Connect Live
+                    </button>
+                    <button type="button" onclick="resetSupabaseConfigFromModal()" class="btn btn-pill-glass" style="flex:1; padding:10px; border-color:rgba(230,57,70,0.4); color:#ff6b6b;">
+                        Reset / Demo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <footer class="footer">
         <div class="container" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; text-align:left;">
             <div style="max-width:340px;">
@@ -443,12 +787,12 @@ function loadFooter() {
                     <strong style="color:#ffffff; font-size:1.05rem;">Health Center</strong>
                 </div>
                 <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
-                    Delhi Technological University · Shahbad Daulatpur, Main Bawana Road, Delhi-110042. 
-                    Providing round-the-clock primary clinical aid and emergency response.
+                    Delhi Technological University · Shahbad Daulatpur, Main Bawana Road, Delhi-110042.<br>
+                    Featuring a full-fledged 20-bed hospital block, day &amp; evening medical practitioners, and weekly visiting specialized doctors (ENT, eye, dental, nutrition).
                 </p>
             </div>
             <div>
-                <h4 style="color:#ffffff; font-size:0.95rem; margin-bottom:12px;">Portals & Services</h4>
+                <h4 style="color:#ffffff; font-size:0.95rem; margin-bottom:12px;">Portals &amp; Services</h4>
                 <ul style="list-style:none; font-size:0.85rem; line-height:2;">
                     <li><a href="student-dashboard.html">Student OPD Portal</a></li>
                     <li><a href="doctor-dashboard.html">Doctor Clinical Portal</a></li>
@@ -456,7 +800,7 @@ function loadFooter() {
                 </ul>
             </div>
             <div>
-                <h4 style="color:#ffffff; font-size:0.95rem; margin-bottom:12px;">Emergency & OPD</h4>
+                <h4 style="color:#ffffff; font-size:0.95rem; margin-bottom:12px;">Emergency &amp; OPD</h4>
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">📞 Health Center: <strong style="color:#fff;">011-27871018</strong></p>
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">🚑 Ambulance: <strong style="color:#e63946;">102 / 112</strong></p>
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">⏰ OPD Hours: <span style="color:#fff;">Mon–Sat 9:00 AM – 5:00 PM</span></p>
@@ -470,7 +814,65 @@ function loadFooter() {
     `;
 }
 
+function openSupabaseConfigModal() {
+    const modal = document.getElementById('supabaseModalBackdrop');
+    if (!modal) return;
+    const urlInput = document.getElementById('modalSupabaseUrl');
+    const keyInput = document.getElementById('modalSupabaseAnonKey');
+
+    if (window.DTU_SUPABASE) {
+        const currentUrl = window.DTU_SUPABASE.getUrl();
+        const currentKey = window.DTU_SUPABASE.getAnonKey();
+        if (currentUrl && !currentUrl.includes('your-project-id')) urlInput.value = currentUrl;
+        if (currentKey && !currentKey.includes('your-anon')) keyInput.value = currentKey;
+    }
+
+    modal.style.display = 'flex';
+}
+
+function closeSupabaseConfigModal() {
+    const modal = document.getElementById('supabaseModalBackdrop');
+    if (modal) modal.style.display = 'none';
+}
+
+function saveSupabaseConfigFromModal(event) {
+    event.preventDefault();
+    let url = document.getElementById('modalSupabaseUrl').value.trim();
+    const key = document.getElementById('modalSupabaseAnonKey').value.trim();
+
+    if (!url.startsWith('https://') && !url.startsWith('http://')) {
+        if (!url.includes('.')) {
+            url = `https://${url}.supabase.co`;
+        } else {
+            url = `https://${url}`;
+        }
+    }
+
+    if (!url.startsWith('https://')) {
+        alert('Invalid Supabase Project URL. Must start with https://');
+        return;
+    }
+    if (key.length < 20) {
+        alert('Invalid Supabase Publishable / Anon Key.');
+        return;
+    }
+
+    if (window.DTU_SUPABASE && window.DTU_SUPABASE.saveCredentials) {
+        window.DTU_SUPABASE.saveCredentials(url, key);
+    }
+}
+
+function resetSupabaseConfigFromModal() {
+    if (confirm('Reset to demo offline mode? This will clear locally entered Supabase credentials.')) {
+        if (window.DTU_SUPABASE && window.DTU_SUPABASE.clearCredentials) {
+            window.DTU_SUPABASE.clearCredentials();
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
 // Master page initialization
+// -----------------------------------------------------------------------------
 function initPage(role) {
     if (typeof initData === "function") {
         initData();
@@ -479,6 +881,7 @@ function initPage(role) {
     loadNavbar(role);
     loadFooter();
     applyTheme(getSavedTheme());
+    initSupabaseRealtimeSync();
 
     return user;
 }

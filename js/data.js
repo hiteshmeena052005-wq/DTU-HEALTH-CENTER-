@@ -1,87 +1,190 @@
+// =============================================================================
 // DTU Health Center - Core Datasets & State Store
-// Decoupled frontend mock datasets for UI prototyping and testing
+// Official OPD Schedule - Main Campus Healthcare Datasets
+// =============================================================================
 
 const departments = [
-    { id: 1, name: "General Medicine (OPD)", icon: "🏥" },
-    { id: 2, name: "Dental", icon: "🦷" },
-    { id: 3, name: "Orthopedic", icon: "🦴" },
-    { id: 4, name: "Dermatology", icon: "🧴" },
-    { id: 5, name: "Psychiatry & Counseling", icon: "🧠" },
-    { id: 6, name: "ENT", icon: "👂" },
-    { id: 7, name: "Ophthalmology", icon: "👁️" },
-    { id: 8, name: "Gynecology", icon: "🩺" },
-    { id: 9, name: "Physiotherapy", icon: "💪" },
-    { id: 10, name: "Pathology & Lab", icon: "🔬" }
+    { id: 1, name: "General Medicine (OPD)", icon: "🩺", desc: "Outpatient clinical consultation and seasonal ailments." },
+    { id: 2, name: "General Medicine (Evening OPD)", icon: "🌙", desc: "Evening primary healthcare and student consultations." },
+    { id: 3, name: "Ophthalmology (Eye Specialist)", icon: "👁️", desc: "Eye care, vision checks, and computer vision strain." },
+    { id: 4, name: "Dental Care", icon: "🦷", desc: "Dental screening, scaling, toothache and oral hygiene." },
+    { id: 5, name: "Sports Medicine & Physiotherapy", icon: "🏃", desc: "Sports injuries, physical rehabilitation and MPT care." },
+    { id: 6, name: "Orthopedic", icon: "🦴", desc: "Joint pain, bone alignment, fractures and sprains." },
+    { id: 7, name: "Psychiatry", icon: "🧠", desc: "Mental health assessment, depression and psychiatric care." },
+    { id: 8, name: "Gynecology", icon: "👩‍⚕️", desc: "Women's wellness clinic, menstrual and hormonal health." },
+    { id: 9, name: "Clinical Psychology & Counseling", icon: "💬", desc: "Exam stress, psychotherapy and student counseling." },
+    { id: 10, name: "Pathology & Lab Diagnostics", icon: "🔬", desc: "Diagnostic lab tests, blood investigations and reports." }
 ];
 
+// Official DTU Health Center Main Campus OPD Doctors (From Official Schedule)
 const doctors = [
     {
         id: 1,
-        name: "Dr. Rajesh Sharma",
+        uuid: "d0000000-0000-0000-0000-000000000001",
+        name: "Dr. Ravi Bansal",
         department: "General Medicine (OPD)",
-        qualification: "MBBS, MD (Medicine)",
-        experience: "12+ Years",
+        expertise: "General Physician",
+        qualification: "MBBS, MD (General Medicine)",
+        days: "Mon to Sat",
+        timings: "1:00 PM to 5:00 PM",
+        experience: "15+ Years",
         photo: "👨‍⚕️",
-        email: "dr.sharma@dtu.ac.in",
-        phone: "+91 9811223344",
+        email: "dr.ravibansal@dtu.ac.in",
+        phone: "+91 9811223301",
         available: true
     },
     {
         id: 2,
-        name: "Dr. Priya Verma",
-        department: "Dental",
-        qualification: "BDS, MDS",
-        experience: "8+ Years",
-        photo: "👩‍⚕️",
-        email: "dr.priya@dtu.ac.in",
-        phone: "+91 9811223345",
+        uuid: "d0000000-0000-0000-0000-000000000002",
+        name: "Dr. Rajesh Singhai",
+        department: "General Medicine (OPD)",
+        expertise: "General Physician",
+        qualification: "MBBS, MD",
+        days: "Mon to Sat",
+        timings: "9:00 AM to 12:00 PM",
+        experience: "14+ Years",
+        photo: "👨‍⚕️",
+        email: "dr.rajeshsinghai@dtu.ac.in",
+        phone: "+91 9811223302",
         available: true
     },
     {
         id: 3,
-        name: "Dr. Amit Kumar",
-        department: "Orthopedic",
-        qualification: "MBBS, MS (Ortho)",
-        experience: "15+ Years",
-        photo: "👨‍⚕️",
-        email: "dr.amit@dtu.ac.in",
-        phone: "+91 9811223346",
+        uuid: "d0000000-0000-0000-0000-000000000003",
+        name: "Dr. Arpana Bansal",
+        department: "Ophthalmology (Eye Specialist)",
+        expertise: "Eye Specialist",
+        qualification: "MBBS, MS (Ophthalmology)",
+        days: "Monday, Wednesday & Friday",
+        timings: "1:00 PM to 3:00 PM",
+        experience: "11+ Years",
+        photo: "👩‍⚕️",
+        email: "dr.arpanabansal@dtu.ac.in",
+        phone: "+91 9811223303",
         available: true
     },
     {
         id: 4,
-        name: "Dr. Sunita Gupta",
-        department: "Psychiatry & Counseling",
-        qualification: "MD (Psychiatry), DPM",
-        experience: "10+ Years",
-        photo: "👩‍⚕️",
-        email: "dr.sunita@dtu.ac.in",
-        phone: "+91 9811223347",
+        uuid: "d0000000-0000-0000-0000-000000000004",
+        name: "Dr. Bharat Bhushan Sethi",
+        department: "Dental Care",
+        expertise: "Dentist",
+        qualification: "BDS, MDS (Dental Surgery)",
+        days: "Monday, Wednesday & Friday",
+        timings: "1:00 PM to 3:00 PM",
+        experience: "12+ Years",
+        photo: "👨‍⚕️",
+        email: "dr.bharatsethi@dtu.ac.in",
+        phone: "+91 9811223304",
         available: true
     },
     {
         id: 5,
-        name: "Dr. Vikram Singh",
-        department: "Dermatology",
-        qualification: "MBBS, DVD, MD",
-        experience: "9+ Years",
+        uuid: "d0000000-0000-0000-0000-000000000005",
+        name: "Dr. Subodh Mor",
+        department: "Sports Medicine & Physiotherapy",
+        expertise: "Sports Medicine cum Physiotherapist(MPT)",
+        qualification: "BPT, MPT (Sports Medicine)",
+        days: "Monday to Saturday",
+        timings: "1:00 PM to 4:00 PM",
+        experience: "10+ Years",
         photo: "👨‍⚕️",
-        email: "dr.vikram@dtu.ac.in",
-        phone: "+91 9811223348",
+        email: "dr.subodhmor@dtu.ac.in",
+        phone: "+91 9811223305",
         available: true
     },
     {
         id: 6,
-        name: "Dr. Neha Agarwal",
-        department: "ENT",
-        qualification: "MBBS, MS (ENT)",
+        uuid: "d0000000-0000-0000-0000-000000000006",
+        name: "Dr. Dinesh Bansal",
+        department: "Orthopedic",
+        expertise: "Orthopedician",
+        qualification: "MBBS, MS (Orthopedics)",
+        days: "Monday, Wednesday & Friday",
+        timings: "1:00 PM to 3:00 PM",
+        experience: "16+ Years",
+        photo: "👨‍⚕️",
+        email: "dr.dineshbansal@dtu.ac.in",
+        phone: "+91 9811223306",
+        available: true
+    },
+    {
+        id: 7,
+        uuid: "d0000000-0000-0000-0000-000000000007",
+        name: "Dr. Gaurav Gupta",
+        department: "Psychiatry",
+        expertise: "Psychiatrist",
+        qualification: "MBBS, MD (Psychiatry)",
+        days: "Tuesday and Thursday",
+        timings: "1:00 PM to 4:00 PM",
+        experience: "9+ Years",
+        photo: "👨‍⚕️",
+        email: "dr.gauravgupta@dtu.ac.in",
+        phone: "+91 9811223307",
+        available: true
+    },
+    {
+        id: 8,
+        uuid: "d0000000-0000-0000-0000-000000000008",
+        name: "Dr. Nisha Jha",
+        department: "Gynecology",
+        expertise: "Gynaecologist",
+        qualification: "MBBS, MS, DGO",
+        days: "Tuesday and Thursday",
+        timings: "1:00 PM to 4:00 PM",
+        experience: "13+ Years",
+        photo: "👩‍⚕️",
+        email: "dr.nishajha@dtu.ac.in",
+        phone: "+91 9811223308",
+        available: true
+    },
+    {
+        id: 9,
+        uuid: "d0000000-0000-0000-0000-000000000009",
+        name: "Dr. Mohit Gulia",
+        department: "General Medicine (Evening OPD)",
+        expertise: "General Physician",
+        qualification: "MBBS, DNB",
+        days: "Monday to Saturday",
+        timings: "7:00 PM to 10:00 PM",
+        experience: "8+ Years",
+        photo: "👨‍⚕️",
+        email: "dr.mohitgulia@dtu.ac.in",
+        phone: "+91 9811223309",
+        available: true
+    },
+    {
+        id: 10,
+        uuid: "d0000000-0000-0000-0000-000000000010",
+        name: "Dr. Aditi Bansal",
+        department: "Clinical Psychology & Counseling",
+        expertise: "Clinical Psychologist",
+        qualification: "M.Phil, Ph.D. (Clinical Psychology)",
+        days: "Tue, Thu and Saturday",
+        timings: "12:00 PM to 4:00 PM",
         experience: "7+ Years",
         photo: "👩‍⚕️",
-        email: "dr.neha@dtu.ac.in",
-        phone: "+91 9811223349",
+        email: "dr.aditibansal@dtu.ac.in",
+        phone: "+91 9811223310",
         available: true
     }
 ];
+
+// Helper: Safely resolve Doctor Supabase UUID by ID, Name, or Email
+function getDoctorUUID(idOrName) {
+    if (idOrName && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(idOrName))) {
+        return String(idOrName);
+    }
+    if (!idOrName) return "d0000000-0000-0000-0000-000000000001";
+    const str = String(idOrName).toLowerCase().trim();
+    const doc = doctors.find(d => 
+        (d.id && String(d.id) === str) ||
+        (d.uuid && d.uuid.toLowerCase() === str) ||
+        (d.name && (d.name.toLowerCase().includes(str) || str.includes(d.name.toLowerCase()))) ||
+        (d.email && d.email.toLowerCase() === str)
+    );
+    return doc ? doc.uuid : "d0000000-0000-0000-0000-000000000001";
+}
 
 const sampleStudents = [
     {
@@ -118,7 +221,7 @@ const healthTips = [
         id: 1,
         title: "Beat the Exam Season Stress",
         content: "Practice deep breathing and 7 hours of consistent sleep during exams. Visit DTU Counseling center if feeling overwhelmed.",
-        author: "Dr. Sunita Gupta (Psychiatry)",
+        author: "Dr. Aditi Bansal (Clinical Psychologist)",
         date: "14 Nov 2026",
         category: "Mental Health"
     },
@@ -126,16 +229,16 @@ const healthTips = [
         id: 2,
         title: "Preventing Seasonal Viral & Flu on Campus",
         content: "Wash hands regularly before eating at college canteen, drink clean water and avoid sudden exposure to severe air pollution without masks.",
-        author: "Dr. Rajesh Sharma (General Medicine)",
-        date: "12 Nov 2026",
+        author: "Dr. Ravi Bansal (General Physician)",
+        date: "11 Nov 2026",
         category: "General Wellness"
     },
     {
         id: 3,
         title: "Posture Health for Coding & Long Lab Hours",
         content: "Keep your laptop screen at eye level and take a 5-minute walking stretch every 45 minutes to protect your cervical spine and lower back.",
-        author: "Dr. Amit Kumar (Orthopedic)",
-        date: "09 Nov 2026",
+        author: "Dr. Subodh Mor (Sports Medicine / MPT)",
+        date: "08 Nov 2026",
         category: "Ergonomics"
     },
     {
@@ -156,42 +259,157 @@ const emergencyContacts = [
     { name: "Rohini Sector 16 Police Station", phone: "100 / 112", available: "24/7", location: "Rohini, Delhi" }
 ];
 
+// Active OPD slots matching the official DTU Health Center schedule
 const sampleSlots = [
     {
         id: 1,
-        doctorId: 1,
-        doctorName: "Dr. Rajesh Sharma",
+        doctorId: "d0000000-0000-0000-0000-000000000002",
+        doctorNumericId: 2,
+        doctorName: "Dr. Rajesh Singhai",
         department: "General Medicine (OPD)",
-        date: "2026-11-18",
-        startTime: "10:00 AM",
-        endTime: "01:00 PM",
+        date: "2026-11-23",
+        startTime: "09:00 AM",
+        endTime: "12:00 PM",
+        startTimeRaw: "09:00:00",
+        endTimeRaw: "12:00:00",
         maxLimit: 10,
         bookedCount: 1,
-        note: "OPD physical checkup slots available for students with fever/cough"
+        note: "Morning General OPD Consultation (Mon to Sat 9 AM - 12 PM)"
     },
     {
         id: 2,
-        doctorId: 2,
-        doctorName: "Dr. Priya Verma",
-        department: "Dental",
-        date: "2026-11-19",
-        startTime: "11:00 AM",
-        endTime: "02:00 PM",
+        doctorId: "d0000000-0000-0000-0000-000000000001",
+        doctorNumericId: 1,
+        doctorName: "Dr. Ravi Bansal",
+        department: "General Medicine (OPD)",
+        date: "2026-11-23",
+        startTime: "01:00 PM",
+        endTime: "05:00 PM",
+        startTimeRaw: "13:00:00",
+        endTimeRaw: "17:00:00",
         maxLimit: 10,
-        bookedCount: 0,
-        note: "Dental examination & cavity screening"
+        bookedCount: 1,
+        note: "Afternoon General OPD (Mon to Sat 1 PM - 5 PM)"
     },
     {
         id: 3,
-        doctorId: 4,
-        doctorName: "Dr. Sunita Gupta",
-        department: "Psychiatry & Counseling",
-        date: "2026-11-20",
-        startTime: "02:00 PM",
-        endTime: "05:00 PM",
+        doctorId: "d0000000-0000-0000-0000-000000000003",
+        doctorNumericId: 3,
+        doctorName: "Dr. Arpana Bansal",
+        department: "Ophthalmology (Eye Specialist)",
+        date: "2026-11-24",
+        startTime: "01:00 PM",
+        endTime: "03:00 PM",
+        startTimeRaw: "13:00:00",
+        endTimeRaw: "15:00:00",
         maxLimit: 10,
         bookedCount: 0,
-        note: "One-on-one stress and anxiety management session"
+        note: "Eye testing, vision screening & computer strain (Mon, Wed, Fri 1 PM - 3 PM)"
+    },
+    {
+        id: 4,
+        doctorId: "d0000000-0000-0000-0000-000000000004",
+        doctorNumericId: 4,
+        doctorName: "Dr. Bharat Bhushan Sethi",
+        department: "Dental Care",
+        date: "2026-11-24",
+        startTime: "01:00 PM",
+        endTime: "03:00 PM",
+        startTimeRaw: "13:00:00",
+        endTimeRaw: "15:00:00",
+        maxLimit: 10,
+        bookedCount: 0,
+        note: "Dental examination, scaling & cavity treatment (Mon, Wed, Fri 1 PM - 3 PM)"
+    },
+    {
+        id: 5,
+        doctorId: "d0000000-0000-0000-0000-000000000005",
+        doctorNumericId: 5,
+        doctorName: "Dr. Subodh Mor",
+        department: "Sports Medicine & Physiotherapy",
+        date: "2026-11-24",
+        startTime: "01:00 PM",
+        endTime: "04:00 PM",
+        startTimeRaw: "13:00:00",
+        endTimeRaw: "16:00:00",
+        maxLimit: 10,
+        bookedCount: 0,
+        note: "Sports injuries, physical rehabilitation & joint therapy (Mon to Sat 1 PM - 4 PM)"
+    },
+    {
+        id: 6,
+        doctorId: "d0000000-0000-0000-0000-000000000006",
+        doctorNumericId: 6,
+        doctorName: "Dr. Dinesh Bansal",
+        department: "Orthopedic",
+        date: "2026-11-25",
+        startTime: "01:00 PM",
+        endTime: "03:00 PM",
+        startTimeRaw: "13:00:00",
+        endTimeRaw: "15:00:00",
+        maxLimit: 10,
+        bookedCount: 0,
+        note: "Orthopedic screening, sprains & bone alignment (Mon, Wed, Fri 1 PM - 3 PM)"
+    },
+    {
+        id: 7,
+        doctorId: "d0000000-0000-0000-0000-000000000007",
+        doctorNumericId: 7,
+        doctorName: "Dr. Gaurav Gupta",
+        department: "Psychiatry",
+        date: "2026-11-25",
+        startTime: "01:00 PM",
+        endTime: "04:00 PM",
+        startTimeRaw: "13:00:00",
+        endTimeRaw: "16:00:00",
+        maxLimit: 10,
+        bookedCount: 0,
+        note: "Psychiatric consultation & mental health care (Tue & Thu 1 PM - 4 PM)"
+    },
+    {
+        id: 8,
+        doctorId: "d0000000-0000-0000-0000-000000000008",
+        doctorNumericId: 8,
+        doctorName: "Dr. Nisha Jha",
+        department: "Gynecology",
+        date: "2026-11-25",
+        startTime: "01:00 PM",
+        endTime: "04:00 PM",
+        startTimeRaw: "13:00:00",
+        endTimeRaw: "16:00:00",
+        maxLimit: 10,
+        bookedCount: 0,
+        note: "Women's wellness & gynecological consultation (Tue & Thu 1 PM - 4 PM)"
+    },
+    {
+        id: 9,
+        doctorId: "d0000000-0000-0000-0000-000000000010",
+        doctorNumericId: 10,
+        doctorName: "Dr. Aditi Bansal",
+        department: "Clinical Psychology & Counseling",
+        date: "2026-11-26",
+        startTime: "12:00 PM",
+        endTime: "04:00 PM",
+        startTimeRaw: "12:00:00",
+        endTimeRaw: "16:00:00",
+        maxLimit: 10,
+        bookedCount: 0,
+        note: "Exam stress, psychotherapy & student counseling (Tue, Thu, Sat 12 PM - 4 PM)"
+    },
+    {
+        id: 10,
+        doctorId: "d0000000-0000-0000-0000-000000000009",
+        doctorNumericId: 9,
+        doctorName: "Dr. Mohit Gulia",
+        department: "General Medicine (Evening OPD)",
+        date: "2026-11-26",
+        startTime: "07:00 PM",
+        endTime: "10:00 PM",
+        startTimeRaw: "19:00:00",
+        endTimeRaw: "22:00:00",
+        maxLimit: 10,
+        bookedCount: 0,
+        note: "Evening General OPD consultation for hostelers (Mon to Sat 7 PM - 10 PM)"
     }
 ];
 
@@ -200,14 +418,14 @@ const sampleAppointments = [
         id: "APT-101",
         studentName: "Rahul Meena",
         rollNo: "2K22/CO/101",
-        doctorName: "Dr. Rajesh Sharma",
+        doctorName: "Dr. Ravi Bansal",
         department: "General Medicine (OPD)",
-        slotId: 1,
-        date: "2026-11-18",
-        time: "10:00 AM - 01:00 PM",
+        slotId: 2,
+        date: "2026-11-23",
+        time: "01:00 PM - 05:00 PM",
         reason: "Seasonal viral fever and persistent dry cough",
         status: "Confirmed",
-        createdAt: "16 Nov 2026"
+        createdAt: "21 Nov 2026"
     }
 ];
 
@@ -216,9 +434,9 @@ const samplePrescriptions = [
         id: "RX-101",
         studentName: "Rahul Meena",
         studentEmail: "rahul.22co101@dtu.ac.in",
-        doctorName: "Dr. Rajesh Sharma",
-        department: "General Medicine",
-        date: "16 Nov 2026",
+        doctorName: "Dr. Ravi Bansal",
+        department: "General Medicine (OPD)",
+        date: "21 Nov 2026",
         diagnosis: "Acute viral nasopharyngitis with mild pyrexia",
         medicines: [
             { name: "Paracetamol 650mg", dosage: "1 tab TDS after meals", duration: "3 Days" },
@@ -235,14 +453,14 @@ const sampleReferrals = [
         id: "REF-101",
         studentName: "Rahul Meena",
         rollNo: "2K22/CO/101",
-        fromDoctor: "Dr. Rajesh Sharma",
+        fromDoctor: "Dr. Ravi Bansal",
         fromDept: "General Medicine (OPD)",
-        toDoctor: "Dr. Amit Kumar",
+        toDoctor: "Dr. Dinesh Bansal",
         toDept: "Orthopedic",
         priority: "Routine OPD Referral",
         reason: "Complaining of persistent lower back stiffness after prolonged coding sessions.",
         tests: "Lumbosacral spine posture evaluation",
-        date: "12 Nov 2026",
+        date: "20 Nov 2026",
         status: "Consultation Completed"
     }
 ];
@@ -251,15 +469,15 @@ const sampleNotices = [
     {
         id: 1,
         title: "Flu Vaccination Drive at Health Center",
-        content: "Annual seasonal influenza vaccination drive will be conducted on 20th Nov from 10:00 AM to 4:00 PM. All students are advised to bring DTU ID.",
-        doctorName: "Dr. Rajesh Sharma",
+        content: "Annual seasonal influenza vaccination drive will be conducted from 10:00 AM to 4:00 PM. All students are advised to bring DTU ID.",
+        doctorName: "Dr. Ravi Bansal",
         department: "General Medicine",
-        date: "16 Nov 2026",
+        date: "21 Nov 2026",
         type: "announcement"
     }
 ];
 
-// Client State Storage Adapter (Decoupled store for client-side state across pages)
+// Client State Storage Adapter
 const CLIENT_STORAGE_KEY = 'dtu_client_store';
 
 function loadClientStore() {
@@ -297,7 +515,19 @@ function initData(forceReset = false) {
     if (!forceReset) {
         const stored = loadClientStore();
         if (stored && Array.isArray(stored.appointments)) {
+            // Merge official doctors
+            stored.doctors = doctors;
+            // If stored slots still contain outdated mock doctors (Dr. Rajesh Sharma, Dr. Priya Verma, Dr. Sunita Gupta), refresh with official 10-doctor slots
+            const hasLegacySlots = stored.slots && stored.slots.some(s => 
+                s.doctorName === "Dr. Rajesh Sharma" || 
+                s.doctorName === "Dr. Priya Verma" || 
+                s.doctorName === "Dr. Sunita Gupta"
+            );
+            if (hasLegacySlots || !stored.slots || stored.slots.length < 5) {
+                stored.slots = JSON.parse(JSON.stringify(sampleSlots));
+            }
             window._dtuMemoryDB = stored;
+            saveClientStore(window._dtuMemoryDB);
             return;
         }
     }
