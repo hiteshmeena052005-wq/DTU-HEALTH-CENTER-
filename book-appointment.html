@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Book Doctor Appointment - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=2.2">
+    <link rel="stylesheet" href="css/style.css?v=3.0">
 </head>
 <body onload="initBookingPage()">
 
@@ -84,7 +84,7 @@
             </div>
 
             <div class="card-body">
-                <div id="slotsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
+                <div id="slotsGrid" class="slots-booking-grid">
                     <!-- Loaded dynamically -->
                 </div>
             </div>
@@ -247,8 +247,8 @@
                 const pct = Math.min(100, Math.round((booked / max) * 100));
 
                 return `
-                <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; border-color: ${isFull ? 'rgba(230, 57, 70, 0.4)' : 'var(--border-glass)'};">
-                    <div style="padding: 22px 22px 14px;">
+                <div class="card slot-booking-card" style="display: flex; flex-direction: column; justify-content: space-between; width: 100%; max-width: 100%; box-sizing: border-box; border-color: ${isFull ? 'rgba(230, 57, 70, 0.4)' : 'var(--border-glass)'};">
+                    <div class="slot-card-body-top">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
                             <h4 style="color: #ffffff; font-size: 1.15rem; font-weight: 700;">${slot.doctorName}</h4>
                             <span class="pill-tag ${isFull ? 'badge-danger' : 'badge-success'}">
@@ -267,7 +267,7 @@
                         </p>
                     </div>
 
-                    <div style="padding: 0 22px 22px;">
+                    <div class="slot-card-body-bottom">
                         <div style="margin-bottom: 14px;">
                             <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px;">
                                 <span style="color: var(--text-muted);">Slots filled: <strong style="color: #fff;">${booked} / ${max}</strong></span>

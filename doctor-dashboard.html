@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Doctor & Admin Portal - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=2.2">
+    <link rel="stylesheet" href="css/style.css?v=3.0">
 </head>
 <body onload="initDoctorDashboard()">
 
@@ -436,14 +436,14 @@
 
                 return `
                 <div class="active-slot-pill">
-                    <div style="flex:1;">
+                    <div style="flex:1; min-width:0;">
                         <div style="font-weight:700; color:#ffffff; font-size:0.92rem;">${s.date}</div>
                         <div style="font-size:0.8rem; color:var(--text-muted); margin-top:1px;">${s.startTime} - ${s.endTime}</div>
                         <div class="slot-progress-wrap" style="max-width:180px;">
                             <div class="slot-progress-bar" style="width:${pct}%;"></div>
                         </div>
                     </div>
-                    <div style="text-align:right;">
+                    <div style="text-align:right; flex-shrink:0;">
                         <span class="pill-tag ${isFull ? 'badge-danger' : 'badge-success'}" style="margin-bottom:4px; display:inline-block;">
                             ${isFull ? 'Full' : 'Open'}
                         </span>
