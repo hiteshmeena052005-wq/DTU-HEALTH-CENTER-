@@ -186,6 +186,55 @@ a:hover {
     gap: 10px;
 }
 
+.navbar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-mobile-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-hamburger-btn {
+    display: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-glass);
+    color: var(--text-white);
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+    line-height: 1;
+}
+
+.nav-hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: var(--border-glass-light);
+    color: #ffffff;
+}
+
+.mobile-only-control {
+    display: none !important;
+}
+
+.desktop-only-control {
+    display: flex !important;
+}
+
+.nav-collapse-menu {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
 .theme-toggle-btn {
     width: 36px;
     height: 36px;
@@ -1134,7 +1183,7 @@ select option:disabled {
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN (MOBILE-FIRST SYSTEM & TOUCH OPTIMIZATIONS)
    ========================================================================== */
 @media (max-width: 992px) {
     .stats-grid, .stats-grid-modern, .tools-grid-modern {
@@ -1148,27 +1197,307 @@ select option:disabled {
     }
 }
 
-@media (max-width: 640px) {
-    .stats-grid, .stats-grid-modern, .tools-grid-modern {
-        grid-template-columns: 1fr;
-    }
+/* Tablet & Mobile Nav Breakpoint */
+@media (max-width: 868px) {
     .nav-wrapper {
-        padding: 10px 10px 0;
+        padding: 10px 12px 0;
     }
+
     .navbar {
-        border-radius: 20px;
         flex-direction: column;
+        align-items: stretch;
+        border-radius: 22px;
+        padding: 10px 16px;
+        gap: 0;
+    }
+
+    .navbar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .nav-hamburger-btn {
+        display: inline-flex !important;
+    }
+
+    .mobile-only-control {
+        display: flex !important;
+    }
+
+    .desktop-only-control {
+        display: none !important;
+    }
+
+    .nav-collapse-menu {
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-glass);
+        gap: 12px;
+        animation: mobileNavSlide 0.22s ease-out;
+    }
+
+    .navbar.nav-expanded .nav-collapse-menu {
+        display: flex;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 5px;
+    }
+
+    .nav-links li {
+        width: 100%;
+    }
+
+    .nav-link {
+        display: flex;
+        width: 100%;
+        padding: 11px 16px;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .nav-link.active {
+        background: rgba(230, 57, 70, 0.22);
+        border: 1px solid rgba(230, 57, 70, 0.45);
+        color: #ffffff;
+    }
+
+    .nav-right {
+        width: 100%;
+        margin-top: 4px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--border-glass);
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .user-pill {
+        width: 100%;
+        justify-content: space-between;
+        padding: 8px 14px;
+    }
+}
+
+@keyframes mobileNavSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Phones (Portraits & Small Screens) */
+@media (max-width: 640px) {
+    /* Container & Spacing */
+    .container, .section {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    /* Hero Banner */
+    .hero {
+        padding: 36px 16px 28px;
+        border-radius: 20px;
+        text-align: center;
+    }
+
+    .hero-title-massive {
+        font-size: 1.8rem;
+        line-height: 1.25;
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-bottom: 20px;
+    }
+
+    .hero-btn-group {
+        flex-direction: column;
+        width: 100%;
         gap: 10px;
     }
+
+    .hero-btn-group .btn {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+        padding: 12px 18px;
+        min-height: 46px;
+    }
+
+    /* Grids to Single Column */
+    .stats-grid, .stats-grid-modern, .tools-grid-modern {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    /* Touch Friendly Form Inputs (Prevents iOS Zoom-in) */
+    input, select, textarea, .form-input, .form-textarea {
+        font-size: 16px !important;
+        min-height: 44px;
+        box-sizing: border-box;
+    }
+
+    /* Convert 2-col inline form rows to stacked single-col on mobile */
+    [style*="grid-template-columns: 1fr 1fr"],
+    [style*="grid-template-columns:1fr 1fr"],
+    [style*="grid-template-columns: 2fr 2fr 1fr"],
+    [style*="grid-template-columns:2fr 2fr 1fr"],
+    [style*="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))"],
+    [style*="grid-template-columns:repeat(auto-fill, minmax(320px, 1fr))"] {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Doctor Live Queue Cards */
     .patient-queue-card {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        gap: 12px;
+        padding: 14px;
     }
+
+    .patient-card-left, .patient-card-mid, .patient-card-badges, .patient-card-actions {
+        width: 100%;
+    }
+
+    .patient-card-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .pill-btn-call, .pill-btn-refer, .pill-btn-done {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        padding: 10px 4px;
+        font-size: 0.88rem;
+        min-height: 40px;
+    }
+
+    /* Active Doctor Slots */
+    .active-slot-pill {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px 14px;
+    }
+
+    /* Table Touch Swipe */
+    .table-responsive, .card-body {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table {
+        min-width: 520px;
+    }
+
+    /* Floating Ambulance 102 Pill */
     .floating-ambulance-btn {
-        bottom: 14px;
+        bottom: 16px;
         left: 14px;
-        padding: 8px 16px;
+        padding: 9px 16px;
         font-size: 0.82rem;
+        border-radius: 28px;
+        z-index: 9999;
+        box-shadow: 0 4px 18px rgba(230, 57, 70, 0.55);
+    }
+
+    /* Auth Cards & Modals */
+    .card[style*="padding: 2.2rem"], .card[style*="padding:2.2rem"] {
+        padding: 1.5rem 1rem !important;
+    }
+
+    .modal-content, .card[id*="Section"] {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        margin: 10px auto !important;
+    }
+
+    .login-tabs {
+        margin-bottom: 14px;
+    }
+
+    .login-tab {
+        padding: 10px 8px;
+        font-size: 0.88rem;
+    }
+
+    /* General Cards */
+    .card {
+        padding: 16px 14px;
+    }
+
+    .card-header {
+        padding: 14px 14px;
+    }
+
+    /* Emergency Contact Buttons */
+    .emergency-dial-btn, .emergency-card a.btn {
+        width: 100% !important;
+        justify-content: center;
+        min-height: 44px;
+    }
+
+    /* Emergency SOS Hero & Pulse Button */
+    .sos-hero-card {
+        padding: 30px 16px !important;
+    }
+    .sos-hero-card h1 {
+        font-size: 1.6rem !important;
+    }
+    .sos-pulse-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        font-size: 0.92rem !important;
+        padding: 14px 16px !important;
+    }
+    .contact-grid {
+        grid-template-columns: 1fr !important;
+    }
+    #slotsGrid, [id="slotsGrid"] {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+    }
+    .modal-content [style*="justify-content:flex-end"] {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+    .modal-content [style*="justify-content:flex-end"] .btn {
+        width: 100% !important;
+        text-align: center !important;
+        justify-content: center !important;
+    }
+}
+
+/* Extra Small Phones (<= 380px) */
+@media (max-width: 380px) {
+    .hero-title-massive {
+        font-size: 1.55rem;
+    }
+    .brand-text {
+        display: none;
+    }
+    .nav-brand {
+        font-size: 1rem;
     }
 }
 

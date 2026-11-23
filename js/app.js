@@ -658,18 +658,26 @@ function loadNavbar(role) {
 
     const navHtml = `
     <div class="nav-wrapper">
-        <nav class="navbar">
-            <a href="${homeUrl}" class="nav-brand">
-                <span class="brand-badge">DTU</span>
-                <span class="brand-text">Health</span>
-                <span class="brand-accent">Center</span>
-            </a>
-            <ul class="nav-links">
-                ${navLinksHtml}
-            </ul>
-            <div class="nav-right" style="display:flex; align-items:center; gap:8px;">
-                <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" title="${themeTitle}" aria-label="${themeTitle}">${themeIcon}</button>
-                ${userRightHtml}
+        <nav class="navbar" id="mainNavbar">
+            <div class="navbar-header">
+                <a href="${homeUrl}" class="nav-brand">
+                    <span class="brand-badge">DTU</span>
+                    <span class="brand-text">Health</span>
+                    <span class="brand-accent">Center</span>
+                </a>
+                <div class="nav-mobile-controls">
+                    <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile-only-control" onclick="toggleTheme()" title="${themeTitle}" aria-label="${themeTitle}">${themeIcon}</button>
+                    <button id="navHamburgerBtn" class="nav-hamburger-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation menu" aria-expanded="false">☰</button>
+                </div>
+            </div>
+            <div class="nav-collapse-menu" id="navCollapseMenu">
+                <ul class="nav-links">
+                    ${navLinksHtml}
+                </ul>
+                <div class="nav-right">
+                    <button id="themeToggleBtn" class="theme-toggle-btn desktop-only-control" onclick="toggleTheme()" title="${themeTitle}" aria-label="${themeTitle}">${themeIcon}</button>
+                    ${userRightHtml}
+                </div>
             </div>
         </nav>
     </div>
@@ -677,6 +685,39 @@ function loadNavbar(role) {
 
     headerContainer.innerHTML = navHtml;
     applyTheme(currentTheme);
+}
+
+// -----------------------------------------------------------------------------
+// Mobile Navigation Drawer Toggle
+// -----------------------------------------------------------------------------
+function toggleMobileNav() {
+    const nav = document.getElementById('mainNavbar') || document.querySelector('.navbar');
+    const btn = document.getElementById('navHamburgerBtn');
+    if (!nav) return;
+
+    nav.classList.toggle('nav-expanded');
+    const isExpanded = nav.classList.contains('nav-expanded');
+    if (btn) {
+        btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        btn.innerHTML = isExpanded ? '✕' : '☰';
+    }
+}
+
+// Auto-close mobile navbar when any nav-link is tapped
+if (typeof document !== 'undefined') {
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('nav-link')) {
+            const nav = document.getElementById('mainNavbar') || document.querySelector('.navbar');
+            if (nav && nav.classList.contains('nav-expanded')) {
+                nav.classList.remove('nav-expanded');
+                const btn = document.getElementById('navHamburgerBtn');
+                if (btn) {
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.innerHTML = '☰';
+                }
+            }
+        }
+    });
 }
 
 // -----------------------------------------------------------------------------
@@ -701,13 +742,13 @@ function applyTheme(theme) {
         else document.documentElement.classList.remove('light-mode');
     }
 
-    const btn = document.getElementById('themeToggleBtn');
-    if (btn) {
+    const toggleBtns = document.querySelectorAll('.theme-toggle-btn');
+    toggleBtns.forEach(btn => {
         btn.innerHTML = isLight ? '☀️' : '🌙';
         const label = isLight ? 'Switch to Dark Glass Mode' : 'Switch to Light Mode';
         btn.title = label;
         btn.setAttribute('aria-label', label);
-    }
+    });
 }
 
 function toggleTheme() {
