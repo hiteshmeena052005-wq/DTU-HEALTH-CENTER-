@@ -1286,6 +1286,11 @@ select option:disabled {
         justify-content: space-between;
         padding: 8px 14px;
     }
+
+    /* Hide floating ambulance button on mobile/tablets so it never blocks cards, inputs or buttons */
+    .floating-ambulance-btn {
+        display: none !important;
+    }
 }
 
 @keyframes mobileNavSlide {
@@ -1409,15 +1414,9 @@ select option:disabled {
         min-width: 520px;
     }
 
-    /* Floating Ambulance 102 Pill */
+    /* Floating Ambulance 102 Pill - hidden on mobile to eliminate overlap */
     .floating-ambulance-btn {
-        bottom: 16px;
-        left: 14px;
-        padding: 9px 16px;
-        font-size: 0.82rem;
-        border-radius: 28px;
-        z-index: 9999;
-        box-shadow: 0 4px 18px rgba(230, 57, 70, 0.55);
+        display: none !important;
     }
 
     /* Auth Cards & Modals */

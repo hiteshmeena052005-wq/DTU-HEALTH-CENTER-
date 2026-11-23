@@ -772,11 +772,23 @@ function loadFooter() {
     const footerContainer = document.getElementById("footer-mount");
     if (!footerContainer) return;
 
-    footerContainer.innerHTML = `
-    <!-- Floating Bottom-Left SOS Ambulance Pill Button -->
+    const currentPage = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const isDoctor = (user && user.role === 'doctor') || 
+                     currentPage.includes('doctor') || 
+                     currentPage.includes('referral') || 
+                     currentPage.includes('medicine');
+
+    // Only render floating ambulance pill on desktop public/student pages (never on doctor clinical dashboard)
+    const floatingAmbulanceHtml = isDoctor ? '' : `
+    <!-- Floating Bottom-Left SOS Ambulance Pill Button (Desktop only, hidden on mobile) -->
     <a href="emergency.html" class="floating-ambulance-btn" title="Immediate 24x7 Ambulance Dispatch">
         <span>⚠️</span> Ambulance - 102
     </a>
+    `;
+
+    footerContainer.innerHTML = `
+    ${floatingAmbulanceHtml}
 
     <!-- Supabase Connection Config Modal -->
     <div id="supabaseModalBackdrop" class="supabase-modal-backdrop" onclick="if(event.target === this) closeSupabaseConfigModal();">
