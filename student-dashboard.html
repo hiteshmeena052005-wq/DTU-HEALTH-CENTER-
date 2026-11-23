@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Student Dashboard - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=3.0">
+    <link rel="stylesheet" href="css/style.css?v=3.1">
 </head>
 <body onload="initStudentDashboard()">
 
@@ -16,7 +16,7 @@
         
         <!-- Header Status Row -->
         <div class="hero-status-row">
-            <span>DTU Roll No: <strong id="studentRollDisplay" style="color: #fff;">Loading...</strong> · Branch: <span id="studentBranchDisplay">Loading...</span></span>
+            <span>DTU Roll No: <strong id="studentRollDisplay" style="color: #fff;">Loading...</strong> Â· Branch: <span id="studentBranchDisplay">Loading...</span></span>
             <span class="badge-cloud-live">
                 <span class="pulse-dot"></span> Live Portal
             </span>
@@ -26,35 +26,35 @@
         <div class="hero-header-row">
             <div>
                 <h1 class="hero-title-massive">
-                    Welcome, <span class="highlight" id="studentNameDisplay">Student</span> 🎓<br>
+                    Welcome, <span class="highlight" id="studentNameDisplay">Student</span> ðŸŽ“<br>
                     Your health portal at a glance.
                 </h1>
             </div>
             <div class="hero-btn-group">
                 <a href="book-appointment.html" class="btn btn-pill-primary">+ Book Appointment</a>
-                <a href="emergency.html" class="btn btn-pill-glass" style="border-color: rgba(230,57,70,0.4); color: #ff6b6b;">🚨 Campus SOS</a>
+                <a href="emergency.html" class="btn btn-pill-glass" style="border-color: rgba(230,57,70,0.4); color: #ff6b6b;">ðŸš¨ Campus SOS</a>
             </div>
         </div>
 
         <!-- 4 Stats Cards (First card glowing wine/crimson) -->
         <div class="stats-grid-modern">
             <div class="stat-card-modern stat-card-wine">
-                <div class="stat-icon-circle">🗓️</div>
+                <div class="stat-icon-circle">ðŸ—“ï¸</div>
                 <div class="stat-number-modern" id="statAppointments">0</div>
                 <div class="stat-label-modern">Upcoming Appointments</div>
             </div>
             <div class="stat-card-modern">
-                <div class="stat-icon-circle">💊</div>
+                <div class="stat-icon-circle">ðŸ’Š</div>
                 <div class="stat-number-modern" id="statPrescriptions">0</div>
                 <div class="stat-label-modern">Prescriptions on Record</div>
             </div>
             <div class="stat-card-modern">
-                <div class="stat-icon-circle">📢</div>
+                <div class="stat-icon-circle">ðŸ“¢</div>
                 <div class="stat-number-modern" id="statNotices">0</div>
                 <div class="stat-label-modern">Campus Health Notices</div>
             </div>
             <div class="stat-card-modern">
-                <div class="stat-icon-circle">🚑</div>
+                <div class="stat-icon-circle">ðŸš‘</div>
                 <div class="stat-number-modern" style="color: #ff6b6b;">24/7</div>
                 <div class="stat-label-modern">Emergency Health Aid</div>
             </div>
@@ -70,7 +70,7 @@
                     <div class="card-header" style="border-bottom: 1px solid var(--border-glass);">
                         <div>
                             <h3 style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">
-                                📢 Campus Health Advisories
+                                ðŸ“¢ Campus Health Advisories
                             </h3>
                             <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
                                 Direct updates from DTU Health Center doctors
@@ -89,21 +89,21 @@
                 <div class="card">
                     <div class="card-header" style="border-bottom: 1px solid var(--border-glass);">
                         <h3 style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">
-                            ⚡ Quick Health Services
+                            âš¡ Quick Health Services
                         </h3>
                     </div>
                     <div class="card-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                         <a href="book-appointment.html" class="btn btn-pill-primary" style="text-align: center; padding: 14px;">
-                            📅 Book Doctor Slot
+                            ðŸ“… Book Doctor Slot
                         </a>
                         <a href="video-call.html" class="btn btn-pill-glass" style="text-align: center; padding: 14px;">
-                            📹 Video Consultation
+                            ðŸ“¹ Video Consultation
                         </a>
                         <a href="prescriptions.html" class="btn btn-pill-glass" style="text-align: center; padding: 14px;">
-                            💊 My Prescriptions
+                            ðŸ’Š My Prescriptions
                         </a>
                         <a href="health-tips.html" class="btn btn-pill-glass" style="text-align: center; padding: 14px;">
-                            🧠 Wellness Tips
+                            ðŸ§  Wellness Tips
                         </a>
                     </div>
                 </div>
@@ -111,16 +111,16 @@
                 <!-- DTU Hospital Block & Facilities Overview -->
                 <div class="card" style="margin-top: 24px; padding: 20px; border: 1px solid var(--border-glass-light); background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(230,57,70,0.05) 100%);">
                     <div style="display: flex; gap: 14px; align-items: flex-start;">
-                        <span style="font-size: 2rem;">🏥</span>
+                        <span style="font-size: 2rem;">ðŸ¥</span>
                         <div>
                             <h4 style="color: #ffffff; font-size: 1rem; font-weight: 700; margin-bottom: 6px;">The DTU Health Center</h4>
                             <p style="color: var(--text-light); font-size: 0.84rem; line-height: 1.5; margin-bottom: 10px;">
                                 DTU has a full-fledged 20 bed hospital block. Services of two medical practitioners are available to the students throughout day and evening. The college invites specialized medical practitioners for ENT, eye, dental care, nutrition experts once a week.
                             </p>
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                                <span class="pill-tag badge-info" style="font-size: 0.72rem;">🛏️ 20-Bed Hospital Block</span>
-                                <span class="pill-tag badge-success" style="font-size: 0.72rem;">🩺 Day &amp; Evening Practitioners</span>
-                                <span class="pill-tag badge-warning" style="font-size: 0.72rem;">👨‍⚕️ Weekly Visiting Specialists</span>
+                                <span class="pill-tag badge-info" style="font-size: 0.72rem;">ðŸ›ï¸ 20-Bed Hospital Block</span>
+                                <span class="pill-tag badge-success" style="font-size: 0.72rem;">ðŸ©º Day &amp; Evening Practitioners</span>
+                                <span class="pill-tag badge-warning" style="font-size: 0.72rem;">ðŸ‘¨â€âš•ï¸ Weekly Visiting Specialists</span>
                             </div>
                         </div>
                     </div>
@@ -134,7 +134,7 @@
                     <div class="card-header" style="border-bottom: 1px solid var(--border-glass);">
                         <div>
                             <h3 style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">
-                                🗓️ My Scheduled Appointments
+                                ðŸ—“ï¸ My Scheduled Appointments
                             </h3>
                         </div>
                         <a href="book-appointment.html" class="btn btn-pill-primary btn-small" style="font-size: 0.78rem;">
@@ -150,7 +150,7 @@
                 <div class="card">
                     <div class="card-header" style="border-bottom: 1px solid var(--border-glass);">
                         <h3 style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">
-                            📋 Medical Profile Summary
+                            ðŸ“‹ Medical Profile Summary
                         </h3>
                         <a href="student-profile.html" class="btn btn-pill-glass btn-small" style="font-size: 0.78rem;">
                             Edit Profile
@@ -240,7 +240,7 @@
                     </div>
                     <p class="notice-snippet">${n.content}</p>
                     <small style="color:var(--text-subtle);">
-                        👨‍⚕️ <strong>${n.doctorName || 'Health Center Doctor'}</strong> (${n.department || 'DTU OPD'})
+                        ðŸ‘¨â€âš•ï¸ <strong>${n.doctorName || 'Health Center Doctor'}</strong> (${n.department || 'DTU OPD'})
                     </small>
                 </div>
             `).join('');
@@ -272,15 +272,15 @@
                         </span>
                     </div>
                     <div style="margin:8px 0; font-size:0.85rem; color:var(--text-light);">
-                        <span>📅 <strong>${apt.date}</strong></span> &nbsp;·&nbsp;
-                        <span>⏰ <strong>${apt.time}</strong></span>
+                        <span>ðŸ“… <strong>${apt.date}</strong></span> &nbsp;Â·&nbsp;
+                        <span>â° <strong>${apt.time}</strong></span>
                     </div>
                     <p style="font-size:0.85rem; color:var(--text-muted); background:rgba(255,255,255,0.02); padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); margin-bottom:12px;">
                         <strong>Symptoms:</strong> ${apt.reason || 'Routine consultation'}
                     </p>
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                         <a href="video-call.html?doctor=${encodeURIComponent(apt.doctorName)}" class="btn btn-pill-glass btn-small" style="padding:6px 14px;">
-                            📹 Join Video Call
+                            ðŸ“¹ Join Video Call
                         </a>
                         <button onclick="cancelAppointment('${apt.id}')" class="btn btn-pill-danger btn-small" style="padding:6px 14px;">
                             Cancel Booking

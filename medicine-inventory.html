@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Dispensary Medicine Stock (Doctor/Admin) - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=3.0">
+    <link rel="stylesheet" href="css/style.css?v=3.1">
 </head>
 <body onload="initInventoryPage()">
 
@@ -17,7 +17,7 @@
             <div>
                 <h1 class="section-title" style="margin-bottom:5px;">Dispensary Medicine Inventory</h1>
                 <p style="color:var(--text-light); font-size:0.95rem;">
-                    Doctor & Admin Dispensary Management — Monitor inventory levels and register new pharmacy batches.
+                    Doctor & Admin Dispensary Management â€” Monitor inventory levels and register new pharmacy batches.
                 </p>
             </div>
             <div id="inventoryStats" style="display:flex; gap:12px; font-size:0.85rem;">
@@ -30,7 +30,7 @@
         <div class="card" style="margin-bottom:20px; padding:15px;">
             <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
                 <div style="flex:1; min-width:260px;">
-                    <input type="text" id="medSearch" class="form-input" placeholder="🔍 Search medicine by name (e.g. Paracetamol, Cetirizine)..." oninput="filterInventory()">
+                    <input type="text" id="medSearch" class="form-input" placeholder="ðŸ” Search medicine by name (e.g. Paracetamol, Cetirizine)..." oninput="filterInventory()">
                 </div>
                 <div style="min-width:200px;">
                     <select id="medCategoryFilter" class="form-select" onchange="filterInventory()">

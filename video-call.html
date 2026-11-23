@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Video Consultation Room - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=3.0">
+    <link rel="stylesheet" href="css/style.css?v=3.1">
     <style>
         .video-room-container {
             display: grid;
@@ -143,11 +143,11 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
             <div>
                 <h2 style="color:var(--primary); font-size:1.4rem;">
-                    Telehealth One-to-One Consultation 📹
+                    Telehealth One-to-One Consultation ðŸ“¹
                 </h2>
                 <p style="font-size:0.85rem; color:var(--text-light);">
                     Session Room ID: <strong id="roomCodeDisplay">DTU-HEALTH-ROOM-402</strong> | 
-                    Status: <span class="badge badge-success" id="connectionBadge">● Connected (Encrypted)</span>
+                    Status: <span class="badge badge-success" id="connectionBadge">â— Connected (Encrypted)</span>
                 </p>
             </div>
             <div>
@@ -162,7 +162,7 @@
             <div class="main-stage">
                 
                 <div class="remote-feed" id="remoteFeedBox">
-                    <div style="font-size:4.5rem; margin-bottom:10px;" id="remoteAvatar">👨‍⚕️</div>
+                    <div style="font-size:4.5rem; margin-bottom:10px;" id="remoteAvatar">ðŸ‘¨â€âš•ï¸</div>
                     <h3 style="font-size:1.4rem; color:#fff;" id="remoteNameDisplay">Dr. Rajesh Sharma</h3>
                     <p style="color:#C5A55A; font-size:0.9rem;" id="remoteRoleDisplay">Chief Medical Officer (OPD)</p>
                     <div style="margin-top:15px; display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#aaa;">
@@ -175,7 +175,7 @@
                 <div class="pip-feed">
                     <video id="selfCamera" autoplay playsinline muted></video>
                     <div id="selfCameraFallback" style="color:#fff; font-size:0.8rem; text-align:center; display:none;">
-                        📷 Camera Off
+                        ðŸ“· Camera Off
                     </div>
                     <span style="position:absolute; bottom:4px; left:6px; font-size:0.7rem; color:#fff; background:rgba(0,0,0,0.6); padding:1px 4px; border-radius:3px;">
                         You
@@ -185,16 +185,16 @@
                 <!-- Floating Video Controls Bar -->
                 <div class="call-controls-bar">
                     <button class="call-btn" id="btnMic" onclick="toggleMic()" title="Mute/Unmute Mic">
-                        🎤
+                        ðŸŽ¤
                     </button>
                     <button class="call-btn" id="btnCam" onclick="toggleCam()" title="Camera On/Off">
-                        📹
+                        ðŸ“¹
                     </button>
                     <button class="call-btn" onclick="shareScreenSim()" title="Share Screen">
-                        🖥️
+                        ðŸ–¥ï¸
                     </button>
                     <button class="call-btn btn-hangup" onclick="endCall()" title="End Consultation">
-                        📞
+                        ðŸ“ž
                     </button>
                 </div>
 
@@ -206,10 +206,10 @@
                 <!-- Panel Header with Tabs -->
                 <div style="background:#f4f4f4; padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-around;">
                     <button onclick="switchTab('chat')" id="tabChatBtn" style="border:none; background:none; font-weight:bold; color:var(--primary); cursor:pointer;">
-                        💬 In-Call Chat
+                        ðŸ’¬ In-Call Chat
                     </button>
                     <button onclick="switchTab('notes')" id="tabNotesBtn" style="border:none; background:none; font-weight:bold; color:#777; cursor:pointer;">
-                        📝 Quick Clinical Notes
+                        ðŸ“ Quick Clinical Notes
                     </button>
                 </div>
 
@@ -280,7 +280,7 @@
             const patientParam = urlParams.get('patient');
 
             if (role === 'doctor') {
-                document.getElementById('remoteAvatar').textContent = '🎓';
+                document.getElementById('remoteAvatar').textContent = 'ðŸŽ“';
                 document.getElementById('remoteNameDisplay').textContent = patientParam || 'Rahul Meena (Student)';
                 document.getElementById('remoteRoleDisplay').textContent = 'DTU Student - 2K22/CO/101';
                 document.getElementById('welcomeDocMsg').innerHTML = `<strong>Patient:</strong><br>Hello Doctor, I have been feeling fever and severe headache.`;
@@ -332,11 +332,11 @@
                 localStream.getAudioTracks().forEach(track => track.enabled = isMicOn);
             }
             if (isMicOn) {
-                btn.innerHTML = '🎤';
+                btn.innerHTML = 'ðŸŽ¤';
                 btn.classList.remove('active-off');
                 showNotification('Microphone unmuted', 'success');
             } else {
-                btn.innerHTML = '🔇';
+                btn.innerHTML = 'ðŸ”‡';
                 btn.classList.add('active-off');
                 showNotification('Microphone muted', 'warning');
             }
@@ -355,12 +355,12 @@
             if (isCamOn) {
                 videoEl.style.display = 'block';
                 fallbackEl.style.display = 'none';
-                btn.innerHTML = '📹';
+                btn.innerHTML = 'ðŸ“¹';
                 btn.classList.remove('active-off');
             } else {
                 videoEl.style.display = 'none';
                 fallbackEl.style.display = 'block';
-                btn.innerHTML = '🚫';
+                btn.innerHTML = 'ðŸš«';
                 btn.classList.add('active-off');
             }
         }
