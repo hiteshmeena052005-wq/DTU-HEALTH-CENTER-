@@ -226,6 +226,36 @@ const SupabaseService = (function () {
         }
     }
 
+    async function resetPasswordForEmail(email) {
+        const client = getClient();
+        if (!client || !isLive()) {
+            return { success: true, simulated: true };
+        }
+        const origin = (typeof window !== 'undefined' && window.location) ? window.location.origin : '';
+        const pathname = (typeof window !== 'undefined' && window.location) ? window.location.pathname.replace(/\/+$/, '') : '';
+        const redirectTo = origin + pathname + '?mode=reset-password';
+
+        const { data, error } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+            redirectTo: redirectTo
+        });
+
+        if (error) throw error;
+        return { success: true, data };
+    }
+
+    async function updateUserPassword(newPassword) {
+        const client = getClient();
+        if (!client || !isLive()) {
+            return { success: true, simulated: true };
+        }
+        const { data, error } = await client.auth.updateUser({
+            password: newPassword
+        });
+
+        if (error) throw error;
+        return { success: true, data };
+    }
+
     // -------------------------------------------------------------------------
     // 2. DEPARTMENTS & DOCTORS
     // -------------------------------------------------------------------------
@@ -858,6 +888,8 @@ const SupabaseService = (function () {
         signUpStudent,
         signInUser,
         signOutUser,
+        resetPasswordForEmail,
+        updateUserPassword,
         getActiveSession,
         getDepartments,
         getDoctors,
