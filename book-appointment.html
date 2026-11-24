@@ -226,7 +226,7 @@
             if (!sec) return;
             const isHidden = sec.style.display === 'none';
             sec.style.display = isHidden ? 'block' : 'none';
-            btn.textContent = isHidden ? 'âœ• Close Timetable' : 'ðŸ“‹ View Official OPD Timetable';
+            btn.textContent = isHidden ? '✕ Close Timetable' : '📋 View Official OPD Timetable';
         }
 
         // Render available doctor slots with live capacity progress bar & limit counter
@@ -331,12 +331,12 @@
 
             const submitBtn = document.getElementById('submitBtn');
 
-            // 1. CLICK KARTE HI TURANT GREEN + CONFIRMED!
+            // 1. Show database loading status (never show confirmed until database confirms)
             submitBtn.disabled = true;
-            submitBtn.style.background = '#2ecc71';
-            submitBtn.style.boxShadow = '0 6px 20px rgba(46, 204, 113, 0.6)';
+            submitBtn.style.opacity = '0.85';
+            submitBtn.style.background = 'var(--primary)';
             submitBtn.style.color = '#ffffff';
-            submitBtn.innerHTML = `âœ“ Confirmed!`;
+            submitBtn.innerHTML = `⏳ Reserving slot in database...`;
 
             const slotId = document.getElementById('selectedSlotId').value;
             const doctorName = document.getElementById('selectedDoctorName').value;
@@ -351,8 +351,9 @@
             const slots = getSlots();
             const targetSlot = slots.find(s => s.id == slotId);
             if (targetSlot && targetSlot.bookedCount >= targetSlot.maxLimit) {
-                alert("Sorry, all 10 spots for this doctor session are already filled!");
+                alert("Sorry, all 10 spots for this doctor session are already filled! Please select another doctor or session.");
                 submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
                 submitBtn.style.background = '';
                 submitBtn.style.boxShadow = '';
                 submitBtn.innerHTML = `Confirm Appointment Booking`;
@@ -382,15 +383,39 @@
                 createdAt: new Date().toLocaleDateString()
             };
 
-            // Save to In-Memory Store
-            await saveAppointment(newAppointment);
+            try {
+                // Save directly to live database (Supabase)
+                let confirmedApt = null;
+                if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+                    confirmedApt = await SupabaseService.bookAppointment(newAppointment);
+                } else {
+                    await saveAppointment(newAppointment);
+                    confirmedApt = newAppointment;
+                }
 
-            showNotification("Appointment Confirmed!", "success");
+                // Show green confirmation ONLY after database confirms success
+                submitBtn.style.background = '#2ecc71';
+                submitBtn.style.boxShadow = '0 6px 20px rgba(46, 204, 113, 0.6)';
+                submitBtn.innerHTML = `✓ Confirmed! Slot Reserved`;
+                showNotification("Appointment Confirmed & Saved to Database!", "success");
 
-            // Redirect smoothly to dashboard
-            setTimeout(() => {
-                window.location.href = "student-dashboard.html";
-            }, 800);
+                // Update slot counts locally
+                renderSlots();
+
+                // Redirect smoothly to student dashboard
+                setTimeout(() => {
+                    window.location.href = "student-dashboard.html";
+                }, 900);
+
+            } catch (err) {
+                console.error("Booking failed:", err);
+                alert("Appointment booking failed: " + (err.message || err));
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.background = '';
+                submitBtn.style.boxShadow = '';
+                submitBtn.innerHTML = `Confirm Appointment Booking`;
+            }
         }
     </script>
 </body>

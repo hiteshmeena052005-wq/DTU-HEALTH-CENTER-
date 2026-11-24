@@ -70,9 +70,14 @@
                         Real-time feed from the student app
                     </p>
                 </div>
-                <span class="badge-cloud-live">
-                    <span class="pulse-dot"></span> Auto-sync on
-                </span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" class="btn btn-pill-glass btn-small" onclick="refreshDoctorDashboardManual()" style="font-size: 0.78rem; padding: 5px 12px;">
+                        🔄 Refresh Queue
+                    </button>
+                    <span class="badge-cloud-live">
+                        <span class="pulse-dot"></span> Auto-sync on
+                    </span>
+                </div>
             </div>
             <div class="card-body" style="padding: 20px;">
                 <div id="patientQueueList">
@@ -305,12 +310,47 @@
                     showNotification("New appointment booked in live queue!", "success");
                 } else if (event.type === 'EMERGENCY_SOS') {
                     const loc = (event.payload && event.payload.location) ? event.payload.location : 'Campus';
-                    showNotification(`ðŸš¨ URGENT SOS from ${loc}! Ambulance dispatched.`, 'danger');
+                    showNotification(`🚨 URGENT SOS from ${loc}! Ambulance dispatched.`, 'danger');
                 }
                 renderQueue();
                 renderDoctorSlots();
+                renderDoctorNotices();
                 renderStats();
             });
+
+            // Automatic multi-device polling sync every 7 seconds
+            setInterval(async () => {
+                try {
+                    await Promise.all([
+                        fetchAppointmentsAsync(),
+                        fetchSlotsAsync(currentDoctor.id, currentDoctor.name),
+                        fetchNoticesAsync()
+                    ]);
+                    renderQueue();
+                    renderDoctorSlots();
+                    renderDoctorNotices();
+                    renderStats();
+                } catch (e) {}
+            }, 7000);
+        }
+
+        async function refreshDoctorDashboardManual() {
+            showNotification("Syncing live patient queue & notices from database...", "info");
+            try {
+                await Promise.all([
+                    fetchAppointmentsAsync(),
+                    fetchSlotsAsync(currentDoctor.id, currentDoctor.name),
+                    fetchNoticesAsync(),
+                    fetchPrescriptionsAsync()
+                ]);
+                renderQueue();
+                renderDoctorSlots();
+                renderDoctorNotices();
+                renderStats();
+                showNotification("Live queue up to date!", "success");
+            } catch (err) {
+                console.warn("Manual sync error:", err);
+            }
         }
 
         // Render live queue of appointments as sleek glassmorphism cards
@@ -409,12 +449,33 @@
                 note: note || `OPD consultation session with ${currentDoctor.name || 'Doctor'}`
             };
 
-            await saveSlot(newSlot);
-            showNotification(`Checkup slot published! ${limit} student seats available.`, 'success');
-            
-            document.getElementById('slotNote').value = '';
-            renderDoctorSlots();
-            renderStats();
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Publishing slot to database...';
+            }
+
+            try {
+                if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+                    await SupabaseService.createSlot(newSlot);
+                } else {
+                    await saveSlot(newSlot);
+                }
+                showNotification(`Checkup slot published! ${limit} student seats available.`, 'success');
+                
+                document.getElementById('slotNote').value = '';
+                await fetchSlotsAsync(currentDoctor.id, currentDoctor.name);
+                renderDoctorSlots();
+                renderStats();
+            } catch (err) {
+                console.error("Slot creation error:", err);
+                alert("Failed to publish slot: " + (err.message || err));
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Publish slot to students';
+                }
+            }
         }
 
         // Render active slots with real-time capacity and progress bar
@@ -467,23 +528,47 @@
 
             const title = document.getElementById('noticeTitle').value.trim();
             const content = document.getElementById('noticeContent').value.trim();
+            if (!title || !content) return;
+
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Publishing notice to database...';
+            }
 
             const newNotice = {
                 id: Date.now(),
                 title: title,
                 content: content,
-                doctorName: currentDoctor.name || 'Dr. Rajesh Sharma',
+                doctorName: currentDoctor.name || 'Dr. Ravi Bansal',
                 department: currentDoctor.department || 'DTU Health Center',
                 date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
                 type: 'announcement'
             };
 
-            await saveNotice(newNotice);
-            showNotification('Health notice broadcasted to campus portal!', 'success');
+            try {
+                if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+                    await SupabaseService.createNotice(newNotice);
+                } else {
+                    await saveNotice(newNotice);
+                }
+                showNotification('Health notice broadcasted to all doctors and students!', 'success');
 
-            document.getElementById('noticeTitle').value = '';
-            document.getElementById('noticeContent').value = '';
-            renderStats();
+                document.getElementById('noticeTitle').value = '';
+                document.getElementById('noticeContent').value = '';
+
+                await fetchNoticesAsync();
+                renderDoctorNotices();
+                renderStats();
+            } catch (err) {
+                console.error("Notice broadcast failed:", err);
+                alert("Failed to publish announcement: " + (err.message || err));
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Post to student app';
+                }
+            }
         }
 
         function renderDoctorNotices(customNotices) {
@@ -495,11 +580,14 @@
                 return;
             }
 
-            container.innerHTML = notices.slice(0, 3).map(n => `
+            container.innerHTML = notices.slice(0, 6).map(n => `
                 <div class="recent-notice-pill">
                     <h4 class="notice-headline">${n.title}</h4>
                     <p class="notice-snippet">${n.content}</p>
-                    <span class="notice-timestamp">${n.date}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                        <span class="notice-timestamp">${n.date || 'Today'}</span>
+                        <span style="font-size:0.75rem; color:var(--amber); font-weight:600;">By ${n.doctorName || 'Doctor'}</span>
+                    </div>
                 </div>
             `).join('');
         }

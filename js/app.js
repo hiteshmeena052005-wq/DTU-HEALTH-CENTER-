@@ -475,19 +475,22 @@ function getSlots(filterDoctor) {
 
     slots.forEach(slot => {
         if (!slot.maxLimit) slot.maxLimit = 10;
+        if (typeof slot.bookedCount !== 'number') slot.bookedCount = 0;
+        // Count confirmed active appointments
         const activeCount = appointments.filter(a => 
-            (a.slotId && a.slotId == slot.id) || (a.doctorName && a.doctorName === slot.doctorName)
+            a.status !== 'cancelled' &&
+            ((a.slotId && a.slotId == slot.id) || (a.doctorName && slot.doctorName && (a.doctorName.toLowerCase().includes(slot.doctorName.toLowerCase()) || slot.doctorName.toLowerCase().includes(a.doctorName.toLowerCase()))))
         ).length;
-        if (slot.bookedCount > slot.maxLimit || slot.bookedCount !== activeCount) {
+        if (activeCount > slot.bookedCount) {
             slot.bookedCount = Math.min(slot.maxLimit, activeCount);
         }
     });
 
     if (filterDoctor) {
-        const docStr = String(filterDoctor).toLowerCase().trim();
+        const docStr = String(filterDoctor).toLowerCase().trim().replace(/^dr\.?\s*/i, '');
         return slots.filter(s => {
-            const sName = (s.doctorName || '').toLowerCase().trim();
-            const sId = String(s.doctorId || s.id || '');
+            const sName = (s.doctorName || '').toLowerCase().trim().replace(/^dr\.?\s*/i, '');
+            const sId = String(s.doctorId || s.id || '').toLowerCase();
             return (sId && sId === docStr) || (sName && (sName.includes(docStr) || docStr.includes(sName)));
         });
     }
@@ -499,10 +502,21 @@ async function fetchSlotsAsync(doctorId, doctorName) {
     if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
         try {
             const data = await SupabaseService.getSlots(doctorId, doctorName);
-            if (window._dtuMemoryDB) {
+            if (window._dtuMemoryDB && Array.isArray(data)) {
                 if (!doctorId && !doctorName) {
                     window._dtuMemoryDB.slots = data;
+                } else {
+                    data.forEach(freshSlot => {
+                        const idx = (window._dtuMemoryDB.slots || []).findIndex(s => s.id == freshSlot.id);
+                        if (idx >= 0) {
+                            window._dtuMemoryDB.slots[idx] = freshSlot;
+                        } else {
+                            if (!window._dtuMemoryDB.slots) window._dtuMemoryDB.slots = [];
+                            window._dtuMemoryDB.slots.push(freshSlot);
+                        }
+                    });
                 }
+                if (typeof saveClientStore === 'function') saveClientStore(window._dtuMemoryDB);
             }
             return data;
         } catch (e) {

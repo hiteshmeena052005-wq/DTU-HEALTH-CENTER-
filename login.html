@@ -505,6 +505,7 @@
             const rawName = email.split('@')[0].replace(/[._-]/g, ' ');
             const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
             const user = {
+                id: 'a0000000-0000-0000-0000-000000000001',
                 role: 'student',
                 email: email,
                 name: formattedName || 'Student'
@@ -776,7 +777,8 @@
 
             const doctorUser = {
                 role: 'doctor',
-                ...doctorData
+                ...doctorData,
+                id: (doctorData && (doctorData.uuid || doctorData.id)) || "d0000000-0000-0000-0000-000000000001"
             };
 
             localStorage.setItem('currentUser', JSON.stringify(doctorUser));

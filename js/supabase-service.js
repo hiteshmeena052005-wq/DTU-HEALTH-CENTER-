@@ -376,23 +376,28 @@ const SupabaseService = (function () {
         const client = getClient();
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
-        if (client && isLive() && currentUser && currentUser.id) {
+        if (client && isLive()) {
             let query = client.from('appointments').select('*');
 
-            if (currentUser.role === 'student') {
+            if (currentUser && currentUser.role === 'student') {
                 if (isUUIDString(currentUser.id)) {
                     query = query.eq('student_id', currentUser.id);
                 } else if (currentUser.email) {
                     query = query.eq('student_email', currentUser.email);
                 }
-            } else if (currentUser.role === 'doctor') {
-                const docUuid = resolveDoctorUUID(currentUser.id || currentUser.name);
-                query = query.eq('doctor_id', docUuid);
+            } else if (currentUser && currentUser.role === 'doctor') {
+                const docUuid = resolveDoctorUUID(currentUser.id || currentUser.uuid || currentUser.name);
+                const docName = (currentUser.name || '').replace(/^Dr\.?\s*/i, '').trim();
+                if (docName) {
+                    query = query.or(`doctor_id.eq.${docUuid},doctor_name.ilike.%${encodeURIComponent(docName)}%`);
+                } else {
+                    query = query.eq('doctor_id', docUuid);
+                }
             }
 
-            const { data, error } = await query.order('date', { ascending: false });
+            const { data, error } = await query.order('created_at', { ascending: false });
             if (!error && data) {
-                return data.map(a => ({
+                const mapped = data.map(a => ({
                     id: a.id,
                     slotId: a.slot_id,
                     studentId: a.student_id,
@@ -411,6 +416,10 @@ const SupabaseService = (function () {
                     status: a.status,
                     createdAt: a.created_at ? new Date(a.created_at).toLocaleDateString() : ''
                 }));
+                if (window._dtuMemoryDB) {
+                    window._dtuMemoryDB.appointments = mapped;
+                }
+                return mapped;
             }
         }
         return (window._dtuMemoryDB && window._dtuMemoryDB.appointments) || [];
@@ -421,10 +430,53 @@ const SupabaseService = (function () {
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
         if (client && isLive()) {
-            const doctorUuid = resolveDoctorUUID(aptData.doctorId || aptData.doctorName);
-            let studentUuid = currentUser.id;
-            if (!isUUIDString(studentUuid)) {
+            let studentUuid = null;
+            try {
+                const { data: authData } = await client.auth.getUser();
+                if (authData && authData.user) {
+                    studentUuid = authData.user.id;
+                }
+            } catch (e) {}
+
+            if (!studentUuid && currentUser && isUUIDString(currentUser.id)) {
+                studentUuid = currentUser.id;
+            }
+            if (!studentUuid) {
                 studentUuid = "a0000000-0000-0000-0000-000000000001";
+            }
+
+            const slotIdInt = (aptData.slotId && !isNaN(parseInt(aptData.slotId))) ? parseInt(aptData.slotId) : null;
+            let doctorUuid = null;
+            let currentBooked = 0;
+            let maxLimit = 10;
+
+            // Verify live slot capacity directly from database before booking
+            if (slotIdInt) {
+                try {
+                    const { data: slotRow, error: slotErr } = await client
+                        .from('doctor_slots')
+                        .select('doctor_id, doctor_name, department, booked_count, max_limit, is_active')
+                        .eq('id', slotIdInt)
+                        .single();
+
+                    if (slotRow) {
+                        currentBooked = slotRow.booked_count || 0;
+                        maxLimit = slotRow.max_limit || 10;
+                        if (currentBooked >= maxLimit) {
+                            throw new Error(`This slot is fully booked (${currentBooked}/${maxLimit} students). Please pick another doctor or consultation session.`);
+                        }
+                        if (slotRow.doctor_id) doctorUuid = slotRow.doctor_id;
+                    }
+                } catch (slotCheckErr) {
+                    if (slotCheckErr.message && slotCheckErr.message.includes('fully booked')) {
+                        throw slotCheckErr;
+                    }
+                    console.warn("Slot pre-check notice:", slotCheckErr.message);
+                }
+            }
+
+            if (!doctorUuid || !isUUIDString(doctorUuid)) {
+                doctorUuid = resolveDoctorUUID(aptData.doctorId || aptData.doctorName);
             }
 
             // Ensure student record exists in public.students table
@@ -441,8 +493,10 @@ const SupabaseService = (function () {
                 console.warn("Auto-upsert student skipped:", e.message);
             }
 
+            const generatedId = aptData.id || ('APT-' + Date.now().toString().slice(-4));
             const appointmentPayload = {
-                slot_id: (aptData.slotId && !isNaN(parseInt(aptData.slotId))) ? parseInt(aptData.slotId) : null,
+                id: generatedId,
+                slot_id: slotIdInt,
                 student_id: studentUuid,
                 doctor_id: doctorUuid,
                 student_name: aptData.studentName || currentUser.name || 'DTU Student',
@@ -459,28 +513,65 @@ const SupabaseService = (function () {
                 status: 'confirmed'
             };
 
-            const { data, error } = await client
+            const { data: insertedData, error: insertError } = await client
                 .from('appointments')
                 .insert(appointmentPayload)
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (insertError) {
+                console.error("Supabase booking insert error:", insertError);
+                throw insertError;
+            }
 
             // Increment booked_count on slot if not handled by DB trigger
-            if (appointmentPayload.slot_id) {
+            if (slotIdInt) {
                 try {
-                    const { data: slotRow } = await client.from('doctor_slots').select('booked_count, max_limit').eq('id', appointmentPayload.slot_id).single();
-                    if (slotRow) {
-                        const newCount = Math.min(slotRow.max_limit || 10, (slotRow.booked_count || 0) + 1);
-                        await client.from('doctor_slots').update({ booked_count: newCount }).eq('id', appointmentPayload.slot_id);
-                    }
-                } catch (slotErr) {
-                    console.warn("Slot count sync info:", slotErr.message);
+                    const newCount = Math.min(maxLimit, currentBooked + 1);
+                    await client.from('doctor_slots').update({ booked_count: newCount }).eq('id', slotIdInt);
+                } catch (slotUpdateErr) {
+                    console.warn("Slot booked_count update warning:", slotUpdateErr.message);
                 }
             }
 
-            return data;
+            // Format confirmed appointment
+            const confirmedApt = {
+                id: (insertedData && insertedData.id) || generatedId,
+                slotId: slotIdInt,
+                studentId: studentUuid,
+                doctorId: doctorUuid,
+                studentName: appointmentPayload.student_name,
+                studentEmail: appointmentPayload.student_email,
+                rollNo: appointmentPayload.roll_no,
+                branch: appointmentPayload.branch,
+                doctorName: appointmentPayload.doctor_name,
+                department: appointmentPayload.department,
+                date: appointmentPayload.date,
+                time: appointmentPayload.time_window,
+                mode: appointmentPayload.mode,
+                reason: appointmentPayload.reason,
+                urgency: appointmentPayload.urgency,
+                status: 'confirmed',
+                createdAt: new Date().toLocaleDateString()
+            };
+
+            // Update in-memory DB & persist
+            if (window._dtuMemoryDB) {
+                if (!window._dtuMemoryDB.appointments) window._dtuMemoryDB.appointments = [];
+                window._dtuMemoryDB.appointments.unshift(confirmedApt);
+                if (slotIdInt && window._dtuMemoryDB.slots) {
+                    const targetSlot = window._dtuMemoryDB.slots.find(s => s.id == slotIdInt);
+                    if (targetSlot) {
+                        targetSlot.bookedCount = Math.min(targetSlot.maxLimit || 10, (targetSlot.bookedCount || 0) + 1);
+                    }
+                }
+                if (typeof saveClientStore === 'function') {
+                    saveClientStore(window._dtuMemoryDB);
+                }
+            }
+
+            broadcastDataChange('APPOINTMENT_BOOKED', { appointment: confirmedApt, slotId: slotIdInt });
+            return confirmedApt;
         }
 
         // Memory fallback
@@ -727,7 +818,7 @@ const SupabaseService = (function () {
                 .order('created_at', { ascending: false });
 
             if (!error && data) {
-                return data.map(n => ({
+                const mapped = data.map(n => ({
                     id: n.id,
                     title: n.title,
                     content: n.content,
@@ -736,6 +827,13 @@ const SupabaseService = (function () {
                     type: n.type,
                     date: n.created_at ? new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
                 }));
+                if (window._dtuMemoryDB) {
+                    window._dtuMemoryDB.notices = mapped;
+                    if (typeof saveClientStore === 'function') saveClientStore(window._dtuMemoryDB);
+                }
+                return mapped;
+            } else if (error) {
+                console.warn("Supabase getNotices error:", error.message);
             }
         }
         return (window._dtuMemoryDB && window._dtuMemoryDB.notices) || [];
@@ -746,23 +844,57 @@ const SupabaseService = (function () {
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
         if (client && isLive()) {
-            const docUuid = resolveDoctorUUID(currentUser.id || noticeData.doctorId || noticeData.doctorName);
+            let docUuid = null;
+            try {
+                const { data: authData } = await client.auth.getUser();
+                if (authData && authData.user) {
+                    docUuid = authData.user.id;
+                }
+            } catch (e) {}
+
+            if (!docUuid) {
+                docUuid = resolveDoctorUUID(currentUser.id || noticeData.doctorId || noticeData.doctorName);
+            }
+
+            const noticePayload = {
+                doctor_id: docUuid,
+                author_name: currentUser.name || noticeData.doctorName || 'Dr. Ravi Bansal',
+                department: currentUser.department || noticeData.department || 'General Medicine (OPD)',
+                title: noticeData.title,
+                content: noticeData.content,
+                type: noticeData.type || 'announcement',
+                is_active: true
+            };
+
             const { data, error } = await client
                 .from('notifications')
-                .insert({
-                    doctor_id: docUuid,
-                    author_name: currentUser.name || noticeData.doctorName || 'Dr. Ravi Bansal',
-                    department: currentUser.department || noticeData.department || 'General Medicine (OPD)',
-                    title: noticeData.title,
-                    content: noticeData.content,
-                    type: noticeData.type || 'announcement',
-                    is_active: true
-                })
+                .insert(noticePayload)
                 .select()
                 .single();
 
-            if (error) throw error;
-            return data;
+            if (error) {
+                console.error("Supabase notice insert error:", error);
+                throw error;
+            }
+
+            const formattedNotice = {
+                id: data.id,
+                title: data.title,
+                content: data.content,
+                doctorName: data.author_name,
+                department: data.department,
+                type: data.type,
+                date: data.created_at ? new Date(data.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString()
+            };
+
+            if (window._dtuMemoryDB) {
+                if (!window._dtuMemoryDB.notices) window._dtuMemoryDB.notices = [];
+                window._dtuMemoryDB.notices.unshift(formattedNotice);
+                if (typeof saveClientStore === 'function') saveClientStore(window._dtuMemoryDB);
+            }
+
+            broadcastDataChange('NOTICE_ADDED', { notice: formattedNotice });
+            return formattedNotice;
         }
 
         // Memory fallback
