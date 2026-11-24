@@ -810,6 +810,29 @@ a:hover {
     margin-top: 25px;
 }
 
+.quick-services-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.responsive-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+    width: 100%;
+}
+
+.appointment-actions-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
 /* Form Styles */
 .form-group {
     margin-bottom: 14px;
@@ -1540,11 +1563,15 @@ select option:disabled {
     [style*="grid-template-columns:2fr 2fr 1fr"],
     [style*="grid-template-columns: 2fr 1fr"],
     [style*="grid-template-columns:2fr 1fr"],
+    [style*="grid-template-columns: 1fr 1fr"],
+    [style*="grid-template-columns:1fr 1fr"],
     [style*="grid-template-columns: repeat(auto-fill"],
     [style*="grid-template-columns:repeat(auto-fill"],
     [style*="grid-template-columns: repeat(auto-fit"],
     [style*="grid-template-columns:repeat(auto-fit"],
     .dashboard-grid,
+    .quick-services-grid,
+    .responsive-form-row,
     #slotsGrid,
     .slots-booking-grid,
     #doctorsGrid,
@@ -1554,7 +1581,46 @@ select option:disabled {
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
-        gap: 18px !important;
+        gap: 14px !important;
+    }
+
+    .quick-services-grid .btn {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 12px 14px !important;
+    }
+
+    .appointment-actions-wrap {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    .appointment-actions-wrap .btn,
+    .appointment-actions-wrap a,
+    .appointment-actions-wrap button {
+        width: 100% !important;
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 9px 14px !important;
+        box-sizing: border-box !important;
+    }
+
+    .table, .profile-summary-table {
+        width: 100% !important;
+        max-width: 100% !important;
+        table-layout: fixed !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
+    .table td, .table th,
+    .profile-summary-table td, .profile-summary-table th {
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        padding: 10px 8px !important;
     }
 
     /* Slot Booking Window Fix - Completely eliminates horizontal sliding */

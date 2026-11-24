@@ -92,17 +92,17 @@
                             ⚡ Quick Health Services
                         </h3>
                     </div>
-                    <div class="card-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                        <a href="book-appointment.html" class="btn btn-pill-primary" style="text-align: center; padding: 14px;">
+                    <div class="card-body quick-services-grid">
+                        <a href="book-appointment.html" class="btn btn-pill-primary" style="text-align: center; padding: 12px 10px;">
                             📅 Book Doctor Slot
                         </a>
-                        <a href="video-call.html" class="btn btn-pill-glass" style="text-align: center; padding: 14px;">
+                        <a href="video-call.html" class="btn btn-pill-glass" style="text-align: center; padding: 12px 10px;">
                             📹 Video Consultation
                         </a>
-                        <a href="prescriptions.html" class="btn btn-pill-glass" style="text-align: center; padding: 14px;">
+                        <a href="prescriptions.html" class="btn btn-pill-glass" style="text-align: center; padding: 12px 10px;">
                             💊 My Prescriptions
                         </a>
-                        <a href="health-tips.html" class="btn btn-pill-glass" style="text-align: center; padding: 14px;">
+                        <a href="health-tips.html" class="btn btn-pill-glass" style="text-align: center; padding: 12px 10px;">
                             🧠 Wellness Tips
                         </a>
                     </div>
@@ -285,25 +285,23 @@
                             </span>
                         </div>
                     </div>
-                    <div style="margin:10px 0; font-size:0.86rem; color:var(--text-light); background:rgba(255,255,255,0.02); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04);">
-                        <span>📅 <strong>Appointment:</strong> ${apt.date}</span> &nbsp;·&nbsp;
+                    <div style="display:flex; flex-wrap:wrap; gap:8px 14px; margin:10px 0; font-size:0.86rem; color:var(--text-light); background:rgba(255,255,255,0.02); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04);">
+                        <span>📅 <strong>Appointment:</strong> ${apt.date}</span>
                         <span>⏰ <strong>Time:</strong> ${apt.time}</span>
                     </div>
-                    <p style="font-size:0.85rem; color:var(--text-muted); background:rgba(255,255,255,0.02); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); margin-bottom:14px; line-height:1.45;">
+                    <p style="font-size:0.85rem; color:var(--text-muted); background:rgba(255,255,255,0.02); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); margin-bottom:14px; line-height:1.45; word-break:break-word;">
                         <strong style="color:var(--text-light);">Symptoms:</strong> ${apt.reason || 'Routine consultation'}
                     </p>
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                            <button type="button" 
-                                    onclick="openChatModal('${apt.id}', '${docName.replace(/'/g, "\\'")}', 'doctor', '${apt.doctorId || ''}', '${docDept.replace(/'/g, "\\'")}')" 
-                                    class="btn btn-pill-primary btn-small" style="padding:6px 14px; font-weight:700;">
-                                💬 Message Doctor
-                            </button>
-                            <a href="video-call.html?doctor=${encodeURIComponent(docName)}" class="btn btn-pill-glass btn-small" style="padding:6px 14px;">
-                                📹 Join Video Call
-                            </a>
-                        </div>
-                        <button onclick="cancelAppointment('${apt.id}')" class="btn btn-pill-danger btn-small" style="padding:6px 14px;">
+                    <div class="appointment-actions-wrap">
+                        <button type="button" 
+                                onclick="openChatModal('${apt.id}', '${docName.replace(/'/g, "\\'")}', 'doctor', '${apt.doctorId || ''}', '${docDept.replace(/'/g, "\\'")}')" 
+                                class="btn btn-pill-primary btn-small">
+                            💬 Message Doctor
+                        </button>
+                        <a href="video-call.html?doctor=${encodeURIComponent(docName)}" class="btn btn-pill-glass btn-small">
+                            📹 Join Video Call
+                        </a>
+                        <button onclick="cancelAppointment('${apt.id}')" class="btn btn-pill-danger btn-small">
                             Cancel Booking
                         </button>
                     </div>
@@ -323,13 +321,13 @@
             }
 
             container.innerHTML = `
-                <table class="table" style="font-size:0.88rem;">
-                    <tr><td style="color:var(--text-muted); width:40%;">Full Name</td><td><strong style="color:#fff;">${profile.name}</strong></td></tr>
-                    <tr><td style="color:var(--text-muted);">Roll Number</td><td><strong style="color:#fff;">${profile.rollNo}</strong></td></tr>
-                    <tr><td style="color:var(--text-muted);">Branch & Year</td><td><span style="color:var(--text-light);">${profile.branch} (${profile.year || 'Student'})</span></td></tr>
-                    <tr><td style="color:var(--text-muted);">Blood Group</td><td><span class="pill-tag badge-danger" style="padding:2px 10px;">${profile.bloodGroup || 'Not specified'}</span></td></tr>
-                    <tr><td style="color:var(--text-muted);">DTU Email</td><td><span style="color:var(--text-light);">${profile.email || profile.dtuEmail}</span></td></tr>
-                    <tr><td style="color:var(--text-muted);">Contact No.</td><td><span style="color:var(--text-light);">${profile.phone}</span></td></tr>
+                <table class="table profile-summary-table" style="font-size:0.86rem;">
+                    <tr><td style="color:var(--text-muted); width:35%;">Full Name</td><td><strong style="color:#fff;">${profile.name}</strong></td></tr>
+                    <tr><td style="color:var(--text-muted); width:35%;">Roll Number</td><td><strong style="color:#fff;">${profile.rollNo}</strong></td></tr>
+                    <tr><td style="color:var(--text-muted); width:35%;">Branch & Year</td><td><span style="color:var(--text-light); word-break:break-word;">${profile.branch} (${profile.year || 'Student'})</span></td></tr>
+                    <tr><td style="color:var(--text-muted); width:35%;">Blood Group</td><td><span class="pill-tag badge-danger" style="padding:2px 10px;">${profile.bloodGroup || 'Not specified'}</span></td></tr>
+                    <tr><td style="color:var(--text-muted); width:35%;">DTU Email</td><td><span style="color:var(--text-light); word-break:break-all;">${profile.email || profile.dtuEmail}</span></td></tr>
+                    <tr><td style="color:var(--text-muted); width:35%;">Contact No.</td><td><span style="color:var(--text-light);">${profile.phone}</span></td></tr>
                 </table>
             `;
         }
