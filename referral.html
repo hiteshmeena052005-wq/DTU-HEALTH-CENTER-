@@ -32,7 +32,7 @@
                 <div class="card-body">
                     <form onsubmit="submitReferral(event)">
                         
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                        <div class="responsive-form-row">
                             <div class="form-group">
                                 <label class="form-label">Student Name *</label>
                                 <input type="text" id="refStudentName" class="form-input" placeholder="e.g. Full Name" required>
@@ -43,7 +43,7 @@
                             </div>
                         </div>
 
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                        <div class="responsive-form-row">
                             <div class="form-group">
                                 <label class="form-label">Referring Doctor (You)</label>
                                 <input type="text" id="refFromDoctor" class="form-input" readonly style="opacity:0.85;">
@@ -54,7 +54,7 @@
                             </div>
                         </div>
 
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                        <div class="responsive-form-row">
                             <div class="form-group">
                                 <label class="form-label">Refer To Specialty Department *</label>
                                 <select id="refToDept" class="form-select" onchange="filterDoctorsByDept()" required>

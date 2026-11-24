@@ -60,7 +60,7 @@
             </div>
             <div class="card-body">
                 <form onsubmit="submitNewTip(event)">
-                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div class="responsive-form-row">
                         <div class="form-group">
                             <label class="form-label">Article Title *</label>
                             <input type="text" id="tipTitle" class="form-input" placeholder="e.g. Protecting Vision During Long Screen Lab Sessions" required>
@@ -85,7 +85,7 @@
         </div>
 
         <!-- Tips Grid -->
-        <div id="tipsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
+        <div id="tipsGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
             <!-- Populated dynamically -->
         </div>
 

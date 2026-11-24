@@ -47,7 +47,7 @@
             <div class="card-body">
                 <form onsubmit="submitNewPrescription(event)">
                     
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:12px;">
+                    <div class="responsive-form-row">
                         <div class="form-group">
                             <label class="form-label">Student Name *</label>
                             <input type="text" id="rxStudentName" class="form-input" placeholder="e.g. Full Name" required>
@@ -67,9 +67,9 @@
                     <div class="form-group" style="margin-bottom:15px;">
                         <label class="form-label">Prescribed Medicines & Dosage *</label>
                         <div id="medicineRows">
-                            <div class="med-row" style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:8px;">
+                            <div class="med-row responsive-form-row" style="margin-bottom:8px;">
                                 <input type="text" class="form-input med-name" placeholder="Medicine Name (e.g. Paracetamol 650mg)" required>
-                                <input type="text" class="form-input med-dose" placeholder="Dosage (e.g. 1 Tab after food TDS)" required>
+                                <input type="text" class="form-input med-dose" placeholder="Dosage (e.g. 1 Tab TDS)" required>
                                 <input type="text" class="form-input med-dur" placeholder="Duration (e.g. 3 Days)" required>
                             </div>
                         </div>
@@ -78,7 +78,7 @@
                         </button>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:12px;">
+                    <div class="responsive-form-row">
                         <div class="form-group">
                             <label class="form-label">Recommended Lab Tests</label>
                             <input type="text" id="rxTests" class="form-input" placeholder="e.g. CBC, Dengue Serology, Rapid Antigen">
@@ -253,7 +253,7 @@
                     </div>
 
                     <!-- Patient & Doctor Metadata -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; background:rgba(255,255,255,0.03); padding:14px; border-radius:var(--radius-inner); margin-bottom:16px; font-size:0.9rem; border:1px solid var(--border-glass);">
+                    <div class="responsive-form-row" style="background:rgba(255,255,255,0.03); padding:14px; border-radius:var(--radius-inner); margin-bottom:16px; font-size:0.9rem; border:1px solid var(--border-glass);">
                         <div>
                             <div>Patient: <strong style="color:#ffffff;">${rx.studentName}</strong></div>
                             <div style="color:var(--text-muted); font-size:0.82rem; margin-top:2px;">Email/Roll: ${rx.studentEmail}</div>
@@ -300,7 +300,7 @@
                     </div>
 
                     <!-- Tests & Advice -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:0.88rem; margin-bottom:16px;">
+                    <div class="responsive-form-row" style="font-size:0.88rem; margin-bottom:16px;">
                         <div style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-inner); border-left:3px solid var(--primary); border:1px solid var(--border-glass);">
                             <strong style="color:#ffffff;">🔬 Diagnostic Tests Advised:</strong>
                             <p style="margin-top:4px; color:var(--text-muted);">${rx.tests || 'None'}</p>
