@@ -1,15 +1,15 @@
 -- =============================================================================
 -- DTU Health Center - Supabase Database Architecture
--- Script 09: Private Messages Table, Bulletproof RLS & Doctor Auth Provisioning
+-- Script 09: Private Messages Table, Hardened RLS & Server-Verified Identity
 -- =============================================================================
 -- Execute this script in your Supabase Project Dashboard:
 -- 1. Open: https://supabase.com/dashboard/project/zifgkxkrpimyxjaqjvwd
 -- 2. Navigate to "SQL Editor" on the left sidebar
 -- 3. Click "New query", paste this entire script, and click "Run" (▶)
 -- =============================================================================
-
--- Ensure pgcrypto extension is active for password hashing
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+-- Note: This migration strictly creates and hardens the private messaging
+-- infrastructure. It does NOT modify auth.users, auth.identities, or passwords.
+-- =============================================================================
 
 -- -----------------------------------------------------------------------------
 -- 1. Create Messages Table
@@ -17,8 +17,8 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 CREATE TABLE IF NOT EXISTS public.messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     appointment_id TEXT NOT NULL REFERENCES public.appointments(id) ON DELETE CASCADE,
-    sender_id UUID NOT NULL,
-    receiver_id UUID NOT NULL,
+    sender_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    receiver_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     sender_name TEXT NOT NULL,
     sender_role TEXT NOT NULL CHECK (sender_role IN ('student', 'doctor')),
     message_text TEXT NOT NULL CHECK (char_length(trim(message_text)) > 0 AND char_length(message_text) <= 4000),
@@ -39,7 +39,6 @@ CREATE INDEX IF NOT EXISTS idx_messages_unread ON public.messages(receiver_id, r
 -- -----------------------------------------------------------------------------
 -- 3. Table Permissions & Grants
 -- -----------------------------------------------------------------------------
--- In accordance with strict security requirements:
 -- Anonymous access is completely REVOKED.
 -- Only verified authenticated users can interact with messages.
 REVOKE ALL ON TABLE public.messages FROM anon;
@@ -51,14 +50,13 @@ GRANT SELECT, INSERT, UPDATE ON TABLE public.messages TO authenticated;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 -- -----------------------------------------------------------------------------
--- 5. Bulletproof Row Level Security Policies
+-- 5. Row Level Security Policies
 -- -----------------------------------------------------------------------------
 
 -- (A) SELECT POLICY:
--- A conversation is visible ONLY to the authenticated student and doctor of that appointment.
+-- A conversation is visible ONLY to the two verified participants of that appointment.
 -- Students cannot read other students' conversations.
 -- Doctors cannot read unrelated doctors' conversations.
--- Anonymous access is strictly denied.
 DROP POLICY IF EXISTS "messages_select_policy" ON public.messages;
 CREATE POLICY "messages_select_policy" ON public.messages
     FOR SELECT TO authenticated
@@ -74,12 +72,11 @@ CREATE POLICY "messages_select_policy" ON public.messages
     );
 
 -- (B) INSERT POLICY:
--- Validates that:
--- 1. The sender is the authenticated user (sender_id = auth.uid()).
+-- Enforces that:
+-- 1. sender_id matches auth.uid().
 -- 2. The appointment exists.
--- 3. If sender is student: sender_id matches a.student_id, receiver_id matches a.doctor_id, sender_role = 'student'.
--- 4. If sender is doctor: sender_id matches a.doctor_id, receiver_id matches a.student_id, sender_role = 'doctor'.
--- Impersonation or cross-appointment insertion is completely blocked.
+-- 3. The sender belongs to the appointment and receiver is the other participant.
+-- 4. The sender role matches the participant's actual role in the appointment.
 DROP POLICY IF EXISTS "messages_insert_policy" ON public.messages;
 CREATE POLICY "messages_insert_policy" ON public.messages
     FOR INSERT TO authenticated
@@ -105,7 +102,7 @@ CREATE POLICY "messages_insert_policy" ON public.messages
     );
 
 -- (C) UPDATE POLICY:
--- Only allow the intended recipient to update message status (marking read_at).
+-- Only the intended recipient can update message status (marking read_at).
 DROP POLICY IF EXISTS "messages_update_policy" ON public.messages;
 CREATE POLICY "messages_update_policy" ON public.messages
     FOR UPDATE TO authenticated
@@ -117,17 +114,79 @@ CREATE POLICY "messages_update_policy" ON public.messages
     );
 
 -- (D) DELETE POLICY:
--- Consultations are permanent medical records. Neither students nor doctors can delete messages.
+-- Consultations are permanent medical records. Deletion is forbidden.
 DROP POLICY IF EXISTS "messages_delete_policy" ON public.messages;
 CREATE POLICY "messages_delete_policy" ON public.messages
     FOR DELETE TO authenticated
     USING (false);
 
 -- -----------------------------------------------------------------------------
--- 6. Tamper-Proof Trigger on UPDATE
+-- 6. Trusted Identity & Participation Verification Trigger (BEFORE INSERT)
 -- -----------------------------------------------------------------------------
--- Ensures that callers cannot modify existing message text, timestamps,
--- appointment relationships, or sender/receiver identity during an UPDATE.
+-- Ensures sender identity, roles, and recipient are derived and validated
+-- from verified database relationships rather than trusting browser payloads.
+CREATE OR REPLACE FUNCTION public.set_message_sender_identity()
+RETURNS TRIGGER 
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_apt RECORD;
+    v_prof_name TEXT;
+BEGIN
+    -- Verify caller is authenticated
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Security Violation: Anonymous users cannot send messages.';
+    END IF;
+
+    -- Force sender_id to authenticated caller
+    NEW.sender_id := auth.uid();
+
+    -- Retrieve verified appointment participants
+    SELECT student_id, doctor_id, student_name, doctor_name
+    INTO v_apt
+    FROM public.appointments
+    WHERE id = NEW.appointment_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Security Violation: Appointment % does not exist.', NEW.appointment_id;
+    END IF;
+
+    -- Retrieve sender profile name
+    SELECT full_name INTO v_prof_name FROM public.profiles WHERE id = auth.uid();
+
+    -- Strictly validate role and bind recipient to opposite participant
+    IF auth.uid() = v_apt.student_id THEN
+        NEW.sender_role := 'student';
+        NEW.receiver_id := v_apt.doctor_id;
+        NEW.sender_name := COALESCE(v_prof_name, v_apt.student_name, 'Student');
+    ELSIF auth.uid() = v_apt.doctor_id THEN
+        NEW.sender_role := 'doctor';
+        NEW.receiver_id := v_apt.student_id;
+        NEW.sender_name := COALESCE(v_prof_name, v_apt.doctor_name, 'Doctor');
+    ELSE
+        RAISE EXCEPTION 'Security Violation: User % is not an authorized participant in appointment %.', auth.uid(), NEW.appointment_id;
+    END IF;
+
+    -- Force trusted timestamps
+    NEW.created_at := timezone('utc'::text, now());
+    NEW.read_at := NULL;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_set_message_sender_identity ON public.messages;
+CREATE TRIGGER trg_set_message_sender_identity
+    BEFORE INSERT ON public.messages
+    FOR EACH ROW EXECUTE FUNCTION public.set_message_sender_identity();
+
+-- -----------------------------------------------------------------------------
+-- 7. Tamper-Proof Trigger on UPDATE (BEFORE UPDATE)
+-- -----------------------------------------------------------------------------
+-- Ensures message content, timestamps, participants, and foreign keys cannot
+-- be modified. Only the recipient may update read_at, and cannot clear it.
 CREATE OR REPLACE FUNCTION public.validate_message_update()
 RETURNS TRIGGER 
 LANGUAGE plpgsql
@@ -135,9 +194,19 @@ SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
 BEGIN
-    -- Verify that only the recipient can perform an update
-    IF auth.uid() IS NOT NULL AND auth.uid() != OLD.receiver_id THEN
+    -- Reject update if caller is unauthenticated
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Security Violation: Anonymous users cannot update messages.';
+    END IF;
+
+    -- Verify caller is the intended recipient
+    IF auth.uid() != OLD.receiver_id THEN
         RAISE EXCEPTION 'Security Violation: Only the intended recipient can update message status.';
+    END IF;
+
+    -- Recipient cannot clear an existing read receipt
+    IF OLD.read_at IS NOT NULL AND NEW.read_at IS NULL THEN
+        RAISE EXCEPTION 'Security Violation: Cannot clear an existing read receipt.';
     END IF;
 
     -- Enforce immutability of all message attributes except read_at
@@ -160,117 +229,6 @@ DROP TRIGGER IF EXISTS trg_validate_message_update ON public.messages;
 CREATE TRIGGER trg_validate_message_update
     BEFORE UPDATE ON public.messages
     FOR EACH ROW EXECUTE FUNCTION public.validate_message_update();
-
--- -----------------------------------------------------------------------------
--- 7. Provision Official Doctor Accounts in auth.users and auth.identities
--- -----------------------------------------------------------------------------
--- Resolves the HTTP 500 "Database error querying schema" and GoTrue identity issues.
--- Correctly handles provider_id, id, and pgcrypto password hashing.
-DO $$
-DECLARE
-    doc RECORD;
-    v_user_id UUID;
-    v_exists BOOLEAN;
-    v_has_identity BOOLEAN;
-BEGIN
-    FOR doc IN 
-        SELECT * FROM (
-            VALUES 
-            ('d0000000-0000-0000-0000-000000000001'::uuid, 'dr.ravibansal@dtu.ac.in', 'Dr. Ravi Bansal'),
-            ('d0000000-0000-0000-0000-000000000002'::uuid, 'dr.rajeshsinghai@dtu.ac.in', 'Dr. Rajesh Singhai'),
-            ('d0000000-0000-0000-0000-000000000003'::uuid, 'dr.arpanabansal@dtu.ac.in', 'Dr. Arpana Bansal'),
-            ('d0000000-0000-0000-0000-000000000004'::uuid, 'dr.bharatsethi@dtu.ac.in', 'Dr. Bharat Sethi'),
-            ('d0000000-0000-0000-0000-000000000005'::uuid, 'dr.subodhmor@dtu.ac.in', 'Dr. Subodh Mor'),
-            ('d0000000-0000-0000-0000-000000000006'::uuid, 'dr.dineshbansal@dtu.ac.in', 'Dr. Dinesh Bansal'),
-            ('d0000000-0000-0000-0000-000000000007'::uuid, 'dr.gauravgupta@dtu.ac.in', 'Dr. Gaurav Gupta'),
-            ('d0000000-0000-0000-0000-000000000008'::uuid, 'dr.nishajha@dtu.ac.in', 'Dr. Nisha Jha'),
-            ('d0000000-0000-0000-0000-000000000009'::uuid, 'dr.mohitgulia@dtu.ac.in', 'Dr. Mohit Gulia'),
-            ('d0000000-0000-0000-0000-000000000010'::uuid, 'dr.aditibansal@dtu.ac.in', 'Dr. Aditi Bansal')
-        ) AS t(id, email, name)
-    LOOP
-        -- Check if user already exists in auth.users
-        SELECT EXISTS(SELECT 1 FROM auth.users WHERE lower(email) = lower(doc.email)) INTO v_exists;
-
-        IF v_exists THEN
-            UPDATE auth.users 
-            SET encrypted_password = extensions.crypt('doctor123', extensions.gen_salt('bf')),
-                email_confirmed_at = COALESCE(email_confirmed_at, now()),
-                raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
-                raw_user_meta_data = jsonb_build_object('role', 'doctor', 'name', doc.name, 'full_name', doc.name),
-                updated_at = now()
-            WHERE lower(email) = lower(doc.email)
-            RETURNING id INTO v_user_id;
-        ELSE
-            v_user_id := doc.id;
-            INSERT INTO auth.users (
-                id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
-                raw_app_meta_data, raw_user_meta_data, created_at, updated_at
-            ) VALUES (
-                v_user_id,
-                '00000000-0000-0000-0000-000000000000',
-                'authenticated',
-                'authenticated',
-                lower(doc.email),
-                extensions.crypt('doctor123', extensions.gen_salt('bf')),
-                now(),
-                '{"provider":"email","providers":["email"]}'::jsonb,
-                jsonb_build_object('role', 'doctor', 'name', doc.name, 'full_name', doc.name),
-                now(),
-                now()
-            );
-        END IF;
-
-        -- Check and insert GoTrue identity (handling both old and new GoTrue schemas)
-        SELECT EXISTS(SELECT 1 FROM auth.identities WHERE user_id = v_user_id) INTO v_has_identity;
-        IF NOT v_has_identity THEN
-            BEGIN
-                -- Modern Supabase GoTrue schema (requires provider_id, id as UUID)
-                INSERT INTO auth.identities (
-                    id,
-                    provider_id,
-                    user_id,
-                    identity_data,
-                    provider,
-                    last_sign_in_at,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    gen_random_uuid(),
-                    v_user_id::text,
-                    v_user_id,
-                    jsonb_build_object('sub', v_user_id::text, 'email', lower(doc.email)),
-                    'email',
-                    now(),
-                    now(),
-                    now()
-                );
-            EXCEPTION WHEN OTHERS THEN
-                -- Fallback for legacy GoTrue schema (where id is provider_id text)
-                BEGIN
-                    INSERT INTO auth.identities (
-                        provider_id,
-                        user_id,
-                        identity_data,
-                        provider,
-                        last_sign_in_at,
-                        created_at,
-                        updated_at
-                    ) VALUES (
-                        v_user_id::text,
-                        v_user_id,
-                        jsonb_build_object('sub', v_user_id::text, 'email', lower(doc.email)),
-                        'email',
-                        now(),
-                        now(),
-                        now()
-                    );
-                EXCEPTION WHEN OTHERS THEN
-                    NULL; -- Identity already present or managed by trigger
-                END;
-            END;
-        END IF;
-    END LOOP;
-END $$;
 
 -- -----------------------------------------------------------------------------
 -- 8. Enable Supabase Realtime Replication
