@@ -144,7 +144,7 @@ BEGIN
     NEW.sender_id := auth.uid();
 
     -- Retrieve verified appointment participants
-    SELECT student_id, doctor_id, student_name, doctor_name
+    SELECT student_id, doctor_id
     INTO v_apt
     FROM public.appointments
     WHERE id = NEW.appointment_id;
@@ -153,18 +153,24 @@ BEGIN
         RAISE EXCEPTION 'Security Violation: Appointment % does not exist.', NEW.appointment_id;
     END IF;
 
-    -- Retrieve sender profile name
-    SELECT full_name INTO v_prof_name FROM public.profiles WHERE id = auth.uid();
+    -- Retrieve sender profile name strictly from verified public.profiles
+    SELECT full_name INTO v_prof_name 
+    FROM public.profiles 
+    WHERE id = auth.uid();
+
+    IF v_prof_name IS NULL OR trim(v_prof_name) = '' THEN
+        RAISE EXCEPTION 'Security Violation: Verified user profile not found for user %. Message rejected.', auth.uid();
+    END IF;
 
     -- Strictly validate role and bind recipient to opposite participant
     IF auth.uid() = v_apt.student_id THEN
         NEW.sender_role := 'student';
         NEW.receiver_id := v_apt.doctor_id;
-        NEW.sender_name := COALESCE(v_prof_name, v_apt.student_name, 'Student');
+        NEW.sender_name := v_prof_name;
     ELSIF auth.uid() = v_apt.doctor_id THEN
         NEW.sender_role := 'doctor';
         NEW.receiver_id := v_apt.student_id;
-        NEW.sender_name := COALESCE(v_prof_name, v_apt.doctor_name, 'Doctor');
+        NEW.sender_name := v_prof_name;
     ELSE
         RAISE EXCEPTION 'Security Violation: User % is not an authorized participant in appointment %.', auth.uid(), NEW.appointment_id;
     END IF;
