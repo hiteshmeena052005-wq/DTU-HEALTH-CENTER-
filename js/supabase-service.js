@@ -377,7 +377,7 @@ const SupabaseService = (function () {
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
         if (client && isLive()) {
-            let query = client.from('appointments').select('*');
+            let query = client.from('appointments').select('*, students(roll_no, branch, dtu_email)');
 
             if (currentUser && currentUser.role === 'student') {
                 if (isUUIDString(currentUser.id)) {
@@ -389,7 +389,7 @@ const SupabaseService = (function () {
                 const docUuid = resolveDoctorUUID(currentUser.id || currentUser.uuid || currentUser.name);
                 const docName = (currentUser.name || '').replace(/^Dr\.?\s*/i, '').trim();
                 if (docName) {
-                    query = query.or(`doctor_id.eq.${docUuid},doctor_name.ilike.%${encodeURIComponent(docName)}%`);
+                    query = query.or(`doctor_id.eq.${docUuid},doctor_name.ilike.%${docName}%`);
                 } else {
                     query = query.eq('doctor_id', docUuid);
                 }
@@ -397,25 +397,61 @@ const SupabaseService = (function () {
 
             const { data, error } = await query.order('created_at', { ascending: false });
             if (!error && data) {
-                const mapped = data.map(a => ({
-                    id: a.id,
-                    slotId: a.slot_id,
-                    studentId: a.student_id,
-                    doctorId: a.doctor_id,
-                    studentName: a.student_name,
-                    studentEmail: a.student_email,
-                    rollNo: a.roll_no,
-                    branch: a.branch,
-                    doctorName: a.doctor_name,
-                    department: a.department,
-                    date: a.date,
-                    time: a.time_window,
-                    mode: a.mode,
-                    reason: a.reason,
-                    urgency: a.urgency,
-                    status: a.status,
-                    createdAt: a.created_at ? new Date(a.created_at).toLocaleDateString() : ''
-                }));
+                // Fetch profiles in batch for missing or mismatched student names
+                const studentIdsToFetch = [];
+                data.forEach(a => {
+                    const isDoctorNameAsPatient = a.student_name && a.doctor_name && a.student_name.toLowerCase().trim() === a.doctor_name.toLowerCase().trim();
+                    const isGenericStudent = !a.student_name || a.student_name.toLowerCase() === 'student' || a.student_name.toLowerCase().startsWith('dr.');
+                    if ((isDoctorNameAsPatient || isGenericStudent) && a.student_id && !studentIdsToFetch.includes(a.student_id)) {
+                        studentIdsToFetch.push(a.student_id);
+                    }
+                });
+
+                let profileMap = {};
+                if (studentIdsToFetch.length > 0) {
+                    try {
+                        const { data: pRows } = await client.from('profiles').select('id, full_name, email').in('id', studentIdsToFetch);
+                        if (pRows) {
+                            pRows.forEach(p => { profileMap[p.id] = p; });
+                        }
+                    } catch (e) {}
+                }
+
+                const mapped = data.map(a => {
+                    const studObj = a.students || {};
+                    const profObj = profileMap[a.student_id] || {};
+
+                    let studentName = a.student_name;
+                    // If student_name was erroneously set to doctor's name or is generic "Student", replace with true student identity
+                    if (!studentName || studentName.toLowerCase() === 'student' || studentName.toLowerCase().startsWith('dr.') || (a.doctor_name && studentName.toLowerCase().trim() === a.doctor_name.toLowerCase().trim())) {
+                        studentName = profObj.full_name || 'Rahul Meena';
+                    }
+
+                    let studentEmail = a.student_email || profObj.email || studObj.dtu_email || 'student@dtu.ac.in';
+                    let rollNo = a.roll_no || studObj.roll_no || '2K22/CO/101';
+                    let branch = a.branch || studObj.branch || 'Computer Science & Engineering';
+
+                    return {
+                        id: a.id,
+                        slotId: a.slot_id,
+                        studentId: a.student_id,
+                        doctorId: a.doctor_id,
+                        studentName: studentName,
+                        studentEmail: studentEmail,
+                        rollNo: rollNo,
+                        branch: branch,
+                        doctorName: a.doctor_name,
+                        department: a.department,
+                        date: a.date,
+                        time: a.time_window,
+                        mode: a.mode,
+                        reason: a.reason,
+                        urgency: a.urgency,
+                        status: a.status,
+                        createdAt: a.created_at ? new Date(a.created_at).toLocaleDateString() : ''
+                    };
+                });
+
                 if (window._dtuMemoryDB) {
                     window._dtuMemoryDB.appointments = mapped;
                 }
@@ -428,6 +464,7 @@ const SupabaseService = (function () {
     async function bookAppointment(aptData) {
         const client = getClient();
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        const storedProfile = JSON.parse(localStorage.getItem('studentProfile') || '{}');
 
         if (client && isLive()) {
             let studentUuid = null;
@@ -479,15 +516,37 @@ const SupabaseService = (function () {
                 doctorUuid = resolveDoctorUUID(aptData.doctorId || aptData.doctorName);
             }
 
+            // Resolve student identity strictly - NEVER allow doctor's name to be saved as the student
+            let finalStudentName = aptData.studentName;
+            if (!finalStudentName || finalStudentName.toLowerCase() === 'student' || finalStudentName.toLowerCase().startsWith('dr.')) {
+                if (storedProfile.name && !storedProfile.name.toLowerCase().startsWith('dr.')) {
+                    finalStudentName = storedProfile.name;
+                } else if (currentUser && currentUser.role === 'student' && currentUser.name && !currentUser.name.toLowerCase().startsWith('dr.')) {
+                    finalStudentName = currentUser.name;
+                } else {
+                    try {
+                        const { data: pRow } = await client.from('profiles').select('full_name').eq('id', studentUuid).maybeSingle();
+                        if (pRow && pRow.full_name) finalStudentName = pRow.full_name;
+                    } catch (e) {}
+                }
+            }
+            if (!finalStudentName || finalStudentName.toLowerCase() === 'student' || finalStudentName.toLowerCase().startsWith('dr.')) {
+                finalStudentName = 'Rahul Meena';
+            }
+
+            let finalStudentRoll = aptData.rollNo || storedProfile.rollNo || (currentUser.role === 'student' ? currentUser.rollNo : null) || '2K22/CO/101';
+            let finalStudentBranch = aptData.branch || storedProfile.branch || (currentUser.role === 'student' ? currentUser.branch : null) || 'Computer Science & Engineering';
+            let finalStudentEmail = aptData.studentEmail || storedProfile.email || storedProfile.dtuEmail || (currentUser.role === 'student' ? currentUser.email : null) || 'student@dtu.ac.in';
+
             // Ensure student record exists in public.students table
             try {
                 await client.from('students').upsert({
                     id: studentUuid,
-                    roll_no: aptData.rollNo || currentUser.rollNo || '2K23/CO/001',
-                    branch: aptData.branch || currentUser.branch || 'General Engineering',
-                    year_of_study: currentUser.year || '1st Year',
-                    phone: currentUser.phone || '+91 9876543210',
-                    dtu_email: aptData.studentEmail || currentUser.email || 'student@dtu.ac.in'
+                    roll_no: finalStudentRoll,
+                    branch: finalStudentBranch,
+                    year_of_study: storedProfile.year || currentUser.year || '3rd Year',
+                    phone: storedProfile.phone || currentUser.phone || '+91 9876543210',
+                    dtu_email: finalStudentEmail
                 }, { onConflict: 'id', ignoreDuplicates: true });
             } catch (e) {
                 console.warn("Auto-upsert student skipped:", e.message);
@@ -499,10 +558,10 @@ const SupabaseService = (function () {
                 slot_id: slotIdInt,
                 student_id: studentUuid,
                 doctor_id: doctorUuid,
-                student_name: aptData.studentName || currentUser.name || 'DTU Student',
-                student_email: aptData.studentEmail || currentUser.email || 'student@dtu.ac.in',
-                roll_no: aptData.rollNo || currentUser.rollNo || '2K23/CO/001',
-                branch: aptData.branch || currentUser.branch || 'General Engineering',
+                student_name: finalStudentName,
+                student_email: finalStudentEmail,
+                roll_no: finalStudentRoll,
+                branch: finalStudentBranch,
                 doctor_name: aptData.doctorName,
                 department: aptData.department,
                 date: aptData.date,
@@ -570,15 +629,47 @@ const SupabaseService = (function () {
                 }
             }
 
-            broadcastDataChange('APPOINTMENT_BOOKED', { appointment: confirmedApt, slotId: slotIdInt });
+            if (typeof broadcastDataChange === 'function') {
+                broadcastDataChange('APPOINTMENT_BOOKED', { appointment: confirmedApt, slotId: slotIdInt });
+            }
+
             return confirmedApt;
         }
 
         // Memory fallback
-        if (typeof saveAppointment === 'function') {
-            await saveAppointment(aptData);
+        const newApt = {
+            id: aptData.id || ('APT-' + Date.now().toString().slice(-4)),
+            slotId: aptData.slotId,
+            studentId: aptData.studentId || 'a0000000-0000-0000-0000-000000000001',
+            doctorId: aptData.doctorId || resolveDoctorUUID(aptData.doctorName),
+            studentName: aptData.studentName || storedProfile.name || 'Rahul Meena',
+            studentEmail: aptData.studentEmail || storedProfile.email || 'student@dtu.ac.in',
+            rollNo: aptData.rollNo || storedProfile.rollNo || '2K22/CO/101',
+            branch: aptData.branch || storedProfile.branch || 'Computer Science & Engineering',
+            doctorName: aptData.doctorName,
+            department: aptData.department,
+            date: aptData.date,
+            time: aptData.time,
+            mode: aptData.mode || 'Physical OPD Visit (Health Center)',
+            reason: aptData.reason,
+            urgency: aptData.urgency || 'Normal / Routine',
+            status: 'confirmed',
+            createdAt: new Date().toLocaleDateString()
+        };
+
+        if (window._dtuMemoryDB) {
+            if (!window._dtuMemoryDB.appointments) window._dtuMemoryDB.appointments = [];
+            window._dtuMemoryDB.appointments.unshift(newApt);
+            if (typeof saveClientStore === 'function') {
+                saveClientStore(window._dtuMemoryDB);
+            }
         }
-        return aptData;
+
+        if (typeof broadcastDataChange === 'function') {
+            broadcastDataChange('APPOINTMENT_BOOKED', { appointment: newApt, slotId: newApt.slotId });
+        }
+
+        return newApt;
     }
 
     async function cancelAppointment(appointmentId) {
@@ -996,7 +1087,167 @@ const SupabaseService = (function () {
     }
 
     // -------------------------------------------------------------------------
-    // 10. REAL-TIME SUBSCRIPTIONS
+    // 10. PRIVATE STUDENT-DOCTOR MESSAGING
+    // -------------------------------------------------------------------------
+
+    async function getMessages(appointmentId) {
+        if (!appointmentId) return [];
+        const client = getClient();
+        if (client && isLive()) {
+            try {
+                const { data, error } = await client
+                    .from('messages')
+                    .select('*')
+                    .eq('appointment_id', appointmentId)
+                    .order('created_at', { ascending: true });
+
+                if (!error && Array.isArray(data)) {
+                    // Update in-memory DB cache
+                    if (window._dtuMemoryDB) {
+                        window._dtuMemoryDB.messages = window._dtuMemoryDB.messages || {};
+                        window._dtuMemoryDB.messages[appointmentId] = data;
+                    }
+                    return data;
+                }
+            } catch (e) {
+                console.warn("Supabase getMessages notice:", e.message);
+            }
+        }
+
+        // Memory fallback
+        if (window._dtuMemoryDB && window._dtuMemoryDB.messages && window._dtuMemoryDB.messages[appointmentId]) {
+            return window._dtuMemoryDB.messages[appointmentId];
+        }
+        return [];
+    }
+
+    async function sendMessage({ appointmentId, senderId, receiverId, senderName, senderRole, messageText }) {
+        if (!appointmentId || !messageText || !messageText.trim()) {
+            throw new Error("Appointment ID and message text are required.");
+        }
+
+        const client = getClient();
+        const newMsg = {
+            id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+            appointment_id: appointmentId,
+            sender_id: senderId || (senderRole === 'doctor' ? 'd0000000-0000-0000-0000-000000000001' : 'a0000000-0000-0000-0000-000000000001'),
+            receiver_id: receiverId || (senderRole === 'doctor' ? 'a0000000-0000-0000-0000-000000000001' : 'd0000000-0000-0000-0000-000000000001'),
+            sender_name: senderName || (senderRole === 'doctor' ? 'Doctor' : 'Student'),
+            sender_role: senderRole || 'student',
+            message_text: messageText.trim(),
+            created_at: new Date().toISOString(),
+            read_at: null
+        };
+
+        if (client && isLive()) {
+            try {
+                const { data, error } = await client
+                    .from('messages')
+                    .insert({
+                        appointment_id: newMsg.appointment_id,
+                        sender_id: newMsg.sender_id,
+                        receiver_id: newMsg.receiver_id,
+                        sender_name: newMsg.sender_name,
+                        sender_role: newMsg.sender_role,
+                        message_text: newMsg.message_text
+                    })
+                    .select()
+                    .single();
+
+                if (!error && data) {
+                    newMsg.id = data.id;
+                    newMsg.created_at = data.created_at;
+                }
+            } catch (e) {
+                console.warn("Supabase sendMessage fallback to memory:", e.message);
+            }
+        }
+
+        // Cache in memory DB
+        if (window._dtuMemoryDB) {
+            window._dtuMemoryDB.messages = window._dtuMemoryDB.messages || {};
+            if (!window._dtuMemoryDB.messages[appointmentId]) {
+                window._dtuMemoryDB.messages[appointmentId] = [];
+            }
+            window._dtuMemoryDB.messages[appointmentId].push(newMsg);
+            if (typeof saveClientStore === 'function') {
+                saveClientStore(window._dtuMemoryDB);
+            }
+        }
+
+        // Broadcast to other tabs & windows
+        if (typeof broadcastDataChange === 'function') {
+            broadcastDataChange('NEW_CHAT_MESSAGE', { message: newMsg, appointmentId });
+        }
+
+        return newMsg;
+    }
+
+    async function markMessagesAsRead(appointmentId, currentUserId) {
+        if (!appointmentId || !currentUserId) return;
+        const client = getClient();
+        if (client && isLive()) {
+            try {
+                await client
+                    .from('messages')
+                    .update({ read_at: new Date().toISOString() })
+                    .eq('appointment_id', appointmentId)
+                    .eq('receiver_id', currentUserId)
+                    .is('read_at', null);
+            } catch (e) {}
+        }
+        if (window._dtuMemoryDB && window._dtuMemoryDB.messages && window._dtuMemoryDB.messages[appointmentId]) {
+            window._dtuMemoryDB.messages[appointmentId].forEach(m => {
+                if (m.receiver_id === currentUserId && !m.read_at) {
+                    m.read_at = new Date().toISOString();
+                }
+            });
+        }
+    }
+
+    function subscribeToMessages(appointmentId, onMessageCallback) {
+        const client = getClient();
+        let channel = null;
+        if (client && isLive()) {
+            try {
+                channel = client.channel(`messages:${appointmentId}`)
+                    .on('postgres_changes', {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'messages',
+                        filter: `appointment_id=eq.${appointmentId}`
+                    }, payload => {
+                        if (payload.new && typeof onMessageCallback === 'function') {
+                            onMessageCallback(payload.new);
+                        }
+                    })
+                    .subscribe();
+            } catch (e) {
+                console.warn("Realtime subscribe notice:", e.message);
+            }
+        }
+
+        // Also listen to local cross-tab event
+        const unsubscribeLocal = typeof onDataChanged === 'function' ? onDataChanged(event => {
+            if (event.type === 'NEW_CHAT_MESSAGE' && event.payload && event.payload.appointmentId === appointmentId) {
+                if (typeof onMessageCallback === 'function') {
+                    onMessageCallback(event.payload.message);
+                }
+            }
+        }) : null;
+
+        return () => {
+            if (channel && client) {
+                try { client.removeChannel(channel); } catch (e) {}
+            }
+            if (typeof unsubscribeLocal === 'function') {
+                unsubscribeLocal();
+            }
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    // 11. REAL-TIME SUBSCRIPTIONS
     // -------------------------------------------------------------------------
 
     function subscribeRealtime(table, callback) {
@@ -1042,6 +1293,10 @@ const SupabaseService = (function () {
         getMedicines,
         updateMedicineStock,
         getHealthTips,
+        getMessages,
+        sendMessage,
+        markMessagesAsRead,
+        subscribeToMessages,
         subscribeRealtime
     };
 

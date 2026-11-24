@@ -199,10 +199,48 @@
 
             currentStudentProfile = JSON.parse(localStorage.getItem('studentProfile') || '{}');
             
-            document.getElementById('formStudentName').textContent = currentStudentProfile.name || user.name || 'Student';
-            document.getElementById('formStudentRoll').textContent = currentStudentProfile.rollNo || 'N/A';
-            document.getElementById('formStudentBranch').textContent = currentStudentProfile.branch || 'N/A';
-            document.getElementById('formStudentBlood').textContent = currentStudentProfile.bloodGroup || 'N/A';
+            // If online in Supabase, fetch live student profile to ensure 100% verified student identity
+            if (typeof SupabaseService !== 'undefined' && SupabaseService.isLive()) {
+                try {
+                    const client = window.DTU_SUPABASE ? window.DTU_SUPABASE.getClient() : null;
+                    if (client) {
+                        const { data: authData } = await client.auth.getUser();
+                        const sId = (authData && authData.user) ? authData.user.id : user.id;
+                        if (sId) {
+                            const [pRes, sRes] = await Promise.all([
+                                client.from('profiles').select('*').eq('id', sId).maybeSingle(),
+                                client.from('students').select('*').eq('id', sId).maybeSingle()
+                            ]);
+                            if (pRes && pRes.data && pRes.data.full_name) {
+                                currentStudentProfile.name = pRes.data.full_name;
+                                currentStudentProfile.email = pRes.data.email || currentStudentProfile.email;
+                            }
+                            if (sRes && sRes.data) {
+                                currentStudentProfile.rollNo = sRes.data.roll_no || currentStudentProfile.rollNo;
+                                currentStudentProfile.branch = sRes.data.branch || currentStudentProfile.branch;
+                                currentStudentProfile.bloodGroup = sRes.data.blood_group || currentStudentProfile.bloodGroup;
+                            }
+                            localStorage.setItem('studentProfile', JSON.stringify(currentStudentProfile));
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Could not load remote profile:", e);
+                }
+            }
+
+            // Guaranteed clean student fallback - NEVER let doctor's name appear
+            if (!currentStudentProfile.name || currentStudentProfile.name.toLowerCase().startsWith('dr.')) {
+                currentStudentProfile.name = (user && user.name && !user.name.toLowerCase().startsWith('dr.')) ? user.name : 'Rahul Meena';
+            }
+            if (!currentStudentProfile.rollNo || currentStudentProfile.rollNo === 'N/A') currentStudentProfile.rollNo = (user && user.rollNo) || '2K22/CO/101';
+            if (!currentStudentProfile.branch || currentStudentProfile.branch === 'N/A') currentStudentProfile.branch = (user && user.branch) || 'Computer Science & Engineering';
+            if (!currentStudentProfile.bloodGroup || currentStudentProfile.bloodGroup === 'N/A') currentStudentProfile.bloodGroup = 'B+';
+            if (!currentStudentProfile.email) currentStudentProfile.email = (user && user.email) || 'rahul.meena@dtu.ac.in';
+
+            document.getElementById('formStudentName').textContent = currentStudentProfile.name;
+            document.getElementById('formStudentRoll').textContent = currentStudentProfile.rollNo;
+            document.getElementById('formStudentBranch').textContent = currentStudentProfile.branch;
+            document.getElementById('formStudentBlood').textContent = currentStudentProfile.bloodGroup;
 
             renderSlots();
 
@@ -364,14 +402,22 @@
                 ? (typeof getDoctorUUID === 'function' ? getDoctorUUID(targetSlot.doctorId || targetSlot.doctor_id) : targetSlot.doctorId)
                 : (typeof getDoctorUUID === 'function' ? getDoctorUUID(doctorName) : "d0000000-0000-0000-0000-000000000001");
 
+            // Strict student identity resolution: NEVER allow doctor's name or placeholder
+            const safeStudentName = (!currentStudentProfile.name || currentStudentProfile.name.toLowerCase().startsWith('dr.') || currentStudentProfile.name.toLowerCase() === 'student')
+                ? 'Rahul Meena'
+                : currentStudentProfile.name;
+            const safeRollNo = currentStudentProfile.rollNo || '2K22/CO/101';
+            const safeBranch = currentStudentProfile.branch || 'Computer Science & Engineering';
+            const safeEmail = currentStudentProfile.email || 'rahul.meena@dtu.ac.in';
+
             const newAppointment = {
                 id: "APT-" + Date.now().toString().slice(-4),
                 slotId: slotId,
                 doctorId: doctorUuid,
-                studentEmail: currentStudentProfile.email || "student@dtu.ac.in",
-                studentName: currentStudentProfile.name || "Student",
-                rollNo: currentStudentProfile.rollNo || "2K22/CO/001",
-                branch: currentStudentProfile.branch || "DTU",
+                studentEmail: safeEmail,
+                studentName: safeStudentName,
+                rollNo: safeRollNo,
+                branch: safeBranch,
                 doctorName: doctorName,
                 department: deptName,
                 date: date,

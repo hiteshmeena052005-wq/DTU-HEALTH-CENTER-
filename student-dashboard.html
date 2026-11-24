@@ -207,6 +207,12 @@
 
             // Listen to real-time sync across tabs and Supabase websocket
             onDataChanged((event) => {
+                if (event.type === 'NEW_CHAT_MESSAGE' && event.payload && event.payload.message) {
+                    const msg = event.payload.message;
+                    if (msg.sender_role === 'doctor') {
+                        showNotification(`💬 New message from ${msg.sender_name || 'Doctor'}!`, 'info');
+                    }
+                }
                 renderStats();
                 renderAppointments(getAppointments());
                 renderNotices(getNotices());
@@ -260,34 +266,50 @@
                 return;
             }
 
-            container.innerHTML = appointments.map((apt) => `
-                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-glass); border-radius:var(--radius-inner); padding:16px; margin-bottom:12px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+            container.innerHTML = appointments.map((apt) => {
+                const docName = apt.doctorName || 'Dr. Ravi Bansal';
+                const docDept = apt.department || 'General Medicine (OPD)';
+                const statusDisplay = apt.status ? (apt.status.charAt(0).toUpperCase() + apt.status.slice(1)) : 'Confirmed';
+
+                return `
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-glass); border-radius:var(--radius-inner); padding:16px; margin-bottom:12px; border-left: 3px solid var(--primary);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                         <div>
-                            <strong style="color:#ffffff; font-size:1.05rem;">${apt.doctorName}</strong>
-                            <p style="font-size:0.82rem; color:var(--amber); margin-top:2px;">${apt.department}</p>
+                            <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Consulting Physician</div>
+                            <strong style="color:#ffffff; font-size:1.1rem; display:block; margin-top:2px;">👨‍⚕️ ${docName}</strong>
+                            <p style="font-size:0.83rem; color:var(--amber); margin-top:2px; font-weight:600;">${docDept}</p>
                         </div>
-                        <span class="pill-tag ${apt.status === 'confirmed' ? 'badge-success' : 'badge-warning'}">
-                            ${apt.status || 'Confirmed'}
-                        </span>
+                        <div style="text-align:right;">
+                            <span class="pill-tag ${apt.status === 'confirmed' ? 'badge-success' : 'badge-warning'}">
+                                ${statusDisplay}
+                            </span>
+                        </div>
                     </div>
-                    <div style="margin:8px 0; font-size:0.85rem; color:var(--text-light);">
-                        <span>📅 <strong>${apt.date}</strong></span> &nbsp;·&nbsp;
-                        <span>⏰ <strong>${apt.time}</strong></span>
+                    <div style="margin:10px 0; font-size:0.86rem; color:var(--text-light); background:rgba(255,255,255,0.02); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04);">
+                        <span>📅 <strong>Appointment:</strong> ${apt.date}</span> &nbsp;·&nbsp;
+                        <span>⏰ <strong>Time:</strong> ${apt.time}</span>
                     </div>
-                    <p style="font-size:0.85rem; color:var(--text-muted); background:rgba(255,255,255,0.02); padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); margin-bottom:12px;">
-                        <strong>Symptoms:</strong> ${apt.reason || 'Routine consultation'}
+                    <p style="font-size:0.85rem; color:var(--text-muted); background:rgba(255,255,255,0.02); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); margin-bottom:14px; line-height:1.45;">
+                        <strong style="color:var(--text-light);">Symptoms:</strong> ${apt.reason || 'Routine consultation'}
                     </p>
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                        <a href="video-call.html?doctor=${encodeURIComponent(apt.doctorName)}" class="btn btn-pill-glass btn-small" style="padding:6px 14px;">
-                            📹 Join Video Call
-                        </a>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <button type="button" 
+                                    onclick="openChatModal('${apt.id}', '${docName.replace(/'/g, "\\'")}', 'doctor', '${apt.doctorId || ''}', '${docDept.replace(/'/g, "\\'")}')" 
+                                    class="btn btn-pill-primary btn-small" style="padding:6px 14px; font-weight:700;">
+                                💬 Message Doctor
+                            </button>
+                            <a href="video-call.html?doctor=${encodeURIComponent(docName)}" class="btn btn-pill-glass btn-small" style="padding:6px 14px;">
+                                📹 Join Video Call
+                            </a>
+                        </div>
                         <button onclick="cancelAppointment('${apt.id}')" class="btn btn-pill-danger btn-small" style="padding:6px 14px;">
                             Cancel Booking
                         </button>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function renderProfileSummary(profile) {

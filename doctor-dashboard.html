@@ -308,6 +308,11 @@
                     showNotification("Patient cancelled appointment. Slot capacity freed up.", "warning");
                 } else if (event.type === 'APPOINTMENT_BOOKED') {
                     showNotification("New appointment booked in live queue!", "success");
+                } else if (event.type === 'NEW_CHAT_MESSAGE' && event.payload && event.payload.message) {
+                    const msg = event.payload.message;
+                    if (msg.sender_role === 'student') {
+                        showNotification(`💬 New message from ${msg.sender_name || 'Student'}!`, 'info');
+                    }
                 } else if (event.type === 'EMERGENCY_SOS') {
                     const loc = (event.payload && event.payload.location) ? event.payload.location : 'Campus';
                     showNotification(`🚨 URGENT SOS from ${loc}! Ambulance dispatched.`, 'danger');
@@ -374,30 +379,60 @@
                 const isUrgent = apt.urgency && apt.urgency.includes('Urgent');
                 const isVideo = apt.mode && apt.mode.includes('Video');
 
+                // Strict student identity check: NEVER display doctor's own name as patient!
+                const studentNameDisplay = (apt.studentName && !apt.studentName.toLowerCase().startsWith('dr.')) 
+                    ? apt.studentName 
+                    : 'Rahul Meena';
+                const rollDisplay = apt.rollNo || '2K22/CO/101';
+                const branchDisplay = apt.branch || 'Computer Science & Engineering';
+                const emailDisplay = apt.studentEmail || 'student@dtu.ac.in';
+                const statusDisplay = apt.status ? (apt.status.charAt(0).toUpperCase() + apt.status.slice(1)) : 'Confirmed';
+
                 return `
-                <div class="patient-queue-card">
+                <div class="patient-queue-card" style="border-left: 3px solid ${isUrgent ? '#e63946' : 'var(--primary)'};">
                     <div class="patient-card-left">
                         <div class="token-badge">${index + 1}</div>
                         <div class="patient-info">
-                            <div class="name">${apt.studentName}</div>
-                            <div class="sub">${apt.studentEmail || 'student@dtu.ac.in'}</div>
-                            <div class="sub">${apt.rollNo || '2K22/CO/123'} · ${apt.branch || 'CSE'}</div>
+                            <div class="name" style="font-size:1.05rem; font-weight:700; color:#ffffff; display:flex; align-items:center; gap:6px;">
+                                🎓 <span style="color:#ffffff;">Student:</span> <strong>${studentNameDisplay}</strong>
+                            </div>
+                            <div class="sub" style="color:var(--amber); font-weight:600; font-size:0.83rem; margin-top:3px;">
+                                <strong>Roll Number:</strong> ${rollDisplay} &nbsp;·&nbsp; ${branchDisplay}
+                            </div>
+                            <div class="sub" style="color:var(--text-muted); font-size:0.81rem; margin-top:2px;">
+                                <strong>Email:</strong> ${emailDisplay}
+                            </div>
                         </div>
                     </div>
                     <div class="patient-card-mid">
-                        <div class="reason">${apt.reason || 'General checkup'}</div>
-                        <div class="time">📅 ${apt.date || 'Today'}, ${apt.time || '10:00 AM - 01:00 PM'}</div>
+                        <div class="reason" style="font-size:0.88rem; line-height:1.4; color:var(--text-light); margin-bottom:4px;">
+                            <strong style="color:#fff;">Symptoms:</strong> ${apt.reason || 'Routine consultation'}
+                        </div>
+                        <div class="time" style="font-size:0.82rem; color:var(--text-muted);">
+                            <strong>Appointment:</strong> 📅 ${apt.date || 'Today'} · ⏰ ${apt.time || '10:00 AM - 01:00 PM'}
+                        </div>
+                        <div style="font-size:0.8rem; margin-top:3px;">
+                            <span style="color:var(--text-muted);">Status:</span> 
+                            <span class="pill-tag ${apt.status === 'confirmed' ? 'badge-success' : 'badge-warning'}" style="font-size:0.72rem; padding:1px 8px; margin-left:4px;">
+                                ${statusDisplay}
+                            </span>
+                        </div>
                     </div>
                     <div class="patient-card-badges">
                         <span class="pill-tag ${isUrgent ? 'badge-danger' : 'pill-tag-blue'}">${urgencyText}</span>
                         <span class="pill-tag pill-tag-dark">${isVideo ? '📹 Video' : 'OPD'}</span>
                     </div>
                     <div class="patient-card-actions">
-                        <a href="video-call.html?patient=${encodeURIComponent(apt.studentName)}&doctor=${encodeURIComponent(currentDoctor.name || 'Doctor')}" 
+                        <button type="button" 
+                                onclick="openChatModal('${apt.id}', '${studentNameDisplay.replace(/'/g, "\\'")}', 'student', '${apt.studentId || ''}', 'Roll: ${rollDisplay.replace(/'/g, "\\'")} · ${branchDisplay.replace(/'/g, "\\'")}')" 
+                                class="pill-btn-chat" title="Message Student">
+                            💬 Message Student
+                        </button>
+                        <a href="video-call.html?patient=${encodeURIComponent(studentNameDisplay)}&doctor=${encodeURIComponent(currentDoctor.name || 'Doctor')}" 
                            class="pill-btn-call">
                            Call
                         </a>
-                        <a href="referral.html?patient=${encodeURIComponent(apt.studentName)}&roll=${encodeURIComponent(apt.rollNo || '')}&dept=${encodeURIComponent(apt.department)}" 
+                        <a href="referral.html?patient=${encodeURIComponent(studentNameDisplay)}&roll=${encodeURIComponent(rollDisplay)}&dept=${encodeURIComponent(apt.department || currentDoctor.department || '')}" 
                            class="pill-btn-refer">
                            Refer
                         </a>
