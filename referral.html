@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Doctor Referral System - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=3.1">
+    <link rel="stylesheet" href="css/style.css?v=3.2">
 </head>
 <body onload="initReferralPage()">
 
@@ -26,7 +26,7 @@
             <div class="card">
                 <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
                     <h3 style="font-size:1.15rem; color:var(--primary);">
-                        ðŸ”„ Create Clinical Referral Slip
+                        🔄 Create Clinical Referral Slip
                     </h3>
                 </div>
                 <div class="card-body">
@@ -101,7 +101,7 @@
             <div class="card">
                 <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                     <h3 style="font-size:1.15rem; color:var(--primary-dark);">
-                        ðŸ“‹ Campus Clinical Referral History
+                        📋 Campus Clinical Referral History
                     </h3>
                     <span class="badge badge-info" id="refCountBadge">0 records</span>
                 </div>
@@ -268,7 +268,7 @@
                     <div style="margin:10px 0; font-size:0.88rem; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid var(--border-glass);">
                         <div style="color:var(--text-muted);">From: <strong style="color:#fff;">${ref.fromDoctor}</strong> (${ref.fromDept})</div>
                         <div style="color:var(--amber); margin-top:4px;">
-                            âž” Referred To: <strong style="color:var(--amber);">${ref.toDoctor}</strong> (${ref.toDept})
+                            ➔ Referred To: <strong style="color:var(--amber);">${ref.toDoctor}</strong> (${ref.toDept})
                         </div>
                     </div>
 

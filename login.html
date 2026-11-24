@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Login - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=3.1">
+    <link rel="stylesheet" href="css/style.css?v=3.2">
 </head>
 <body>
 
@@ -18,7 +18,7 @@
         <div class="login-box" id="authBox" style="max-width: 480px;">
             <div style="text-align: center; margin-bottom: 1.8rem;">
                 <div style="display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background: rgba(230, 57, 70, 0.15); font-size: 1.6rem; margin-bottom: 0.5rem; border: 1px solid rgba(230, 57, 70, 0.3);">
-                    ðŸ¥
+                    🏥
                 </div>
                 <h2 style="color: #ffffff; font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em;">Health Portal Login</h2>
                 <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 2px;">Delhi Technological University</p>
@@ -150,7 +150,7 @@
             <form id="doctorLoginForm" onsubmit="handleDoctorLogin(event)" style="display: none;">
                 <div class="form-group" style="margin-bottom: 14px;">
                     <label class="form-label" for="doctorSelect">
-                        ðŸ‘¨â€âš•ï¸ Select Doctor Name (DTU Medical Officer)
+                        👨‍⚕️ Select Doctor Name (DTU Medical Officer)
                     </label>
                     <select id="doctorSelect" class="form-select" onchange="onDoctorSelectChanged()" required style="background: rgba(255,255,255,0.06); color: #ffffff;">
                         <option value="">-- Choose Doctor Name --</option>
@@ -164,7 +164,7 @@
                         <option value="dr.nishajha@dtu.ac.in" data-name="Dr. Nisha Jha" data-dept="Gynecology" data-exp="Gynaecologist">8. Dr. Nisha Jha (Gynaecologist)</option>
                         <option value="dr.mohitgulia@dtu.ac.in" data-name="Dr. Mohit Gulia" data-dept="General Medicine (Evening OPD)" data-exp="General Physician">9. Dr. Mohit Gulia (General Physician - Evening OPD)</option>
                         <option value="dr.aditibansal@dtu.ac.in" data-name="Dr. Aditi Bansal" data-dept="Clinical Psychology &amp; Counseling" data-exp="Clinical Psychologist">10. Dr. Aditi Bansal (Clinical Psychologist)</option>
-                        <option value="custom">âœï¸ Other / Enter Custom Email</option>
+                        <option value="custom">✍️ Other / Enter Custom Email</option>
                     </select>
                 </div>
 
@@ -172,7 +172,7 @@
                     <label class="form-label" for="doctorEmail">Allocated Official Email ID</label>
                     <input type="email" id="doctorEmail" class="form-input" placeholder="Select your name above to auto-fill" required readonly style="background: rgba(255,255,255,0.04); color: #ffffff; cursor: not-allowed;">
                     <div id="doctorBadgeInfo" style="display: none; margin-top: 6px; font-size: 0.8rem; color: var(--amber); align-items: center; gap: 6px;">
-                        <span>ðŸ©º</span>
+                        <span>🩺</span>
                         <span id="doctorDeptText"></span>
                     </div>
                 </div>
@@ -191,7 +191,7 @@
                 </div>
 
                 <button type="submit" id="doctorLoginBtn" class="btn btn-pill-primary" style="width: 100%; padding: 0.8rem; font-size: 1rem; margin-top: 0.5rem;">
-                    Sign In to Doctor Clinical Portal â†’
+                    Sign In to Doctor Clinical Portal →
                 </button>
             </form>
 
@@ -199,10 +199,10 @@
             <div id="forgotPasswordSection" style="display: none;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
                     <h3 style="font-size: 1.15rem; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <span>ðŸ”‘</span> Reset Password
+                        <span>🔑</span> Reset Password
                     </h3>
                     <button type="button" onclick="closeForgotPassword()" class="btn btn-pill-glass btn-small" style="font-size: 0.8rem; padding: 4px 10px;">
-                        âœ• Cancel
+                        ✕ Cancel
                     </button>
                 </div>
                 <p style="font-size: 0.86rem; color: var(--text-light); margin-bottom: 16px; line-height: 1.5;">
@@ -219,12 +219,12 @@
                     </div>
 
                     <button type="submit" id="forgotSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem;">
-                        Send Password Reset Link â†’
+                        Send Password Reset Link →
                     </button>
 
                     <div style="text-align: center; margin-top: 14px;">
                         <a href="javascript:void(0)" onclick="closeForgotPassword()" style="font-size: 0.82rem; color: var(--text-muted); text-decoration: none;">
-                            â† Back to Login
+                            ← Back to Login
                         </a>
                     </div>
                 </form>
@@ -234,7 +234,7 @@
             <div id="setNewPasswordSection" style="display: none;">
                 <div style="margin-bottom: 14px;">
                     <h3 style="font-size: 1.15rem; color: #ffffff; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px;">
-                        <span>ðŸ”’</span> Set New Password
+                        <span>🔒</span> Set New Password
                     </h3>
                     <p style="font-size: 0.86rem; color: var(--text-light); line-height: 1.5;">
                         Create a strong new password for your DTU Health Center account.
@@ -253,7 +253,7 @@
                     </div>
 
                     <button type="submit" id="setNewPasswordBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem;">
-                        Update & Save Password â†’
+                        Update & Save Password →
                     </button>
                 </form>
             </div>
@@ -304,7 +304,7 @@
             notice.innerHTML = '';
             const btn = document.getElementById('forgotSubmitBtn');
             btn.disabled = false;
-            btn.textContent = 'Send Password Reset Link â†’';
+            btn.textContent = 'Send Password Reset Link →';
 
             document.getElementById('studentSection').style.display = 'none';
             document.getElementById('doctorLoginForm').style.display = 'none';
@@ -346,20 +346,20 @@
                 if (window.SupabaseService && SupabaseService.isLive()) {
                     await SupabaseService.resetPasswordForEmail(email);
                     notice.style.display = 'block';
-                    notice.innerHTML = `âœ… Password recovery link sent to <strong>${email}</strong>.<br>Please check your inbox (including spam) and click the recovery link to set your new password.`;
+                    notice.innerHTML = `✅ Password recovery link sent to <strong>${email}</strong>.<br>Please check your inbox (including spam) and click the recovery link to set your new password.`;
                     btn.textContent = 'Reset Link Dispatched!';
                     return;
                 }
             } catch (err) {
                 alert('Could not send reset link: ' + (err.message || err));
                 btn.disabled = false;
-                btn.textContent = 'Send Password Reset Link â†’';
+                btn.textContent = 'Send Password Reset Link →';
                 return;
             }
 
             // Fallback for offline/demo simulation mode
             notice.style.display = 'block';
-            notice.innerHTML = `â„¹ï¸ <strong>Demo Simulation:</strong> Password reset link dispatched to <strong>${email}</strong>.<br><small style="color:var(--text-light);">(Default test passwords: <code>student123</code> for students, <code>doctor123</code> for doctors)</small>`;
+            notice.innerHTML = `ℹ️ <strong>Demo Simulation:</strong> Password reset link dispatched to <strong>${email}</strong>.<br><small style="color:var(--text-light);">(Default test passwords: <code>student123</code> for students, <code>doctor123</code> for doctors)</small>`;
             btn.textContent = 'Link Dispatched (Demo)';
         }
 
@@ -408,7 +408,7 @@
             } catch (err) {
                 alert('Failed to update password: ' + (err.message || err));
                 btn.disabled = false;
-                btn.textContent = 'Update & Save Password â†’';
+                btn.textContent = 'Update & Save Password →';
                 return;
             }
 
@@ -711,7 +711,7 @@
 
             if (badgeInfo && deptText) {
                 badgeInfo.style.display = 'flex';
-                deptText.textContent = `${exp} Â· ${dept}`;
+                deptText.textContent = `${exp} · ${dept}`;
             }
 
             // Move focus directly to password input so doctor can enter password right away
@@ -770,7 +770,7 @@
                     name: 'Dr. ' + (namePart ? namePart.charAt(0).toUpperCase() + namePart.slice(1) : 'Medical Officer'),
                     department: 'General Medicine (OPD)',
                     qualification: 'MBBS, MD',
-                    photo: 'ðŸ‘¨â€âš•ï¸',
+                    photo: '👨‍⚕️',
                     email: email
                 };
             }

@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Doctor & Admin Portal - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=3.1">
+    <link rel="stylesheet" href="css/style.css?v=3.2">
 </head>
 <body onload="initDoctorDashboard()">
 
@@ -15,7 +15,7 @@
 
         <!-- Top Status Row -->
         <div class="hero-status-row">
-            <span id="currentDateDeptDisplay">Monday, 16 November Â· General Medicine (OPD)</span>
+            <span id="currentDateDeptDisplay">Monday, 16 November · General Medicine (OPD)</span>
             <span class="badge-cloud-live">
                 <span class="pulse-dot"></span> Live Portal
             </span>
@@ -38,22 +38,22 @@
         <!-- 4 Stats Cards (First card glowing wine/crimson gradient) -->
         <div class="stats-grid-modern">
             <div class="stat-card-modern stat-card-wine">
-                <div class="stat-icon-circle">ðŸ‘¤</div>
+                <div class="stat-icon-circle">👤</div>
                 <div class="stat-number-modern" id="docStatAppointments">0</div>
                 <div class="stat-label-modern">Patients in queue today</div>
             </div>
             <div class="stat-card-modern">
-                <div class="stat-icon-circle">ðŸ“…</div>
+                <div class="stat-icon-circle">📅</div>
                 <div class="stat-number-modern" id="docStatSlots">0</div>
                 <div class="stat-label-modern">Active slots posted</div>
             </div>
             <div class="stat-card-modern">
-                <div class="stat-icon-circle">ðŸ“„</div>
+                <div class="stat-icon-circle">📄</div>
                 <div class="stat-number-modern" id="docStatPrescriptions">0</div>
                 <div class="stat-label-modern">Prescriptions issued</div>
             </div>
             <div class="stat-card-modern">
-                <div class="stat-icon-circle">ðŸ“¢</div>
+                <div class="stat-icon-circle">📢</div>
                 <div class="stat-number-modern" id="docStatNotices">0</div>
                 <div class="stat-label-modern">Campus announcements</div>
             </div>
@@ -103,7 +103,7 @@
                 </div>
                 <div class="card-body">
                     <form onsubmit="postDoctorSlot(event)">
-                        <div class="form-row-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label class="form-label">Consultation date</label>
                                 <input type="date" id="slotDate" class="form-input" required>
@@ -114,7 +114,7 @@
                             </div>
                         </div>
 
-                        <div class="form-row-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label class="form-label">Start time</label>
                                 <input type="time" id="slotStartTime" class="form-input" value="10:00" required>
@@ -125,9 +125,9 @@
                             </div>
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 16px;">
+                        <div class="form-group" style="margin-bottom: 18px;">
                             <label class="form-label">Instructions (optional)</label>
-                            <input type="text" id="slotNote" class="form-input" placeholder="e.g. Fever, cold, viral OPD slots">
+                            <input type="text" id="slotNote" class="form-input" placeholder="e.g. Fever, cold and seasonal virus OPD slots for DTU hostellers">
                         </div>
 
                         <button type="submit" class="btn btn-pill-primary" style="width: 100%; padding: 13px; font-size: 0.95rem;">
@@ -194,22 +194,22 @@
         <div id="clinical-tools-section">
             <div class="tools-grid-modern">
                 <a href="referral.html" class="tool-card-modern">
-                    <div class="tool-icon-box tool-icon-pink">â‡„</div>
+                    <div class="tool-icon-box tool-icon-pink">⇄</div>
                     <div class="tool-title">Refer patient</div>
                     <div class="tool-subtitle">Transfer student to a specialist</div>
                 </a>
                 <a href="prescriptions.html" class="tool-card-modern">
-                    <div class="tool-icon-box tool-icon-amber">ðŸ“„</div>
+                    <div class="tool-icon-box tool-icon-amber">📄</div>
                     <div class="tool-title">Digital Rx writer</div>
                     <div class="tool-subtitle">Prescriptions and test orders</div>
                 </a>
                 <a href="video-call.html" class="tool-card-modern">
-                    <div class="tool-icon-box tool-icon-blue">ðŸ“¹</div>
+                    <div class="tool-icon-box tool-icon-blue">📹</div>
                     <div class="tool-title">Telehealth room</div>
                     <div class="tool-subtitle">Start a video consultation</div>
                 </a>
                 <a href="medicine-inventory.html" class="tool-card-modern">
-                    <div class="tool-icon-box tool-icon-green">ðŸ“¦</div>
+                    <div class="tool-icon-box tool-icon-green">📦</div>
                     <div class="tool-title">Dispensary stock</div>
                     <div class="tool-subtitle">Update medicine inventory</div>
                 </a>
@@ -273,7 +273,7 @@
             const today = new Date();
             const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
             const deptStr = currentDoctor.department || 'General Medicine (OPD)';
-            document.getElementById('currentDateDeptDisplay').textContent = `${dateStr} Â· ${deptStr}`;
+            document.getElementById('currentDateDeptDisplay').textContent = `${dateStr} · ${deptStr}`;
 
             // Set default date for new slot to tomorrow
             const tomorrow = new Date();
@@ -361,7 +361,7 @@
             if (!appointments || appointments.length === 0) {
                 container.innerHTML = `
                     <div style="text-align:center; padding:36px 20px; background:rgba(255,255,255,0.02); border:1px dashed var(--border-glass); border-radius:16px; color:var(--text-muted);">
-                        <div style="font-size:2rem; margin-bottom:8px;">ðŸ©º</div>
+                        <div style="font-size:2rem; margin-bottom:8px;">🩺</div>
                         <strong style="color:#ffffff;">No patients currently in the appointment queue.</strong>
                         <p style="font-size:0.84rem; margin-top:4px;">When students book appointments from their portal, they will instantly appear here with live notifications.</p>
                     </div>
@@ -381,16 +381,16 @@
                         <div class="patient-info">
                             <div class="name">${apt.studentName}</div>
                             <div class="sub">${apt.studentEmail || 'student@dtu.ac.in'}</div>
-                            <div class="sub">${apt.rollNo || '2K22/CO/123'} Â· ${apt.branch || 'CSE'}</div>
+                            <div class="sub">${apt.rollNo || '2K22/CO/123'} · ${apt.branch || 'CSE'}</div>
                         </div>
                     </div>
                     <div class="patient-card-mid">
                         <div class="reason">${apt.reason || 'General checkup'}</div>
-                        <div class="time">ðŸ“… ${apt.date || 'Today'}, ${apt.time || '10:00 AM - 01:00 PM'}</div>
+                        <div class="time">📅 ${apt.date || 'Today'}, ${apt.time || '10:00 AM - 01:00 PM'}</div>
                     </div>
                     <div class="patient-card-badges">
                         <span class="pill-tag ${isUrgent ? 'badge-danger' : 'pill-tag-blue'}">${urgencyText}</span>
-                        <span class="pill-tag pill-tag-dark">${isVideo ? 'ðŸ“¹ Video' : 'OPD'}</span>
+                        <span class="pill-tag pill-tag-dark">${isVideo ? '📹 Video' : 'OPD'}</span>
                     </div>
                     <div class="patient-card-actions">
                         <a href="video-call.html?patient=${encodeURIComponent(apt.studentName)}&doctor=${encodeURIComponent(currentDoctor.name || 'Doctor')}" 
@@ -495,20 +495,12 @@
                 const isFull = booked >= max;
                 const pct = Math.min(100, Math.round((booked / max) * 100));
 
-                let dateDisplay = s.date;
-                try {
-                    const d = new Date(s.date);
-                    if (!isNaN(d.getTime())) {
-                        dateDisplay = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-                    }
-                } catch(e) {}
-
                 return `
                 <div class="active-slot-pill">
                     <div style="flex:1; min-width:0;">
-                        <div style="font-weight:700; color:#ffffff; font-size:0.92rem;">${dateDisplay}</div>
-                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">${s.startTime} - ${s.endTime}</div>
-                        <div class="slot-progress-wrap" style="max-width:180px; margin-top:6px;">
+                        <div style="font-weight:700; color:#ffffff; font-size:0.92rem;">${s.date}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:1px;">${s.startTime} - ${s.endTime}</div>
+                        <div class="slot-progress-wrap" style="max-width:180px;">
                             <div class="slot-progress-bar" style="width:${pct}%;"></div>
                         </div>
                     </div>

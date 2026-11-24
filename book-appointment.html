@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Book Doctor Appointment - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=3.1">
+    <link rel="stylesheet" href="css/style.css?v=3.2">
 </head>
 <body onload="initBookingPage()">
 
@@ -26,12 +26,12 @@
             <div class="card-header" style="border-bottom: 1px solid var(--border-glass); flex-wrap: wrap; gap: 10px;">
                 <div>
                     <h3 style="font-size: 1.15rem; font-weight: 700; color: #ffffff;">
-                        ðŸ“… Step 1: Open Doctor Sessions &amp; Available Slots
+                        📅 Step 1: Open Doctor Sessions &amp; Available Slots
                     </h3>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button type="button" class="btn btn-pill-glass btn-small" onclick="toggleScheduleTable()" id="toggleScheduleBtn" style="font-size: 0.78rem;">
-                        ðŸ“‹ View Official OPD Timetable
+                        📋 View Official OPD Timetable
                     </button>
                     <span class="badge-cloud-live">
                         <span class="pulse-dot"></span> Live Capacity Monitor
@@ -43,20 +43,20 @@
             <div id="scheduleTableSection" style="display: none; padding: 20px; border-bottom: 1px solid var(--border-glass); background: rgba(255,255,255,0.02); overflow-x: auto;">
                 <div style="margin-bottom: 16px; padding: 14px 18px; background: rgba(230,57,70,0.06); border: 1px solid rgba(230,57,70,0.25); border-radius: 12px; border-left: 4px solid var(--primary);">
                     <h4 style="color: #ffffff; font-size: 1.05rem; margin-bottom: 6px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                        <span>ðŸ¥</span> The DTU Health Center
+                        <span>🏥</span> The DTU Health Center
                     </h4>
                     <p style="color: var(--text-light); font-size: 0.88rem; line-height: 1.6; margin: 0 0 10px 0;">
                         DTU has a full-fledged 20 bed hospital block. Services of two medical practitioners are available to the students throughout day and evening. The college invites specialized medical practitioners for ENT, eye, dental care, nutrition experts once a week.
                     </p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <span class="pill-tag badge-info" style="font-size: 0.74rem;">ðŸ›ï¸ 20-Bed Hospital Block</span>
-                        <span class="pill-tag badge-success" style="font-size: 0.74rem;">ðŸ©º Day &amp; Evening Practitioners</span>
-                        <span class="pill-tag badge-warning" style="font-size: 0.74rem;">ðŸ‘¨â€âš•ï¸ Weekly Visiting Specialists</span>
+                        <span class="pill-tag badge-info" style="font-size: 0.74rem;">🛏️ 20-Bed Hospital Block</span>
+                        <span class="pill-tag badge-success" style="font-size: 0.74rem;">🩺 Day &amp; Evening Practitioners</span>
+                        <span class="pill-tag badge-warning" style="font-size: 0.74rem;">👨‍⚕️ Weekly Visiting Specialists</span>
                     </div>
                 </div>
 
                 <h4 style="color: #ffffff; font-size: 1.05rem; margin-bottom: 12px; font-weight: 700;">
-                    ðŸ“‹ Official Main Campus OPD Schedule
+                    📋 Official Main Campus OPD Schedule
                 </h4>
                 <table class="table" style="font-size: 0.85rem; min-width: 620px;">
                     <thead>
@@ -95,7 +95,7 @@
             <div class="card-header" style="border-bottom: 1px solid var(--border-glass);">
                 <div>
                     <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">
-                        ðŸ“ Step 2: Student Consultation Request Form
+                        📝 Step 2: Student Consultation Request Form
                     </h3>
                     <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 3px;">
                         Session: <strong id="formSelectedDoctor" style="color: #ffffff;">Dr. Rajesh Sharma</strong> 
@@ -111,9 +111,9 @@
                     <div style="background: rgba(255, 255, 255, 0.03); padding: 16px; border-radius: var(--radius-inner); margin-bottom: 20px; font-size: 0.88rem; border: 1px solid var(--border-glass);">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                             <span class="brand-badge" style="font-size: 0.75rem; padding: 2px 8px;">VERIFIED</span>
-                            <h4 style="color: #ffffff; font-size: 0.95rem; margin: 0;">ðŸŽ“ Student Identity</h4>
+                            <h4 style="color: #ffffff; font-size: 0.95rem; margin: 0;">🎓 Student Identity</h4>
                         </div>
-                        <div class="form-row-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; color: var(--text-light); font-size: 0.85rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; color: var(--text-light);">
                             <div>Student Name: <strong id="formStudentName" style="color: #fff;">--</strong></div>
                             <div>Roll Number: <strong id="formStudentRoll" style="color: #fff;">--</strong></div>
                             <div>Branch: <strong id="formStudentBranch" style="color: #fff;">--</strong></div>
@@ -128,7 +128,7 @@
                     <input type="hidden" id="selectedDate">
                     <input type="hidden" id="selectedTime">
 
-                    <div class="form-row-2col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 16px;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Consultation Date</label>
                             <input type="text" id="displayDate" class="form-input" readonly style="opacity: 0.85;">
@@ -142,8 +142,8 @@
                     <div class="form-group" style="margin-bottom: 16px;">
                         <label class="form-label">Mode of Consultation *</label>
                         <select id="consultationMode" class="form-select" required>
-                            <option value="Physical OPD Visit (Health Center)">ðŸ¥ Physical Visit at DTU Health Center</option>
-                            <option value="Online Video Consultation">ðŸ“¹ Online One-to-One Video Call</option>
+                            <option value="Physical OPD Visit (Health Center)">🏥 Physical Visit at DTU Health Center</option>
+                            <option value="Online Video Consultation">📹 Online One-to-One Video Call</option>
                         </select>
                     </div>
 
@@ -169,7 +169,7 @@
 
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-glass);">
                         <a href="emergency.html" style="color: #ff6b6b; font-size: 0.88rem; font-weight: 600;">
-                            ðŸš¨ Need immediate ambulance? Tap for SOS!
+                            🚨 Need immediate ambulance? Tap for SOS!
                         </a>
                         <button type="submit" class="btn btn-pill-primary" id="submitBtn" style="min-width: 250px; font-weight: 700; padding: 13px 26px;">
                             Confirm Appointment Booking
@@ -252,15 +252,15 @@
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
                             <h4 style="color: #ffffff; font-size: 1.15rem; font-weight: 700;">${slot.doctorName}</h4>
                             <span class="pill-tag ${isFull ? 'badge-danger' : 'badge-success'}">
-                                ${isFull ? 'ðŸ”’ FULL' : 'AVAILABLE'}
+                                ${isFull ? '🔒 FULL' : 'AVAILABLE'}
                             </span>
                         </div>
                         <p style="font-size: 0.85rem; color: var(--amber); font-weight: 600; margin-bottom: 12px;">
                             Dept: ${slot.department}
                         </p>
                         <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-glass); padding: 10px 12px; border-radius: var(--radius-inner); font-size: 0.85rem; margin-bottom: 12px; color: var(--text-light);">
-                            <div>ðŸ“… <strong>Date:</strong> ${slot.date}</div>
-                            <div style="margin-top: 2px;">â° <strong>Time:</strong> ${slot.startTime} - ${slot.endTime}</div>
+                            <div>📅 <strong>Date:</strong> ${slot.date}</div>
+                            <div style="margin-top: 2px;">⏰ <strong>Time:</strong> ${slot.startTime} - ${slot.endTime}</div>
                         </div>
                         <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 14px;">
                             ${slot.note || 'OPD physical checkup slots available for students with fever/cough'}

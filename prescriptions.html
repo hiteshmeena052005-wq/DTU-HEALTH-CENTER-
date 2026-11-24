@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Prescriptions & Medical Records - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=3.1">
+    <link rel="stylesheet" href="css/style.css?v=3.2">
     <style>
         @media print {
             .navbar, .footer, .no-print, .btn, #createRxSection {
@@ -41,7 +41,7 @@
         <div class="card" id="createRxSection" style="display:none; margin-bottom:30px; border-top:4px solid var(--primary);">
             <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
                 <h3 style="font-size:1.15rem; color:var(--primary);">
-                    ðŸ’Š Issue Digital Prescription
+                    💊 Issue Digital Prescription
                 </h3>
             </div>
             <div class="card-body">
@@ -238,10 +238,10 @@
                         <div>
                             <div style="font-size:1.15rem; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:8px;">
                                 <span class="brand-badge" style="font-size:0.75rem;">OFFICIAL RX</span>
-                                ðŸ¥ DELHI TECHNOLOGICAL UNIVERSITY HEALTH CENTER
+                                🏥 DELHI TECHNOLOGICAL UNIVERSITY HEALTH CENTER
                             </div>
                             <div style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">
-                                Bawana Road, Delhi-110042 Â· OPD Electronic Medical Record
+                                Bawana Road, Delhi-110042 · OPD Electronic Medical Record
                             </div>
                         </div>
                         <div style="text-align:right;">
@@ -302,11 +302,11 @@
                     <!-- Tests & Advice -->
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:0.88rem; margin-bottom:16px;">
                         <div style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-inner); border-left:3px solid var(--primary); border:1px solid var(--border-glass);">
-                            <strong style="color:#ffffff;">ðŸ”¬ Diagnostic Tests Advised:</strong>
+                            <strong style="color:#ffffff;">🔬 Diagnostic Tests Advised:</strong>
                             <p style="margin-top:4px; color:var(--text-muted);">${rx.tests || 'None'}</p>
                         </div>
                         <div style="background:rgba(255,255,255,0.02); padding:12px; border-radius:var(--radius-inner); border-left:3px solid var(--amber); border:1px solid var(--border-glass);">
-                            <strong style="color:#ffffff;">ðŸ“… Next Follow-Up:</strong>
+                            <strong style="color:#ffffff;">📅 Next Follow-Up:</strong>
                             <p style="margin-top:4px; color:var(--text-muted);">${rx.followUp || 'SOS (If symptoms persist)'}</p>
                         </div>
                     </div>
@@ -318,7 +318,7 @@
                     <!-- Print / Download Footer -->
                     <div class="no-print" style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border-glass); padding-top:14px;">
                         <button onclick="window.print()" class="btn btn-pill-glass btn-small">
-                            ðŸ–¨ï¸ Print / Save as PDF
+                            🖨️ Print / Save as PDF
                         </button>
                     </div>
 

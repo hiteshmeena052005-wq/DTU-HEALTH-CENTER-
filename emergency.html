@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Instant Ambulance & Emergency SOS - DTU Health Center</title>
-    <link rel="stylesheet" href="css/style.css?v=3.1">
+    <link rel="stylesheet" href="css/style.css?v=3.2">
     <style>
         .sos-hero-card {
             background: linear-gradient(135deg, rgba(180, 20, 50, 0.95) 0%, rgba(90, 15, 30, 0.9) 100%);
@@ -76,7 +76,7 @@
 
         <!-- GIANT INSTANT AMBULANCE HERO BUTTON -->
         <div class="sos-hero-card">
-            <span style="font-size:3rem; display:block; margin-bottom:10px;">ðŸš¨</span>
+            <span style="font-size:3rem; display:block; margin-bottom:10px;">🚨</span>
             <h1 style="font-size:2.2rem; font-weight:800; letter-spacing:0.5px;">
                 DTU CAMPUS EMERGENCY SOS
             </h1>
@@ -86,7 +86,7 @@
 
             <div>
                 <button onclick="openAmbulanceModal()" class="sos-pulse-btn">
-                    <span>ðŸš‘</span> REQUEST INSTANT AMBULANCE
+                    <span>🚑</span> REQUEST INSTANT AMBULANCE
                 </button>
             </div>
             
@@ -104,7 +104,7 @@
                         <span class="brand-badge" style="background:#e63946;">SOS</span>
                         Instant Ambulance Request
                     </h3>
-                    <button onclick="closeAmbulanceModal()" style="border:none; background:rgba(255,255,255,0.08); color:var(--text-muted); width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">âœ•</button>
+                    <button onclick="closeAmbulanceModal()" style="border:none; background:rgba(255,255,255,0.08); color:var(--text-muted); width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
                 </div>
 
                 <div id="modalFormStep">
@@ -145,22 +145,22 @@
                     <div style="display:flex; justify-content:flex-end; gap:10px;">
                         <button type="button" onclick="closeAmbulanceModal()" class="btn btn-pill-glass">Cancel</button>
                         <button type="button" onclick="dispatchAmbulance()" class="btn btn-pill-danger" style="font-weight:700;">
-                            ðŸš¨ DISPATCH AMBULANCE NOW
+                            🚨 DISPATCH AMBULANCE NOW
                         </button>
                     </div>
                 </div>
 
                 <!-- Step 2: Dispatched Status -->
                 <div id="modalDispatchedStep" style="display:none; text-align:center; padding:15px 0;">
-                    <span style="font-size:3.5rem;">ðŸš¨</span>
+                    <span style="font-size:3.5rem;">🚨</span>
                     <h2 style="color:#ff6b6b; margin:10px 0 5px 0; font-weight:800;">AMBULANCE DISPATCHED!</h2>
                     <p style="font-size:0.92rem; color:var(--text-light); margin-bottom:16px;">
                         DTU Campus Medical Emergency Vehicle has been alerted.
                     </p>
                     <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-glass-light); padding:16px; border-radius:var(--radius-inner); font-size:0.9rem; margin-bottom:18px; text-align:left;">
-                        <div style="margin-bottom:4px;">ðŸ“ Destination: <strong id="dispDest" style="color:#ffffff;">--</strong></div>
-                        <div style="margin-bottom:4px; color:#2ecc71;">â±ï¸ Estimated Response: <strong style="color:#2ecc71;">3 to 5 Minutes</strong></div>
-                        <div>ðŸ“ž Driver Contact: <strong style="color:var(--amber);">+91 9811223399</strong> (DTU Driver Desk)</div>
+                        <div style="margin-bottom:4px;">📍 Destination: <strong id="dispDest" style="color:#ffffff;">--</strong></div>
+                        <div style="margin-bottom:4px; color:#2ecc71;">⏱️ Estimated Response: <strong style="color:#2ecc71;">3 to 5 Minutes</strong></div>
+                        <div>📞 Driver Contact: <strong style="color:var(--amber);">+91 9811223399</strong> (DTU Driver Desk)</div>
                     </div>
                     <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:18px;">
                         Please ensure the hostel gate/corridor is clear. DTU Security has been notified to guide the paramedics.
@@ -175,7 +175,7 @@
         <div class="card" style="margin-bottom:30px;">
             <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
                 <h3 style="font-size:1.2rem; color:var(--primary);">
-                    ðŸ“ž 24/7 Critical Emergency Directory
+                    📞 24/7 Critical Emergency Directory
                 </h3>
             </div>
             <div class="card-body">
@@ -191,7 +191,7 @@
             <div class="card">
                 <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
                     <h3 style="font-size:1.1rem; color:var(--primary);">
-                        ðŸ“‹ What to do while waiting for the Ambulance
+                        📋 What to do while waiting for the Ambulance
                     </h3>
                 </div>
                 <div class="card-body" style="font-size:0.9rem; line-height:1.7;">
@@ -208,20 +208,20 @@
             <div class="card">
                 <div class="card-header" style="background:#fff; border-bottom:1px solid #eee;">
                     <h3 style="font-size:1.1rem; color:var(--primary);">
-                        ðŸ©¹ Quick Campus First Aid Tips
+                        🩹 Quick Campus First Aid Tips
                     </h3>
                 </div>
                 <div class="card-body" style="font-size:0.9rem; line-height:1.7;">
                     <div style="margin-bottom:10px;">
-                        <strong style="color:var(--primary);">ðŸ©¸ Bleeding Cut:</strong>
+                        <strong style="color:var(--primary);">🩸 Bleeding Cut:</strong>
                         <p style="color:#555;">Apply firm direct pressure with clean cloth or sterile gauze for 10 minutes without lifting.</p>
                     </div>
                     <div style="margin-bottom:10px;">
-                        <strong style="color:var(--primary);">ðŸ¦´ Sprains & Sports Injuries:</strong>
-                        <p style="color:#555;">Follow R.I.C.E protocol â€” Rest, Ice (cold pack), Compression, Elevation above heart level.</p>
+                        <strong style="color:var(--primary);">🦴 Sprains & Sports Injuries:</strong>
+                        <p style="color:#555;">Follow R.I.C.E protocol — Rest, Ice (cold pack), Compression, Elevation above heart level.</p>
                     </div>
                     <div>
-                        <strong style="color:var(--primary);">ðŸ˜µ Fainting / Dizziness:</strong>
+                        <strong style="color:var(--primary);">😵 Fainting / Dizziness:</strong>
                         <p style="color:#555;">Lay the person flat on their back and elevate legs 12 inches to restore blood flow to the brain.</p>
                     </div>
                 </div>
@@ -265,11 +265,11 @@
                 <div class="contact-card">
                     <div>
                         <h4 style="color:var(--primary-dark); font-size:1.05rem; margin-bottom:4px;">${c.name}</h4>
-                        <p style="font-size:0.85rem; color:#666; margin-bottom:8px;">ðŸ“ ${c.location || 'DTU Main Campus'}</p>
-                        <div style="font-size:0.8rem; color:#28a745; font-weight:bold; margin-bottom:12px;">â— Available: ${c.available || '24x7'}</div>
+                        <p style="font-size:0.85rem; color:#666; margin-bottom:8px;">📍 ${c.location || 'DTU Main Campus'}</p>
+                        <div style="font-size:0.8rem; color:#28a745; font-weight:bold; margin-bottom:12px;">● Available: ${c.available || '24x7'}</div>
                     </div>
                     <a href="tel:${(c.phone || '').replace(/[^0-9]/g, '')}" class="btn btn-danger" style="text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;">
-                        ðŸ“ž Call ${c.phone}
+                        📞 Call ${c.phone}
                     </a>
                 </div>
             `).join('');
