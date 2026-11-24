@@ -23,18 +23,24 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authent
 
 -- 4. Repair GoTrue Auth Identities for Seeded Accounts
 -- (Prevents HTTP 500 "Database error querying schema" on doctor logins)
-INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
-SELECT 
-    id, 
-    id, 
-    jsonb_build_object('sub', id::text, 'email', email), 
-    'email', 
-    now(), 
-    now(), 
-    now()
-FROM auth.users
-WHERE id NOT IN (SELECT user_id FROM auth.identities)
-ON CONFLICT (id) DO NOTHING;
+DO $$
+BEGIN
+    INSERT INTO auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at, id)
+    SELECT 
+        id::text, 
+        id, 
+        jsonb_build_object('sub', id::text, 'email', email), 
+        'email', 
+        now(), 
+        now(), 
+        now(),
+        gen_random_uuid()
+    FROM auth.users
+    WHERE id NOT IN (SELECT user_id FROM auth.identities)
+    ON CONFLICT DO NOTHING;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'auth.identities auto-repair notice: %', SQLERRM;
+END $$;
 
 -- 5. ROW LEVEL SECURITY (RLS) POLICIES
 
