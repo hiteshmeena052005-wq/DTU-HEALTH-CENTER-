@@ -516,13 +516,13 @@
             const savedProfile = localStorage.getItem('studentProfile');
             if (!savedProfile) {
                 const defaultProfile = {
-                    name: formattedName || 'Rahul Sharma',
-                    dob: '2003-05-15',
-                    bloodGroup: 'B+',
-                    rollNo: '2K22/CO/123',
-                    branch: 'Computer Science & Engineering',
-                    year: '3rd Year',
-                    phone: '9876543210',
+                    name: formattedName || 'DTU Student',
+                    dob: '',
+                    bloodGroup: 'Not Specified',
+                    rollNo: 'Pending Profile Setup',
+                    branch: 'DTU',
+                    year: '1st Year',
+                    phone: '',
                     email: email,
                     dtuEmail: email
                 };
@@ -754,7 +754,10 @@
                     return;
                 }
             } catch (err) {
-                console.warn("Supabase doctor auth fallback:", err.message);
+                alert('Doctor sign-in failed: ' + (err.message || err));
+                btn.disabled = false;
+                btn.textContent = 'Sign In as Doctor';
+                return;
             }
 
             // Fallback for offline/demo mode

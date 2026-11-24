@@ -424,12 +424,12 @@ const SupabaseService = (function () {
                     let studentName = a.student_name;
                     // If student_name was erroneously set to doctor's name or is generic "Student", replace with true student identity
                     if (!studentName || studentName.toLowerCase() === 'student' || studentName.toLowerCase().startsWith('dr.') || (a.doctor_name && studentName.toLowerCase().trim() === a.doctor_name.toLowerCase().trim())) {
-                        studentName = profObj.full_name || 'Rahul Meena';
+                        studentName = profObj.full_name || (profObj.email ? profObj.email.split('@')[0] : 'DTU Student');
                     }
 
-                    let studentEmail = a.student_email || profObj.email || studObj.dtu_email || 'student@dtu.ac.in';
-                    let rollNo = a.roll_no || studObj.roll_no || '2K22/CO/101';
-                    let branch = a.branch || studObj.branch || 'Computer Science & Engineering';
+                    let studentEmail = a.student_email || profObj.email || studObj.dtu_email || '';
+                    let rollNo = a.roll_no || studObj.roll_no || 'Not Provided';
+                    let branch = a.branch || studObj.branch || 'DTU';
 
                     return {
                         id: a.id,
@@ -531,12 +531,12 @@ const SupabaseService = (function () {
                 }
             }
             if (!finalStudentName || finalStudentName.toLowerCase() === 'student' || finalStudentName.toLowerCase().startsWith('dr.')) {
-                finalStudentName = 'Rahul Meena';
+                finalStudentName = (currentUser && currentUser.email) ? currentUser.email.split('@')[0] : 'DTU Student';
             }
 
-            let finalStudentRoll = aptData.rollNo || storedProfile.rollNo || (currentUser.role === 'student' ? currentUser.rollNo : null) || '2K22/CO/101';
-            let finalStudentBranch = aptData.branch || storedProfile.branch || (currentUser.role === 'student' ? currentUser.branch : null) || 'Computer Science & Engineering';
-            let finalStudentEmail = aptData.studentEmail || storedProfile.email || storedProfile.dtuEmail || (currentUser.role === 'student' ? currentUser.email : null) || 'student@dtu.ac.in';
+            let finalStudentRoll = aptData.rollNo || storedProfile.rollNo || (currentUser.role === 'student' ? currentUser.rollNo : null) || 'Not Provided';
+            let finalStudentBranch = aptData.branch || storedProfile.branch || (currentUser.role === 'student' ? currentUser.branch : null) || 'DTU';
+            let finalStudentEmail = aptData.studentEmail || storedProfile.email || storedProfile.dtuEmail || (currentUser.role === 'student' ? currentUser.email : null) || (currentUser && currentUser.email) || '';
 
             // Ensure student record exists in public.students table
             try {
@@ -640,12 +640,12 @@ const SupabaseService = (function () {
         const newApt = {
             id: aptData.id || ('APT-' + Date.now().toString().slice(-4)),
             slotId: aptData.slotId,
-            studentId: aptData.studentId || 'a0000000-0000-0000-0000-000000000001',
+            studentId: aptData.studentId || (currentUser ? currentUser.id : null),
             doctorId: aptData.doctorId || resolveDoctorUUID(aptData.doctorName),
-            studentName: aptData.studentName || storedProfile.name || 'Rahul Meena',
-            studentEmail: aptData.studentEmail || storedProfile.email || 'student@dtu.ac.in',
-            rollNo: aptData.rollNo || storedProfile.rollNo || '2K22/CO/101',
-            branch: aptData.branch || storedProfile.branch || 'Computer Science & Engineering',
+            studentName: aptData.studentName || storedProfile.name || (currentUser && currentUser.name) || 'DTU Student',
+            studentEmail: aptData.studentEmail || storedProfile.email || (currentUser && currentUser.email) || '',
+            rollNo: aptData.rollNo || storedProfile.rollNo || 'Not Provided',
+            branch: aptData.branch || storedProfile.branch || 'DTU',
             doctorName: aptData.doctorName,
             department: aptData.department,
             date: aptData.date,
@@ -869,7 +869,7 @@ const SupabaseService = (function () {
                 .insert({
                     student_id: studentUuid,
                     student_name: refData.studentName,
-                    roll_no: refData.rollNo || '2K22/CO/101',
+                    roll_no: refData.rollNo || 'Not Provided',
                     from_doctor_id: fromDocUuid,
                     from_doctor_name: currentUser.name || refData.fromDoctor || 'Dr. Ravi Bansal',
                     from_dept: currentUser.department || refData.fromDept || 'General Medicine (OPD)',
@@ -1127,39 +1127,77 @@ const SupabaseService = (function () {
         }
 
         const client = getClient();
+        let actualSenderId = senderId;
+        let actualReceiverId = receiverId;
+        let actualRole = senderRole;
+
+        if (client && isLive()) {
+            // Verify authenticated user identity via Supabase Auth
+            const { data: { user } } = await client.auth.getUser();
+            if (user) {
+                actualSenderId = user.id;
+            } else if (!actualSenderId) {
+                throw new Error("Authentication required: Please sign in to send messages.");
+            }
+
+            // Verify participant IDs against the real appointment
+            if (!actualReceiverId || !actualRole) {
+                const { data: aptData } = await client
+                    .from('appointments')
+                    .select('student_id, doctor_id')
+                    .eq('id', appointmentId)
+                    .single();
+
+                if (aptData) {
+                    if (aptData.student_id === actualSenderId) {
+                        actualRole = 'student';
+                        actualReceiverId = aptData.doctor_id;
+                    } else if (aptData.doctor_id === actualSenderId) {
+                        actualRole = 'doctor';
+                        actualReceiverId = aptData.student_id;
+                    } else {
+                        throw new Error("Access Denied: You are not a participant in this appointment.");
+                    }
+                }
+            }
+        }
+
+        if (!actualSenderId || !actualReceiverId) {
+            throw new Error("Cannot send message: Missing verified sender or receiver identity.");
+        }
+
         const newMsg = {
-            id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
             appointment_id: appointmentId,
-            sender_id: senderId || (senderRole === 'doctor' ? 'd0000000-0000-0000-0000-000000000001' : 'a0000000-0000-0000-0000-000000000001'),
-            receiver_id: receiverId || (senderRole === 'doctor' ? 'a0000000-0000-0000-0000-000000000001' : 'd0000000-0000-0000-0000-000000000001'),
-            sender_name: senderName || (senderRole === 'doctor' ? 'Doctor' : 'Student'),
-            sender_role: senderRole || 'student',
+            sender_id: actualSenderId,
+            receiver_id: actualReceiverId,
+            sender_name: senderName || (actualRole === 'doctor' ? 'Doctor' : 'Student'),
+            sender_role: actualRole || 'student',
             message_text: messageText.trim(),
             created_at: new Date().toISOString(),
             read_at: null
         };
 
         if (client && isLive()) {
-            try {
-                const { data, error } = await client
-                    .from('messages')
-                    .insert({
-                        appointment_id: newMsg.appointment_id,
-                        sender_id: newMsg.sender_id,
-                        receiver_id: newMsg.receiver_id,
-                        sender_name: newMsg.sender_name,
-                        sender_role: newMsg.sender_role,
-                        message_text: newMsg.message_text
-                    })
-                    .select()
-                    .single();
+            const { data, error } = await client
+                .from('messages')
+                .insert({
+                    appointment_id: newMsg.appointment_id,
+                    sender_id: newMsg.sender_id,
+                    receiver_id: newMsg.receiver_id,
+                    sender_name: newMsg.sender_name,
+                    sender_role: newMsg.sender_role,
+                    message_text: newMsg.message_text
+                })
+                .select()
+                .single();
 
-                if (!error && data) {
-                    newMsg.id = data.id;
-                    newMsg.created_at = data.created_at;
-                }
-            } catch (e) {
-                console.warn("Supabase sendMessage fallback to memory:", e.message);
+            if (error) {
+                throw error;
+            }
+
+            if (data) {
+                newMsg.id = data.id;
+                newMsg.created_at = data.created_at;
             }
         }
 

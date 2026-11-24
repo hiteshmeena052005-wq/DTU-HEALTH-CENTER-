@@ -228,14 +228,24 @@
                 }
             }
 
-            // Guaranteed clean student fallback - NEVER let doctor's name appear
+            // Verified student profile resolution - NEVER substitute another student's name
             if (!currentStudentProfile.name || currentStudentProfile.name.toLowerCase().startsWith('dr.')) {
-                currentStudentProfile.name = (user && user.name && !user.name.toLowerCase().startsWith('dr.')) ? user.name : 'Rahul Meena';
+                currentStudentProfile.name = (user && user.name && !user.name.toLowerCase().startsWith('dr.')) 
+                    ? user.name 
+                    : (user && user.email ? user.email.split('@')[0] : 'DTU Student');
             }
-            if (!currentStudentProfile.rollNo || currentStudentProfile.rollNo === 'N/A') currentStudentProfile.rollNo = (user && user.rollNo) || '2K22/CO/101';
-            if (!currentStudentProfile.branch || currentStudentProfile.branch === 'N/A') currentStudentProfile.branch = (user && user.branch) || 'Computer Science & Engineering';
-            if (!currentStudentProfile.bloodGroup || currentStudentProfile.bloodGroup === 'N/A') currentStudentProfile.bloodGroup = 'B+';
-            if (!currentStudentProfile.email) currentStudentProfile.email = (user && user.email) || 'rahul.meena@dtu.ac.in';
+            if (!currentStudentProfile.rollNo || currentStudentProfile.rollNo === 'N/A') {
+                currentStudentProfile.rollNo = (user && user.rollNo) || 'Pending Profile Setup';
+            }
+            if (!currentStudentProfile.branch || currentStudentProfile.branch === 'N/A') {
+                currentStudentProfile.branch = (user && user.branch) || 'DTU';
+            }
+            if (!currentStudentProfile.bloodGroup || currentStudentProfile.bloodGroup === 'N/A') {
+                currentStudentProfile.bloodGroup = (user && user.bloodGroup) || 'Not Specified';
+            }
+            if (!currentStudentProfile.email) {
+                currentStudentProfile.email = (user && user.email) || '';
+            }
 
             document.getElementById('formStudentName').textContent = currentStudentProfile.name;
             document.getElementById('formStudentRoll').textContent = currentStudentProfile.rollNo;
@@ -404,11 +414,17 @@
 
             // Strict student identity resolution: NEVER allow doctor's name or placeholder
             const safeStudentName = (!currentStudentProfile.name || currentStudentProfile.name.toLowerCase().startsWith('dr.') || currentStudentProfile.name.toLowerCase() === 'student')
-                ? 'Rahul Meena'
+                ? ((user && user.name && !user.name.toLowerCase().startsWith('dr.')) ? user.name : (user && user.email ? user.email.split('@')[0] : 'DTU Student'))
                 : currentStudentProfile.name;
-            const safeRollNo = currentStudentProfile.rollNo || '2K22/CO/101';
-            const safeBranch = currentStudentProfile.branch || 'Computer Science & Engineering';
-            const safeEmail = currentStudentProfile.email || 'rahul.meena@dtu.ac.in';
+            const safeRollNo = currentStudentProfile.rollNo || (user && user.rollNo) || 'Pending Verification';
+            const safeBranch = currentStudentProfile.branch || (user && user.branch) || 'DTU';
+            const safeEmail = currentStudentProfile.email || (user && user.email) || '';
+
+            if (!safeEmail) {
+                alert("Please sign in with your DTU student account before booking an appointment.");
+                window.location.href = 'login.html';
+                return;
+            }
 
             const newAppointment = {
                 id: "APT-" + Date.now().toString().slice(-4),

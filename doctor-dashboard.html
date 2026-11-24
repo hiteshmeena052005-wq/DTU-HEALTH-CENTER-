@@ -380,12 +380,12 @@
                 const isVideo = apt.mode && apt.mode.includes('Video');
 
                 // Strict student identity check: NEVER display doctor's own name as patient!
-                const studentNameDisplay = (apt.studentName && !apt.studentName.toLowerCase().startsWith('dr.')) 
+                const studentNameDisplay = (apt.studentName && !apt.studentName.toLowerCase().startsWith('dr.') && apt.studentName.toLowerCase() !== 'student') 
                     ? apt.studentName 
-                    : 'Rahul Meena';
-                const rollDisplay = apt.rollNo || '2K22/CO/101';
-                const branchDisplay = apt.branch || 'Computer Science & Engineering';
-                const emailDisplay = apt.studentEmail || 'student@dtu.ac.in';
+                    : (apt.studentEmail ? apt.studentEmail.split('@')[0] : 'DTU Student');
+                const rollDisplay = apt.rollNo || 'Not Provided';
+                const branchDisplay = apt.branch || 'DTU';
+                const emailDisplay = apt.studentEmail || 'N/A';
                 const statusDisplay = apt.status ? (apt.status.charAt(0).toUpperCase() + apt.status.slice(1)) : 'Confirmed';
 
                 return `

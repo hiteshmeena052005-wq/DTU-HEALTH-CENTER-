@@ -281,8 +281,8 @@
 
             if (role === 'doctor') {
                 document.getElementById('remoteAvatar').textContent = '🎓';
-                document.getElementById('remoteNameDisplay').textContent = patientParam || 'Rahul Meena (Student)';
-                document.getElementById('remoteRoleDisplay').textContent = 'DTU Student - 2K22/CO/101';
+                document.getElementById('remoteNameDisplay').textContent = patientParam || 'Student Patient';
+                document.getElementById('remoteRoleDisplay').textContent = 'DTU Student';
                 document.getElementById('welcomeDocMsg').innerHTML = `<strong>Patient:</strong><br>Hello Doctor, I have been feeling fever and severe headache.`;
                 switchTab('notes'); // Open clinical notes directly for doctors
             } else {

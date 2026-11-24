@@ -87,34 +87,40 @@ function checkLogin(expectedRole) {
     if (user && expectedRole && user.role !== expectedRole) {
         if (expectedRole === 'student') {
             const profile = JSON.parse(localStorage.getItem('studentProfile') || '{}');
-            user = {
-                id: profile.id || 'a0000000-0000-0000-0000-000000000001',
-                role: 'student',
-                name: (profile.name && !profile.name.toLowerCase().startsWith('dr.')) ? profile.name : 'Rahul Meena',
-                email: profile.email || profile.dtuEmail || 'rahul.meena@dtu.ac.in',
-                rollNo: profile.rollNo || '2K22/CO/101',
-                branch: profile.branch || 'Computer Science & Engineering',
-                bloodGroup: profile.bloodGroup || 'B+'
-            };
-            try {
-                localStorage.setItem("currentUser", JSON.stringify(user));
-                localStorage.setItem("userRole", 'student');
-            } catch (e) {}
-            return user;
+            if (profile && (profile.email || profile.name)) {
+                user = {
+                    id: profile.id || user.id,
+                    role: 'student',
+                    name: (profile.name && !profile.name.toLowerCase().startsWith('dr.')) ? profile.name : (profile.email ? profile.email.split('@')[0] : 'DTU Student'),
+                    email: profile.email || profile.dtuEmail || '',
+                    rollNo: profile.rollNo || 'Not Provided',
+                    branch: profile.branch || 'DTU',
+                    bloodGroup: profile.bloodGroup || 'Not Specified'
+                };
+                try {
+                    localStorage.setItem("currentUser", JSON.stringify(user));
+                    localStorage.setItem("userRole", 'student');
+                } catch (e) {}
+                return user;
+            }
+            return null;
         } else if (expectedRole === 'doctor') {
-            const doc = (window.doctors && window.doctors[0]) || { name: 'Dr. Ravi Bansal', id: 'd0000000-0000-0000-0000-000000000001', department: 'General Medicine (OPD)' };
-            user = {
-                id: doc.id || doc.uuid || 'd0000000-0000-0000-0000-000000000001',
-                role: 'doctor',
-                name: doc.name || 'Dr. Ravi Bansal',
-                email: doc.email || 'dr.ravibansal@dtu.ac.in',
-                department: doc.department || 'General Medicine (OPD)'
-            };
-            try {
-                localStorage.setItem("currentUser", JSON.stringify(user));
-                localStorage.setItem("userRole", 'doctor');
-            } catch (e) {}
-            return user;
+            const doc = (window.doctors && window.doctors[0]);
+            if (doc) {
+                user = {
+                    id: doc.id || doc.uuid || 'd0000000-0000-0000-0000-000000000001',
+                    role: 'doctor',
+                    name: doc.name || 'Doctor',
+                    email: doc.email || '',
+                    department: doc.department || 'General Medicine (OPD)'
+                };
+                try {
+                    localStorage.setItem("currentUser", JSON.stringify(user));
+                    localStorage.setItem("userRole", 'doctor');
+                } catch (e) {}
+                return user;
+            }
+            return null;
         }
     }
 
@@ -122,20 +128,8 @@ function checkLogin(expectedRole) {
         return user;
     }
 
-    // Return clean default role context for seamless UI browsing
-    const defaultUser = {
-        role: expectedRole || 'student',
-        name: expectedRole === 'doctor' ? 'Dr. Ravi Bansal' : 'Rahul Meena',
-        email: expectedRole === 'doctor' ? 'dr.ravibansal@dtu.ac.in' : 'rahul.meena@dtu.ac.in',
-        rollNo: expectedRole === 'student' ? '2K22/CO/101' : undefined,
-        branch: expectedRole === 'student' ? 'Computer Science & Engineering' : undefined,
-        department: expectedRole === 'doctor' ? 'General Medicine (OPD)' : undefined
-    };
-    try {
-        localStorage.setItem("currentUser", JSON.stringify(defaultUser));
-        localStorage.setItem("userRole", defaultUser.role);
-    } catch (e) {}
-    return defaultUser;
+    // If no user session is present, return null (requiring login)
+    return null;
 }
 
 // Sign out user and clear active session
@@ -199,10 +193,10 @@ function getAppointments() {
         if (isDoctorNameAsPatient || isGenericStudent) {
             return {
                 ...a,
-                studentName: 'Rahul Meena',
-                rollNo: a.rollNo || '2K22/CO/101',
-                branch: a.branch || 'Computer Science & Engineering',
-                studentEmail: a.studentEmail || 'rahul.meena@dtu.ac.in'
+                studentName: a.studentEmail ? a.studentEmail.split('@')[0] : 'DTU Student',
+                rollNo: a.rollNo || 'Not Provided',
+                branch: a.branch || 'DTU',
+                studentEmail: a.studentEmail || 'N/A'
             };
         }
         return a;
@@ -1023,12 +1017,24 @@ async function openChatModal(appointmentId, otherPartyName, otherPartyRole, othe
     if (!appointmentId) return;
     _activeChatAppointmentId = appointmentId;
 
-    const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : { role: 'student', name: 'Student' };
+    const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!currentUser) {
+        alert("Please sign in to access consultation messages.");
+        return;
+    }
     const myRole = currentUser.role || 'student';
-    const myId = currentUser.id || (myRole === 'doctor' ? 'd0000000-0000-0000-0000-000000000001' : 'a0000000-0000-0000-0000-000000000001');
-    const myName = currentUser.name || (myRole === 'doctor' ? 'Dr. Ravi Bansal' : 'Rahul Meena');
+    const myId = currentUser.id;
+    const myName = currentUser.name || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
 
-    const receiverId = otherPartyId || (myRole === 'doctor' ? 'a0000000-0000-0000-0000-000000000001' : 'd0000000-0000-0000-0000-000000000001');
+    let receiverId = otherPartyId;
+    if (!receiverId) {
+        // Fallback: search appointments array for matching participant
+        const allApts = typeof getAppointments === 'function' ? getAppointments() : [];
+        const thisApt = allApts.find(a => a.id === appointmentId);
+        if (thisApt) {
+            receiverId = myRole === 'doctor' ? thisApt.studentId : thisApt.doctorId;
+        }
+    }
     const receiverName = otherPartyName || (otherPartyRole === 'doctor' ? 'Doctor' : 'Student');
     const roleIcon = otherPartyRole === 'doctor' ? '👨‍⚕️' : '🎓';
 
